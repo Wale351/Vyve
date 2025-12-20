@@ -1,11 +1,11 @@
 import Header from '@/components/Header';
 import StreamCard from '@/components/StreamCard';
-import { mockStreams } from '@/lib/mockData';
-import { Gamepad2, TrendingUp, Users } from 'lucide-react';
+import { useLiveStreams } from '@/hooks/useStreams';
+import { Gamepad2, TrendingUp, Users, Loader2 } from 'lucide-react';
 
 const Index = () => {
-  const liveStreams = mockStreams.filter(s => s.isLive);
-  const totalViewers = liveStreams.reduce((acc, s) => acc + s.viewerCount, 0);
+  const { data: liveStreams = [], isLoading } = useLiveStreams();
+  const totalViewers = liveStreams.reduce((acc, s) => acc + (s.viewer_count || 0), 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,19 +65,23 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {liveStreams.map((stream, index) => (
-            <div 
-              key={stream.id} 
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <StreamCard stream={stream} />
-            </div>
-          ))}
-        </div>
-
-        {liveStreams.length === 0 && (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : liveStreams.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {liveStreams.map((stream, index) => (
+              <div 
+                key={stream.id} 
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <StreamCard stream={stream} />
+              </div>
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-16">
             <Gamepad2 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="font-display text-xl font-semibold mb-2">No Live Streams</h3>
