@@ -14,7 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+          stream_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+          stream_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+          stream_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          id: string
+          is_streamer: boolean | null
+          username: string | null
+          wallet_address: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id: string
+          is_streamer?: boolean | null
+          username?: string | null
+          wallet_address: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          is_streamer?: boolean | null
+          username?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
+      streams: {
+        Row: {
+          description: string | null
+          ended_at: string | null
+          game_category: string | null
+          id: string
+          is_live: boolean | null
+          playback_url: string | null
+          started_at: string | null
+          stream_key: string | null
+          streamer_id: string
+          title: string
+          viewer_count: number | null
+        }
+        Insert: {
+          description?: string | null
+          ended_at?: string | null
+          game_category?: string | null
+          id?: string
+          is_live?: boolean | null
+          playback_url?: string | null
+          started_at?: string | null
+          stream_key?: string | null
+          streamer_id: string
+          title: string
+          viewer_count?: number | null
+        }
+        Update: {
+          description?: string | null
+          ended_at?: string | null
+          game_category?: string | null
+          id?: string
+          is_live?: boolean | null
+          playback_url?: string | null
+          started_at?: string | null
+          stream_key?: string | null
+          streamer_id?: string
+          title?: string
+          viewer_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streams_streamer_id_fkey"
+            columns: ["streamer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tips: {
+        Row: {
+          amount_eth: number
+          created_at: string
+          id: string
+          receiver_id: string
+          sender_id: string
+          stream_id: string
+          tx_hash: string
+        }
+        Insert: {
+          amount_eth: number
+          created_at?: string
+          id?: string
+          receiver_id: string
+          sender_id: string
+          stream_id: string
+          tx_hash: string
+        }
+        Update: {
+          amount_eth?: number
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+          stream_id?: string
+          tx_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tips_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tips_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tips_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
