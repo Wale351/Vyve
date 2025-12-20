@@ -4,13 +4,25 @@ import VideoPlayer from '@/components/VideoPlayer';
 import LiveChat from '@/components/LiveChat';
 import TipButton from '@/components/TipButton';
 import { Button } from '@/components/ui/button';
-import { mockStreams, mockChatMessages, formatViewerCount, formatDuration, formatAddress } from '@/lib/mockData';
-import { Users, Clock, Share2, Heart, ExternalLink } from 'lucide-react';
+import { useStream } from '@/hooks/useStreams';
+import { formatViewerCount, formatDuration, formatAddress } from '@/lib/mockData';
+import { Users, Clock, Share2, Heart, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Watch = () => {
   const { streamId } = useParams();
-  const stream = mockStreams.find(s => s.id === streamId);
+  const { data: stream, isLoading } = useStream(streamId);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-16 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   if (!stream) {
     return (
@@ -32,6 +44,9 @@ const Watch = () => {
     toast.success('Link copied to clipboard!');
   };
 
+  const streamerName = stream.profiles?.username || formatAddress(stream.profiles?.wallet_address || '');
+  const streamerAddress = stream.profiles?.wallet_address || '';
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -42,10 +57,9 @@ const Watch = () => {
           <div className="space-y-4">
             {/* Video Player */}
             <VideoPlayer 
-              playbackId={stream.playbackId}
+              playbackId={stream.playback_url || undefined}
               title={stream.title}
-              isLive={stream.isLive}
-              thumbnailUrl={stream.thumbnailUrl}
+              isLive={stream.is_live || false}
             />
 
             {/* Stream Info */}
@@ -58,18 +72,18 @@ const Watch = () => {
                   
                   <div className="flex items-center gap-4 mt-3">
                     <Link 
-                      to={`/profile/${stream.streamerAddress}`}
+                      to={`/profile/${streamerAddress}`}
                       className="flex items-center gap-3 group"
                     >
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-foreground font-bold">
-                        {stream.streamerName.charAt(0)}
+                        {streamerName.charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <p className="font-medium group-hover:text-primary transition-colors">
-                          {stream.streamerName}
+                          {streamerName}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {formatAddress(stream.streamerAddress)}
+                          {formatAddress(streamerAddress)}
                         </p>
                       </div>
                     </Link>
@@ -78,23 +92,27 @@ const Watch = () => {
                   <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <Users className="h-4 w-4 text-primary" />
-                      {formatViewerCount(stream.viewerCount)} watching
+                      {formatViewerCount(stream.viewer_count || 0)} watching
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4" />
-                      {formatDuration(stream.startedAt)}
-                    </div>
-                    <div className="px-2 py-1 bg-primary/10 border border-primary/20 rounded text-primary text-xs">
-                      {stream.game}
-                    </div>
+                    {stream.started_at && (
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        {formatDuration(new Date(stream.started_at))}
+                      </div>
+                    )}
+                    {stream.game_category && (
+                      <div className="px-2 py-1 bg-primary/10 border border-primary/20 rounded text-primary text-xs">
+                        {stream.game_category}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   <TipButton 
-                    streamerAddress={stream.streamerAddress}
-                    streamerName={stream.streamerName}
+                    streamerAddress={streamerAddress}
+                    streamerName={streamerName}
                   />
                   <Button variant="outline" size="icon" onClick={handleShare}>
                     <Share2 className="h-4 w-4" />
@@ -102,7 +120,7 @@ const Watch = () => {
                   <Button variant="outline" size="icon">
                     <Heart className="h-4 w-4" />
                   </Button>
-                  <Link to={`/profile/${stream.streamerAddress}`}>
+                  <Link to={`/profile/${streamerAddress}`}>
                     <Button variant="glass" size="icon">
                       <ExternalLink className="h-4 w-4" />
                     </Button>
@@ -114,10 +132,7 @@ const Watch = () => {
 
           {/* Chat Sidebar */}
           <div className="h-[calc(100vh-180px)] sticky top-24">
-            <LiveChat 
-              streamId={stream.id}
-              initialMessages={mockChatMessages}
-            />
+            <LiveChat streamId={stream.id} />
           </div>
         </div>
       </div>

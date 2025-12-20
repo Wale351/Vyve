@@ -1,22 +1,27 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChatMessage, formatAddress } from '@/lib/mockData';
+import { formatAddress } from '@/lib/mockData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Coins } from 'lucide-react';
+import { Send, Coins, Loader2 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { cn } from '@/lib/utils';
+import { useChatMessages, useSendMessage } from '@/hooks/useChatMessages';
+import { useProfile } from '@/hooks/useProfile';
+import { toast } from 'sonner';
 
 interface LiveChatProps {
   streamId: string;
-  initialMessages?: ChatMessage[];
 }
 
-const LiveChat = ({ streamId, initialMessages = [] }: LiveChatProps) => {
+const LiveChat = ({ streamId }: LiveChatProps) => {
   const { address, isConnected } = useAccount();
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { data: messages = [], isLoading } = useChatMessages(streamId);
+  const { data: profile } = useProfile(address);
+  const sendMessageMutation = useSendMessage();
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -25,19 +30,24 @@ const LiveChat = ({ streamId, initialMessages = [] }: LiveChatProps) => {
     }
   }, [messages]);
 
-  const handleSend = () => {
-    if (!newMessage.trim() || !isConnected || !address) return;
+  const handleSend = async () => {
+    if (!newMessage.trim() || !isConnected || !profile?.id) {
+      if (!profile?.id && isConnected) {
+        toast.error('Profile not found. Please try reconnecting your wallet.');
+      }
+      return;
+    }
 
-    const message: ChatMessage = {
-      id: Date.now().toString(),
-      senderAddress: address,
-      senderName: formatAddress(address),
-      message: newMessage.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages([...messages, message]);
-    setNewMessage('');
+    try {
+      await sendMessageMutation.mutateAsync({
+        streamId,
+        senderId: profile.id,
+        message: newMessage.trim(),
+      });
+      setNewMessage('');
+    } catch (error) {
+      toast.error('Failed to send message');
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -59,43 +69,42 @@ const LiveChat = ({ streamId, initialMessages = [] }: LiveChatProps) => {
 
       {/* Messages */}
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-3">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={cn(
-                "group",
-                msg.isTip && "bg-primary/10 -mx-2 px-2 py-2 rounded-lg border border-primary/20"
-              )}
-            >
-              <div className="flex items-start gap-2">
-                {msg.isTip && (
-                  <Coins className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                )}
-                <div className="min-w-0">
-                  <span className="text-xs font-medium text-primary">
-                    {msg.senderName}
-                  </span>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                  <p className={cn(
-                    "text-sm text-foreground mt-0.5 break-words",
-                    msg.isTip && "text-primary font-medium"
-                  )}>
-                    {msg.message}
-                  </p>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {messages.map((msg) => {
+              const senderName = msg.profiles?.username || formatAddress(msg.profiles?.wallet_address || '');
+              const timestamp = new Date(msg.created_at);
+              
+              return (
+                <div key={msg.id} className="group">
+                  <div className="flex items-start gap-2">
+                    <div className="min-w-0">
+                      <span className="text-xs font-medium text-primary">
+                        {senderName}
+                      </span>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <p className="text-sm text-foreground mt-0.5 break-words">
+                        {msg.message}
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              );
+            })}
+            
+            {messages.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No messages yet. Be the first to chat!
               </div>
-            </div>
-          ))}
-          
-          {messages.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground text-sm">
-              No messages yet. Be the first to chat!
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </ScrollArea>
 
       {/* Input */}
@@ -111,11 +120,15 @@ const LiveChat = ({ streamId, initialMessages = [] }: LiveChatProps) => {
             />
             <Button
               onClick={handleSend}
-              disabled={!newMessage.trim()}
+              disabled={!newMessage.trim() || sendMessageMutation.isPending}
               size="icon"
               variant="glow"
             >
-              <Send className="h-4 w-4" />
+              {sendMessageMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
             </Button>
           </div>
         ) : (

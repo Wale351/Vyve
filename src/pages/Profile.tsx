@@ -2,7 +2,9 @@ import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import StreamCard from '@/components/StreamCard';
 import { Button } from '@/components/ui/button';
-import { mockStreamerProfile, formatAddress } from '@/lib/mockData';
+import { useProfile, useProfileTipsReceived } from '@/hooks/useProfile';
+import { useStreamerStreams } from '@/hooks/useStreams';
+import { formatAddress } from '@/lib/mockData';
 import { useAccount } from 'wagmi';
 import { 
   Users, 
@@ -11,7 +13,8 @@ import {
   ExternalLink, 
   Copy, 
   Check,
-  Calendar
+  Calendar,
+  Loader2
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -21,8 +24,10 @@ const Profile = () => {
   const { address: connectedAddress, isConnected } = useAccount();
   const [copied, setCopied] = useState(false);
 
-  // Use mock data - in production this would fetch from database
-  const profile = mockStreamerProfile;
+  const { data: profile, isLoading: profileLoading } = useProfile(profileAddress);
+  const { data: totalTips = 0 } = useProfileTipsReceived(profile?.id);
+  const { data: streams = [], isLoading: streamsLoading } = useStreamerStreams(profile?.id);
+  
   const isOwnProfile = isConnected && connectedAddress?.toLowerCase() === profileAddress?.toLowerCase();
 
   const copyAddress = async () => {
@@ -33,6 +38,20 @@ const Profile = () => {
       toast.success('Address copied!');
     }
   };
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-16 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  const displayName = profile?.username || formatAddress(profileAddress || '');
+  const avatarUrl = profile?.avatar_url || 'https://images.unsplash.com/photo-1566577134770-3d85bb3a9cc4?w=400&q=80';
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,12 +70,12 @@ const Profile = () => {
             <div className="relative">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/30 shadow-[0_0_30px_hsl(var(--primary)/0.3)]">
                 <img 
-                  src={profile.avatarUrl} 
-                  alt={profile.name}
+                  src={avatarUrl} 
+                  alt={displayName}
                   className="w-full h-full object-cover"
                 />
               </div>
-              {profile.isStreamer && (
+              {profile?.is_streamer && (
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
                   Streamer
                 </div>
@@ -65,14 +84,14 @@ const Profile = () => {
 
             {/* Info */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="font-display text-3xl font-bold">{profile.name}</h1>
+              <h1 className="font-display text-3xl font-bold">{displayName}</h1>
               
               <button
                 onClick={copyAddress}
                 className="inline-flex items-center gap-2 mt-2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <span className="font-mono text-sm">
-                  {formatAddress(profileAddress || profile.address)}
+                  {formatAddress(profileAddress || '')}
                 </span>
                 {copied ? (
                   <Check className="h-4 w-4 text-primary" />
@@ -81,30 +100,32 @@ const Profile = () => {
                 )}
               </button>
 
-              <p className="mt-4 text-muted-foreground max-w-xl">
-                {profile.bio}
-              </p>
+              {profile?.bio && (
+                <p className="mt-4 text-muted-foreground max-w-xl">
+                  {profile.bio}
+                </p>
+              )}
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 mt-6">
                 <div className="text-center">
                   <div className="flex items-center gap-2 text-xl font-display font-bold text-primary">
                     <Users className="h-5 w-5" />
-                    {profile.followerCount.toLocaleString()}
+                    0
                   </div>
                   <p className="text-xs text-muted-foreground">Followers</p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center gap-2 text-xl font-display font-bold text-secondary">
                     <Coins className="h-5 w-5" />
-                    {profile.totalTipsReceived} ETH
+                    {totalTips.toFixed(4)} ETH
                   </div>
                   <p className="text-xs text-muted-foreground">Tips Received</p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center gap-2 text-xl font-display font-bold text-accent">
                     <Radio className="h-5 w-5" />
-                    {profile.pastStreams.length}
+                    {streams.length}
                   </div>
                   <p className="text-xs text-muted-foreground">Streams</p>
                 </div>
@@ -141,9 +162,13 @@ const Profile = () => {
           <h2 className="font-display text-2xl font-bold">Past Streams</h2>
         </div>
 
-        {profile.pastStreams.length > 0 ? (
+        {streamsLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : streams.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {profile.pastStreams.map((stream, index) => (
+            {streams.map((stream, index) => (
               <div 
                 key={stream.id}
                 className="animate-fade-in"
