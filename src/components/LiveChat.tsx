@@ -110,26 +110,34 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
       {/* Input */}
       <div className="p-4 border-t border-border/50">
         {isConnected ? (
-          <div className="flex gap-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Send a message..."
-              className="flex-1 bg-muted/50 border-border/50"
-            />
-            <Button
-              onClick={handleSend}
-              disabled={!newMessage.trim() || sendMessageMutation.isPending}
-              size="icon"
-              variant="glow"
-            >
-              {sendMessageMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
+          <div className="space-y-1">
+            <div className="flex gap-2">
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value.slice(0, 500))}
+                onKeyDown={handleKeyDown}
+                placeholder="Send a message..."
+                className="flex-1 bg-muted/50 border-border/50"
+                maxLength={500}
+              />
+              <Button
+                onClick={handleSend}
+                disabled={!newMessage.trim() || sendMessageMutation.isPending}
+                size="icon"
+                variant="glow"
+              >
+                {sendMessageMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            {newMessage.length > 400 && (
+              <p className="text-xs text-muted-foreground text-right">
+                {newMessage.length}/500
+              </p>
+            )}
           </div>
         ) : (
           <p className="text-center text-sm text-muted-foreground">

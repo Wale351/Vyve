@@ -1,1 +1,4 @@
 project_id = "jntawwphzvbbzpliyzmb"
+
+[functions.create-stream]
+verify_jwt = true

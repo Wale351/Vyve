@@ -185,12 +185,41 @@ export type Database = {
           },
         ]
       }
+      user_rate_limits: {
+        Row: {
+          action_count: number | null
+          action_type: string
+          user_id: string
+          window_start: string | null
+        }
+        Insert: {
+          action_count?: number | null
+          action_type: string
+          user_id: string
+          window_start?: string | null
+        }
+        Update: {
+          action_count?: number | null
+          action_type?: string
+          user_id?: string
+          window_start?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_rate_limit: {
+        Args: {
+          p_action_type: string
+          p_max_actions: number
+          p_user_id: string
+          p_window_seconds: number
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
