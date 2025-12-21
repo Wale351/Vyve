@@ -7,8 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAccount } from 'wagmi';
 import { Radio, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { getRtmpIngestUrl } from '@/lib/livepeer';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 const GoLive = () => {
   const { address, isConnected } = useAccount();
@@ -17,6 +17,7 @@ const GoLive = () => {
   const [description, setDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [streamKey, setStreamKey] = useState('');
+  const [rtmpUrl, setRtmpUrl] = useState('');
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedRtmp, setCopiedRtmp] = useState(false);
 
@@ -26,17 +27,43 @@ const GoLive = () => {
       return;
     }
 
+    if (title.length > 200) {
+      toast.error('Title cannot exceed 200 characters');
+      return;
+    }
+
+    if (description.length > 2000) {
+      toast.error('Description cannot exceed 2000 characters');
+      return;
+    }
+
     setIsCreating(true);
     
-    // Simulate stream creation - in production this would call Livepeer API via edge function
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Generate mock stream key
-    const mockStreamKey = `live_${Math.random().toString(36).substring(2, 15)}`;
-    setStreamKey(mockStreamKey);
-    
-    setIsCreating(false);
-    toast.success('Stream created! Use the stream key in OBS or your streaming software.');
+    try {
+      // Call edge function to create stream securely
+      const { data, error } = await supabase.functions.invoke('create-stream', {
+        body: {
+          title: title.trim(),
+          description: description.trim() || null,
+          game_category: game.trim() || null,
+        },
+      });
+
+      if (error) {
+        console.error('Stream creation error:', error);
+        toast.error('Failed to create stream. Please try again.');
+        return;
+      }
+
+      setStreamKey(data.stream_key);
+      setRtmpUrl(data.rtmp_url);
+      toast.success('Stream created! Use the stream key in OBS or your streaming software.');
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast.error('Failed to create stream. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const copyToClipboard = async (text: string, type: 'key' | 'rtmp') => {
@@ -95,10 +122,16 @@ const GoLive = () => {
                     <Input
                       id="title"
                       value={title}
-                      onChange={(e) => setTitle(e.target.value)}
+                      onChange={(e) => setTitle(e.target.value.slice(0, 200))}
                       placeholder="Enter your stream title..."
                       className="bg-muted/50 border-border/50"
+                      maxLength={200}
                     />
+                    {title.length > 150 && (
+                      <p className="text-xs text-muted-foreground text-right">
+                        {title.length}/200
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -117,10 +150,16 @@ const GoLive = () => {
                     <Textarea
                       id="description"
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
                       placeholder="Tell viewers about your stream..."
                       className="bg-muted/50 border-border/50 min-h-24"
+                      maxLength={2000}
                     />
+                    {description.length > 1800 && (
+                      <p className="text-xs text-muted-foreground text-right">
+                        {description.length}/2000
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -163,14 +202,14 @@ const GoLive = () => {
                     <Label>RTMP Server URL</Label>
                     <div className="flex gap-2">
                       <Input
-                        value="rtmp://rtmp.livepeer.studio/live"
+                        value={rtmpUrl}
                         readOnly
                         className="bg-muted/30 font-mono text-sm"
                       />
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => copyToClipboard('rtmp://rtmp.livepeer.studio/live', 'rtmp')}
+                        onClick={() => copyToClipboard(rtmpUrl, 'rtmp')}
                       >
                         {copiedRtmp ? (
                           <Check className="h-4 w-4 text-primary" />
@@ -224,7 +263,13 @@ const GoLive = () => {
                     <Button
                       variant="outline"
                       className="flex-1"
-                      onClick={() => setStreamKey('')}
+                      onClick={() => {
+                        setStreamKey('');
+                        setRtmpUrl('');
+                        setTitle('');
+                        setGame('');
+                        setDescription('');
+                      }}
                     >
                       Create New Stream
                     </Button>

@@ -87,6 +87,8 @@ export const useChatMessages = (streamId: string | undefined) => {
   return query;
 };
 
+const MAX_MESSAGE_LENGTH = 500;
+
 export const useSendMessage = () => {
   return useMutation({
     mutationFn: async ({
@@ -98,13 +100,30 @@ export const useSendMessage = () => {
       senderId: string;
       message: string;
     }) => {
+      // Client-side validation
+      const trimmedMessage = message.trim();
+      
+      if (!trimmedMessage) {
+        throw new Error('Message cannot be empty');
+      }
+      
+      if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+        throw new Error(`Message cannot exceed ${MAX_MESSAGE_LENGTH} characters`);
+      }
+
       const { error } = await supabase.from('chat_messages').insert({
         stream_id: streamId,
         sender_id: senderId,
-        message,
+        message: trimmedMessage,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle rate limit error
+        if (error.message.includes('rate') || error.code === '42501') {
+          throw new Error('You are sending messages too quickly. Please wait a moment.');
+        }
+        throw error;
+      }
     },
   });
 };
