@@ -4,49 +4,44 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
-
 @layer base {
   :root {
-    --background: 209 40% 96%;
-    --foreground: 222 47% 11%;
+    --background: 220 20% 6%;
+    --foreground: 210 40% 98%;
 
-    --card: 210 40% 98%;
-    --card-foreground: 222 47% 11%;
+    --card: 220 20% 10%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 214 31% 91%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 220 20% 12%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 200 98% 39%;
-    --primary-foreground: 204 100% 97%;
+    --primary: 180 100% 50%;
+    --primary-foreground: 220 20% 6%;
 
-    --secondary: 215 24% 26%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 300 100% 60%;
+    --secondary-foreground: 220 20% 6%;
 
-    --muted: 215 20% 65%;
-    --muted-foreground: 222 47% 11%;
+    --muted: 220 15% 25%;
+    --muted-foreground: 220 15% 65%;
 
-    --accent: 210 40% 98%;
-    --accent-foreground: 215 19% 34%;
+    --accent: 220 20% 15%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 85% 97%;
 
-    --border: 212 26% 83%;
-    --input: 212 26% 83%;
-    --ring: 200 98% 39%;
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 180 100% 50%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Custom gaming colors */
     --neon-cyan: 180 100% 50%;
     --neon-magenta: 300 100% 60%;
     --neon-purple: 270 100% 65%;
     --neon-green: 150 100% 50%;
+    --neon-orange: 25 100% 55%;
 
     /* Gradients */
     --gradient-neon: linear-gradient(135deg, hsl(var(--neon-cyan)), hsl(var(--neon-magenta)));
@@ -60,75 +55,26 @@
     --shadow-glow-magenta: 0 0 40px hsl(var(--neon-magenta) / 0.3);
 
     --sidebar-background: 220 20% 8%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 200 98% 39%;
-    --sidebar-primary-foreground: 204 100% 97%;
-    --sidebar-accent: 215 24% 26%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 180 100% 50%;
+    --sidebar-primary-foreground: 220 20% 6%;
+    --sidebar-accent: 220 20% 15%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 212 26% 83%;
-    --sidebar-ring: 200 98% 39%;
-    --chart-1: 198 93% 59%;
-    --chart-2: 213 93% 67%;
-    --chart-3: 215 20% 65%;
-    --chart-4: 215 16% 46%;
-    --chart-5: 215 19% 34%;
-    --sidebar: 210 40% 98%;
-    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-    --font-serif: 'Lora', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-    --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-    --tracking-normal: 0em;
-    --spacing: 0.25rem;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 180 100% 50%;
+
+    --chart-1: 180 100% 50%;
+    --chart-2: 300 100% 60%;
+    --chart-3: 270 100% 65%;
+    --chart-4: 150 100% 50%;
+    --chart-5: 25 100% 55%;
+
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Space Grotesk', sans-serif;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 217 32% 17%;
-    --card-foreground: 210 40% 98%;
-    --popover: 215 24% 26%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 198 93% 59%;
-    --primary-foreground: 204 80% 15%;
-    --secondary: 212 26% 83%;
-    --secondary-foreground: 228 84% 4%;
-    --muted: 215 16% 46%;
-    --muted-foreground: 210 40% 98%;
-    --accent: 228 84% 4%;
-    --accent-foreground: 215 20% 65%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 85% 97%;
-    --border: 215 19% 34%;
-    --input: 215 19% 34%;
-    --ring: 198 93% 59%;
-    --chart-1: 199 95% 73%;
-    --chart-2: 211 96% 78%;
-    --chart-3: 215 20% 65%;
-    --chart-4: 215 16% 46%;
-    --chart-5: 215 19% 34%;
-    --sidebar: 217 32% 17%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 198 93% 59%;
-    --sidebar-primary-foreground: 204 80% 15%;
-    --sidebar-accent: 215 20% 65%;
-    --sidebar-accent-foreground: 228 84% 4%;
-    --sidebar-border: 215 19% 34%;
-    --sidebar-ring: 198 93% 59%;
-    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+    /* Dark mode is the default for gaming aesthetic */
   }
 }
 
@@ -158,8 +104,18 @@
   }
 
   .neon-border {
-    @apply border border-primary/50;
+    @apply relative border border-primary/50 overflow-hidden;
     box-shadow: inset 0 0 20px hsl(var(--primary) / 0.1), 0 0 20px hsl(var(--primary) / 0.2);
+  }
+
+  .neon-border::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, hsl(var(--neon-cyan) / 0.1), hsl(var(--neon-magenta) / 0.1));
+  }
+
+  .neon-border:hover::before {
+    @apply opacity-100;
   }
 
   .neon-text {
@@ -172,8 +128,8 @@
   }
 
   .live-badge {
-    @apply px-2 py-0.5 bg-destructive text-destructive-foreground text-xs font-bold uppercase rounded;
-    animation: pulse-glow 2s ease-in-out infinite;
+    @apply px-2.5 py-1 bg-destructive text-destructive-foreground text-xs font-bold uppercase rounded-md;
+    animation: pulse-live 2s ease-in-out infinite;
   }
 
   .glow-hover {
@@ -181,8 +137,81 @@
   }
 
   .glow-hover:hover {
-    box-shadow: var(--shadow-neon);
-    transform: translateY(-2px);
+    box-shadow: 0 0 40px hsl(var(--neon-cyan) / 0.3), 0 8px 32px hsl(220 20% 2% / 0.5);
+    transform: translateY(-4px);
+  }
+
+  /* Gaming card with hover effects */
+  .gaming-card {
+    @apply relative bg-card/60 backdrop-blur-xl border border-border/30 rounded-xl overflow-hidden;
+    @apply transition-all duration-500 ease-out;
+    box-shadow: 0 4px 20px hsl(220 20% 2% / 0.3);
+  }
+
+  .gaming-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+    background: linear-gradient(135deg, hsl(var(--neon-cyan) / 0.05), hsl(var(--neon-magenta) / 0.05));
+  }
+
+  .gaming-card:hover {
+    @apply border-primary/40;
+    box-shadow: 0 0 60px hsl(var(--neon-cyan) / 0.15), 0 20px 40px hsl(220 20% 2% / 0.4);
+    transform: translateY(-8px) scale(1.02);
+  }
+
+  .gaming-card:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Glowing avatar for connected users */
+  .glow-avatar {
+    @apply relative;
+  }
+
+  .glow-avatar::before {
+    content: '';
+    @apply absolute -inset-1 rounded-full opacity-0 transition-opacity duration-300;
+    background: var(--gradient-neon);
+    filter: blur(8px);
+  }
+
+  .glow-avatar.connected::before {
+    @apply opacity-70;
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  /* XP Progress bar */
+  .xp-bar {
+    @apply h-2 rounded-full overflow-hidden;
+    background: hsl(220 20% 15%);
+  }
+
+  .xp-bar-fill {
+    @apply h-full rounded-full;
+    background: var(--gradient-neon);
+    box-shadow: 0 0 10px hsl(var(--neon-cyan) / 0.5);
+    transition: width 1s ease-out;
+  }
+
+  /* Step indicator */
+  .step-indicator {
+    @apply flex items-center justify-center w-10 h-10 rounded-full font-display font-bold;
+    @apply transition-all duration-500;
+  }
+
+  .step-indicator.active {
+    @apply bg-primary text-primary-foreground;
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.5);
+  }
+
+  .step-indicator.completed {
+    @apply bg-neon-green text-background;
+    box-shadow: 0 0 20px hsl(var(--neon-green) / 0.5);
+  }
+
+  .step-indicator.pending {
+    @apply bg-muted text-muted-foreground;
   }
 }
 
@@ -193,6 +222,22 @@
 
   .animate-float {
     animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.5s ease-out;
+  }
+
+  .animate-message-in {
+    animation: message-in 0.4s ease-out;
+  }
+
+  .animate-tip-flash {
+    animation: tip-flash 0.6s ease-out;
+  }
+
+  .animate-pulse-ring {
+    animation: pulse-ring 1.5s ease-out infinite;
   }
 }
 
@@ -205,12 +250,25 @@
   }
 }
 
-@keyframes pulse-glow {
+@keyframes pulse-live {
   0%, 100% {
-    box-shadow: 0 0 10px hsl(var(--destructive) / 0.5);
+    box-shadow: 0 0 8px hsl(var(--destructive) / 0.5);
+    transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 20px hsl(var(--destructive) / 0.8);
+    box-shadow: 0 0 20px hsl(var(--destructive) / 0.8), 0 0 40px hsl(var(--destructive) / 0.4);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
   }
 }
 
@@ -223,25 +281,95 @@
   }
 }
 
-/* Custom scrollbar */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes tip-flash {
+  0% {
+    background-color: transparent;
+  }
+  20% {
+    background-color: hsl(var(--neon-cyan) / 0.3);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Page transitions */
+.page-enter {
+  animation: page-fade-in 0.4s ease-out;
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom scrollbar - gaming style */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-background;
+  background: hsl(220 20% 8%);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted rounded-full;
+  background: linear-gradient(180deg, hsl(var(--neon-cyan) / 0.5), hsl(var(--neon-magenta) / 0.5));
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/50;
+  background: linear-gradient(180deg, hsl(var(--neon-cyan) / 0.7), hsl(var(--neon-magenta) / 0.7));
 }
 
 /* RainbowKit overrides */
 [data-rk] {
   --rk-colors-accentColor: hsl(var(--primary)) !important;
+}
+
+/* Grid background pattern */
+.grid-pattern {
+  background-image: 
+    linear-gradient(hsl(var(--neon-cyan) / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--neon-cyan) / 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
 }
