@@ -1,7 +1,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Radio, User, Gamepad2 } from 'lucide-react';
+import { Radio, User, Gamepad2, Zap } from 'lucide-react';
 import { useAccount } from 'wagmi';
 
 const Header = () => {
@@ -9,14 +9,14 @@ const Header = () => {
   const { address, isConnected } = useAccount();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/80 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-8">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
+          {/* Logo with glow effect */}
+          <Link to="/" className="flex items-center gap-2.5 group">
             <div className="relative">
-              <Gamepad2 className="h-8 w-8 text-primary transition-all duration-300 group-hover:scale-110" />
-              <div className="absolute inset-0 blur-lg bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 blur-lg bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <Gamepad2 className="relative h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
             </div>
             <span className="font-display text-xl font-bold gradient-text">
               Base Haven
@@ -29,7 +29,9 @@ const Header = () => {
               <Button
                 variant={location.pathname === '/' ? 'glow' : 'ghost'}
                 size="sm"
+                className="gap-2"
               >
+                <Zap className="h-4 w-4" />
                 Browse
               </Button>
             </Link>
@@ -60,7 +62,7 @@ const Header = () => {
           </nav>
         </div>
 
-        {/* Wallet Connect */}
+        {/* Wallet Connect with custom styling */}
         <ConnectButton.Custom>
           {({
             account,
@@ -87,7 +89,8 @@ const Header = () => {
                 {(() => {
                   if (!connected) {
                     return (
-                      <Button onClick={openConnectModal} variant="neon">
+                      <Button onClick={openConnectModal} variant="neon" className="gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
                         Connect Wallet
                       </Button>
                     );
@@ -95,7 +98,8 @@ const Header = () => {
 
                   if (chain.unsupported) {
                     return (
-                      <Button onClick={openChainModal} variant="destructive">
+                      <Button onClick={openChainModal} variant="destructive" className="gap-2">
+                        <div className="w-2 h-2 rounded-full bg-destructive-foreground animate-pulse" />
                         Wrong network
                       </Button>
                     );
@@ -103,22 +107,23 @@ const Header = () => {
 
                   return (
                     <div className="flex items-center gap-2">
+                      {/* Chain selector */}
                       <Button
                         onClick={openChainModal}
                         variant="glass"
                         size="sm"
-                        className="hidden sm:flex"
+                        className="hidden sm:flex gap-2"
                       >
                         {chain.hasIcon && (
                           <div
-                            className="w-4 h-4 rounded-full overflow-hidden mr-1"
+                            className="w-5 h-5 rounded-full overflow-hidden"
                             style={{ background: chain.iconBackground }}
                           >
                             {chain.iconUrl && (
                               <img
                                 alt={chain.name ?? 'Chain icon'}
                                 src={chain.iconUrl}
-                                className="w-4 h-4"
+                                className="w-5 h-5"
                               />
                             )}
                           </div>
@@ -126,11 +131,25 @@ const Header = () => {
                         {chain.name}
                       </Button>
 
-                      <Button onClick={openAccountModal} variant="glass">
-                        {account.displayName}
+                      {/* Account button with glow */}
+                      <Button 
+                        onClick={openAccountModal} 
+                        variant="glass"
+                        className="gap-2 group"
+                      >
+                        {/* Glowing avatar indicator */}
+                        <div className="relative">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[10px] font-bold text-primary-foreground">
+                            {account.displayName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-neon-green rounded-full border-2 border-background" />
+                        </div>
+                        
+                        <span className="font-medium">{account.displayName}</span>
+                        
                         {account.displayBalance && (
-                          <span className="hidden sm:inline text-muted-foreground ml-1">
-                            ({account.displayBalance})
+                          <span className="hidden sm:inline text-muted-foreground text-xs bg-muted/50 px-2 py-0.5 rounded">
+                            {account.displayBalance}
                           </span>
                         )}
                       </Button>

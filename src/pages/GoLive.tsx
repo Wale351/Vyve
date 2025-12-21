@@ -5,16 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAccount } from 'wagmi';
-import { Radio, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Radio, Copy, Check, Loader2, AlertCircle, Sparkles, Settings, Zap, ArrowRight, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+type Step = 'setup' | 'creating' | 'ready';
+
 const GoLive = () => {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const [title, setTitle] = useState('');
   const [game, setGame] = useState('');
   const [description, setDescription] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+  const [step, setStep] = useState<Step>('setup');
   const [streamKey, setStreamKey] = useState('');
   const [rtmpUrl, setRtmpUrl] = useState('');
   const [copiedKey, setCopiedKey] = useState(false);
@@ -36,10 +38,9 @@ const GoLive = () => {
       return;
     }
 
-    setIsCreating(true);
+    setStep('creating');
     
     try {
-      // Call edge function to create stream securely
       const { data, error } = await supabase.functions.invoke('create-stream', {
         body: {
           title: title.trim(),
@@ -49,25 +50,24 @@ const GoLive = () => {
       });
 
       if (error) {
-        // Log only in development
         if (import.meta.env.DEV) {
           console.error('Stream creation error:', error);
         }
         toast.error('Failed to create stream. Please try again.');
+        setStep('setup');
         return;
       }
 
       setStreamKey(data.stream_key);
       setRtmpUrl(data.rtmp_url);
-      toast.success('Stream created! Use the stream key in OBS or your streaming software.');
+      setStep('ready');
+      toast.success('Stream created successfully!');
     } catch (error) {
-      // Log only in development
       if (import.meta.env.DEV) {
         console.error('Unexpected error:', error);
       }
       toast.error('Failed to create stream. Please try again.');
-    } finally {
-      setIsCreating(false);
+      setStep('setup');
     }
   };
 
@@ -83,14 +83,26 @@ const GoLive = () => {
     toast.success('Copied to clipboard!');
   };
 
+  const resetForm = () => {
+    setStreamKey('');
+    setRtmpUrl('');
+    setTitle('');
+    setGame('');
+    setDescription('');
+    setStep('setup');
+  };
+
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background page-enter">
         <Header />
-        <div className="container py-16 text-center">
-          <div className="glass-card max-w-md mx-auto p-8">
-            <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h1 className="font-display text-2xl font-bold mb-4">Connect Your Wallet</h1>
+        <div className="container py-20 flex items-center justify-center">
+          <div className="glass-card max-w-md p-10 text-center">
+            <div className="relative inline-block mb-6">
+              <AlertCircle className="h-16 w-16 text-muted-foreground" />
+              <div className="absolute inset-0 blur-xl bg-primary/20" />
+            </div>
+            <h1 className="font-display text-2xl font-bold mb-3">Connect Your Wallet</h1>
             <p className="text-muted-foreground">
               You need to connect your wallet to start streaming on Base Haven.
             </p>
@@ -101,35 +113,75 @@ const GoLive = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background page-enter">
       <Header />
       
-      <div className="container py-12">
+      {/* Background effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-secondary/10 rounded-full blur-[120px]" />
+      </div>
+      
+      <div className="container relative py-12">
         <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm mb-4">
+          {/* Header */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm mb-6 animate-fade-in">
               <Radio className="h-4 w-4" />
-              Streaming Dashboard
+              <span className="font-medium">Creator Dashboard</span>
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             </div>
-            <h1 className="font-display text-3xl font-bold">Go Live</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
+              Go <span className="gradient-text neon-text">Live</span>
+            </h1>
+            <p className="text-lg text-muted-foreground animate-fade-in" style={{ animationDelay: '200ms' }}>
               Set up your stream and start broadcasting to Base Haven
             </p>
           </div>
 
-          <div className="glass-card p-8 space-y-6">
-            {!streamKey ? (
-              <>
-                {/* Stream Setup Form */}
-                <div className="space-y-4">
+          {/* Progress steps */}
+          <div className="flex items-center justify-center gap-4 mb-10 animate-fade-in" style={{ animationDelay: '300ms' }}>
+            <div className={`step-indicator ${step === 'setup' ? 'active' : step === 'creating' || step === 'ready' ? 'completed' : 'pending'}`}>
+              {step === 'creating' || step === 'ready' ? <Check className="h-5 w-5" /> : '1'}
+            </div>
+            <div className={`h-0.5 w-16 rounded ${step === 'creating' || step === 'ready' ? 'bg-gradient-to-r from-neon-green to-primary' : 'bg-muted'}`} />
+            <div className={`step-indicator ${step === 'creating' ? 'active' : step === 'ready' ? 'completed' : 'pending'}`}>
+              {step === 'ready' ? <Check className="h-5 w-5" /> : '2'}
+            </div>
+            <div className={`h-0.5 w-16 rounded ${step === 'ready' ? 'bg-gradient-to-r from-primary to-neon-green' : 'bg-muted'}`} />
+            <div className={`step-indicator ${step === 'ready' ? 'active' : 'pending'}`}>
+              3
+            </div>
+          </div>
+
+          {/* Main card */}
+          <div className="glass-card overflow-hidden animate-fade-in" style={{ animationDelay: '400ms' }}>
+            {step === 'setup' && (
+              <div className="p-8 space-y-6">
+                {/* Step header */}
+                <div className="flex items-center gap-3 pb-6 border-b border-border/30">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center">
+                    <Settings className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="font-display font-semibold text-lg">Stream Setup</h2>
+                    <p className="text-sm text-muted-foreground">Configure your stream details</p>
+                  </div>
+                </div>
+
+                {/* Form fields */}
+                <div className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Stream Title *</Label>
+                    <Label htmlFor="title" className="flex items-center gap-2">
+                      Stream Title
+                      <span className="text-destructive">*</span>
+                    </Label>
                     <Input
                       id="title"
                       value={title}
                       onChange={(e) => setTitle(e.target.value.slice(0, 200))}
                       placeholder="Enter your stream title..."
-                      className="bg-muted/50 border-border/50"
+                      className="bg-muted/30 border-border/50 h-12 text-base focus:border-primary/50"
                       maxLength={200}
                     />
                     {title.length > 150 && (
@@ -140,13 +192,16 @@ const GoLive = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="game">Game / Category</Label>
+                    <Label htmlFor="game" className="flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-secondary" />
+                      Game / Category
+                    </Label>
                     <Input
                       id="game"
                       value={game}
                       onChange={(e) => setGame(e.target.value)}
                       placeholder="What are you playing?"
-                      className="bg-muted/50 border-border/50"
+                      className="bg-muted/30 border-border/50 h-12 text-base focus:border-primary/50"
                     />
                   </div>
 
@@ -157,7 +212,7 @@ const GoLive = () => {
                       value={description}
                       onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
                       placeholder="Tell viewers about your stream..."
-                      className="bg-muted/50 border-border/50 min-h-24"
+                      className="bg-muted/30 border-border/50 min-h-28 text-base resize-none focus:border-primary/50"
                       maxLength={2000}
                     />
                     {description.length > 1800 && (
@@ -168,56 +223,68 @@ const GoLive = () => {
                   </div>
                 </div>
 
+                {/* CTA */}
                 <Button 
                   onClick={handleCreateStream}
-                  disabled={isCreating || !title.trim()}
+                  disabled={!title.trim()}
                   variant="neon"
-                  size="lg"
-                  className="w-full"
+                  size="xl"
+                  className="w-full gap-2 mt-4"
                 >
-                  {isCreating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Creating Stream...
-                    </>
-                  ) : (
-                    <>
-                      <Radio className="h-4 w-4" />
-                      Create Stream
-                    </>
-                  )}
+                  Create Stream
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
-              </>
-            ) : (
-              <>
-                {/* Stream Key Display */}
-                <div className="space-y-6">
-                  <div className="text-center pb-4 border-b border-border/50">
-                    <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center mx-auto mb-3">
-                      <Check className="h-6 w-6 text-primary" />
-                    </div>
-                    <h2 className="font-display text-xl font-bold">Stream Ready!</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Use these credentials in OBS or your streaming software
-                    </p>
-                  </div>
+              </div>
+            )}
 
-                  {/* RTMP URL */}
+            {step === 'creating' && (
+              <div className="p-16 text-center">
+                <div className="relative inline-block mb-6">
+                  <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                  <div className="absolute inset-0 blur-2xl bg-primary/30 animate-pulse" />
+                </div>
+                <h2 className="font-display text-2xl font-bold mb-3">Creating Your Stream</h2>
+                <p className="text-muted-foreground">Setting up your streaming credentials...</p>
+              </div>
+            )}
+
+            {step === 'ready' && (
+              <div className="p-8 space-y-6">
+                {/* Success header */}
+                <div className="text-center pb-6 border-b border-border/30">
+                  <div className="relative inline-block mb-4">
+                    <div className="w-16 h-16 rounded-full bg-neon-green/20 border border-neon-green/30 flex items-center justify-center">
+                      <Check className="h-8 w-8 text-neon-green" />
+                    </div>
+                    <div className="absolute inset-0 blur-xl bg-neon-green/30 animate-pulse" />
+                  </div>
+                  <h2 className="font-display text-2xl font-bold mb-2">Stream Ready!</h2>
+                  <p className="text-muted-foreground">
+                    Use these credentials in OBS or your streaming software
+                  </p>
+                </div>
+
+                {/* Credentials */}
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>RTMP Server URL</Label>
+                    <Label className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-primary" />
+                      RTMP Server URL
+                    </Label>
                     <div className="flex gap-2">
                       <Input
                         value={rtmpUrl}
                         readOnly
-                        className="bg-muted/30 font-mono text-sm"
+                        className="bg-muted/30 font-mono text-sm h-12"
                       />
                       <Button
-                        variant="outline"
+                        variant="glass"
                         size="icon"
+                        className="h-12 w-12 flex-shrink-0"
                         onClick={() => copyToClipboard(rtmpUrl, 'rtmp')}
                       >
                         {copiedRtmp ? (
-                          <Check className="h-4 w-4 text-primary" />
+                          <Check className="h-4 w-4 text-neon-green" />
                         ) : (
                           <Copy className="h-4 w-4" />
                         )}
@@ -225,75 +292,90 @@ const GoLive = () => {
                     </div>
                   </div>
 
-                  {/* Stream Key */}
                   <div className="space-y-2">
-                    <Label>Stream Key</Label>
+                    <Label className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-secondary" />
+                      Stream Key
+                    </Label>
                     <div className="flex gap-2">
                       <Input
                         value={streamKey}
                         readOnly
                         type="password"
-                        className="bg-muted/30 font-mono text-sm"
+                        className="bg-muted/30 font-mono text-sm h-12"
                       />
                       <Button
-                        variant="outline"
+                        variant="glass"
                         size="icon"
+                        className="h-12 w-12 flex-shrink-0"
                         onClick={() => copyToClipboard(streamKey, 'key')}
                       >
                         {copiedKey ? (
-                          <Check className="h-4 w-4 text-primary" />
+                          <Check className="h-4 w-4 text-neon-green" />
                         ) : (
                           <Copy className="h-4 w-4" />
                         )}
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
                       Keep this key secret! Anyone with this key can stream to your channel.
                     </p>
                   </div>
-
-                  {/* Instructions */}
-                  <div className="bg-muted/30 rounded-lg p-4 space-y-3">
-                    <h3 className="font-medium text-sm">Quick Setup Guide</h3>
-                    <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                      <li>Open OBS Studio or your preferred streaming software</li>
-                      <li>Go to Settings → Stream</li>
-                      <li>Select "Custom" as your service</li>
-                      <li>Paste the RTMP URL and Stream Key above</li>
-                      <li>Click "Start Streaming"</li>
-                    </ol>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => {
-                        setStreamKey('');
-                        setRtmpUrl('');
-                        setTitle('');
-                        setGame('');
-                        setDescription('');
-                      }}
-                    >
-                      Create New Stream
-                    </Button>
-                    <Button
-                      variant="neon"
-                      className="flex-1"
-                      onClick={() => toast.success('Your stream will appear on the home page when you go live!')}
-                    >
-                      I'm Live!
-                    </Button>
-                  </div>
                 </div>
-              </>
+
+                {/* Quick guide */}
+                <div className="bg-muted/20 rounded-xl p-5 border border-border/30">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <h3 className="font-display font-semibold">Quick Setup Guide</h3>
+                  </div>
+                  <ol className="space-y-3">
+                    {[
+                      'Open OBS Studio or your preferred streaming software',
+                      'Go to Settings → Stream',
+                      'Select "Custom" as your service',
+                      'Paste the RTMP URL and Stream Key above',
+                      'Click "Start Streaming"'
+                    ].map((step, i) => (
+                      <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-xs font-medium text-primary">
+                          {i + 1}
+                        </span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="glass"
+                    className="flex-1"
+                    onClick={resetForm}
+                  >
+                    Create New Stream
+                  </Button>
+                  <Button
+                    variant="neon"
+                    className="flex-1 gap-2"
+                    onClick={() => toast.success('Your stream will appear on the home page when you go live!')}
+                  >
+                    <Radio className="h-4 w-4" />
+                    I'm Live!
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Tips */}
-          <div className="mt-8 text-center text-sm text-muted-foreground">
-            <p>Streaming powered by Livepeer • Tips are sent directly to your wallet on Base</p>
+          {/* Footer tip */}
+          <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '500ms' }}>
+            <p className="text-sm text-muted-foreground">
+              Streaming powered by <span className="text-primary">Livepeer</span> • 
+              Tips are sent directly to your wallet on <span className="text-secondary">Base</span>
+            </p>
           </div>
         </div>
       </div>
