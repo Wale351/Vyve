@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAccount } from 'wagmi';
 import { Radio, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
 const GoLive = () => {
@@ -50,7 +49,10 @@ const GoLive = () => {
       });
 
       if (error) {
-        console.error('Stream creation error:', error);
+        // Log only in development
+        if (import.meta.env.DEV) {
+          console.error('Stream creation error:', error);
+        }
         toast.error('Failed to create stream. Please try again.');
         return;
       }
@@ -59,7 +61,10 @@ const GoLive = () => {
       setRtmpUrl(data.rtmp_url);
       toast.success('Stream created! Use the stream key in OBS or your streaming software.');
     } catch (error) {
-      console.error('Unexpected error:', error);
+      // Log only in development
+      if (import.meta.env.DEV) {
+        console.error('Unexpected error:', error);
+      }
       toast.error('Failed to create stream. Please try again.');
     } finally {
       setIsCreating(false);

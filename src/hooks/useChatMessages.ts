@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
+import { mapDatabaseError } from '@/lib/errorHandler';
 export interface ChatMessageWithSender {
   id: string;
   stream_id: string;
@@ -118,11 +118,9 @@ export const useSendMessage = () => {
       });
 
       if (error) {
-        // Handle rate limit error
-        if (error.message.includes('rate') || error.code === '42501') {
-          throw new Error('You are sending messages too quickly. Please wait a moment.');
-        }
-        throw error;
+        // Map database error to safe user-facing message
+        const appError = mapDatabaseError(error);
+        throw new Error(appError.userMessage);
       }
     },
   });
