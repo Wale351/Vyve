@@ -1,7 +1,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Radio, User, Gamepad2, Zap, LogIn, LogOut, Loader2 } from 'lucide-react';
+import { Radio, User, Play, LogIn, LogOut, Loader2 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 
@@ -11,16 +11,15 @@ const Header = () => {
   const { isAuthenticated, isAuthenticating, signInWithWallet, signOut } = useWalletAuth();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-8">
-          {/* Logo with glow effect */}
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="relative">
-              <div className="absolute inset-0 blur-lg bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <Gamepad2 className="relative h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+              <Play className="h-4 w-4 text-primary-foreground" fill="currentColor" />
             </div>
-            <span className="font-display text-xl font-bold gradient-text">
+            <span className="font-display text-xl font-bold">
               Base Haven
             </span>
           </Link>
@@ -29,11 +28,9 @@ const Header = () => {
           <nav className="hidden md:flex items-center gap-1">
             <Link to="/">
               <Button
-                variant={location.pathname === '/' ? 'glow' : 'ghost'}
+                variant={location.pathname === '/' ? 'soft' : 'ghost'}
                 size="sm"
-                className="gap-2"
               >
-                <Zap className="h-4 w-4" />
                 Browse
               </Button>
             </Link>
@@ -41,7 +38,7 @@ const Header = () => {
               <>
                 <Link to="/go-live">
                   <Button
-                    variant={location.pathname === '/go-live' ? 'glow' : 'ghost'}
+                    variant={location.pathname === '/go-live' ? 'soft' : 'ghost'}
                     size="sm"
                     className="gap-2"
                   >
@@ -51,7 +48,7 @@ const Header = () => {
                 </Link>
                 <Link to={`/profile/${address}`}>
                   <Button
-                    variant={location.pathname.startsWith('/profile') ? 'glow' : 'ghost'}
+                    variant={location.pathname.startsWith('/profile') ? 'soft' : 'ghost'}
                     size="sm"
                     className="gap-2"
                   >
@@ -64,12 +61,12 @@ const Header = () => {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Sign In / Sign Out button for connected wallets */}
           {isConnected && !isAuthenticated && (
             <Button 
               onClick={signInWithWallet} 
-              variant="glow" 
+              variant="soft" 
               size="sm"
               disabled={isAuthenticating}
               className="gap-2"
@@ -95,7 +92,7 @@ const Header = () => {
             </Button>
           )}
 
-          {/* Wallet Connect with custom styling */}
+          {/* Wallet Connect */}
           <ConnectButton.Custom>
             {({
               account,
@@ -122,8 +119,7 @@ const Header = () => {
                   {(() => {
                     if (!connected) {
                       return (
-                        <Button onClick={openConnectModal} variant="neon" className="gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
+                        <Button onClick={openConnectModal} variant="premium" className="gap-2">
                           Connect Wallet
                         </Button>
                       );
@@ -132,7 +128,6 @@ const Header = () => {
                     if (chain.unsupported) {
                       return (
                         <Button onClick={openChainModal} variant="destructive" className="gap-2">
-                          <div className="w-2 h-2 rounded-full bg-destructive-foreground animate-pulse" />
                           Wrong network
                         </Button>
                       );
@@ -143,7 +138,7 @@ const Header = () => {
                         {/* Chain selector */}
                         <Button
                           onClick={openChainModal}
-                          variant="glass"
+                          variant="subtle"
                           size="sm"
                           className="hidden sm:flex gap-2"
                         >
@@ -164,26 +159,20 @@ const Header = () => {
                           {chain.name}
                         </Button>
 
-                        {/* Account button with glow */}
+                        {/* Account button */}
                         <Button 
                           onClick={openAccountModal} 
-                          variant="glass"
-                          className="gap-2 group"
+                          variant="subtle"
+                          className="gap-2"
                         >
-                          {/* Glowing avatar indicator */}
-                          <div className="relative">
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[10px] font-bold text-primary-foreground">
-                              {account.displayName.charAt(0).toUpperCase()}
-                            </div>
-                            {isAuthenticated && (
-                              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-neon-green rounded-full border-2 border-background" />
-                            )}
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[10px] font-bold text-primary-foreground">
+                            {account.displayName.charAt(0).toUpperCase()}
                           </div>
                           
                           <span className="font-medium">{account.displayName}</span>
                           
                           {account.displayBalance && (
-                            <span className="hidden sm:inline text-muted-foreground text-xs bg-muted/50 px-2 py-0.5 rounded">
+                            <span className="hidden sm:inline text-muted-foreground text-xs">
                               {account.displayBalance}
                             </span>
                           )}

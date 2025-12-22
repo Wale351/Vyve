@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAccount } from 'wagmi';
-import { Radio, Copy, Check, Loader2, AlertCircle, Sparkles, Settings, Zap, ArrowRight, Shield, LogIn } from 'lucide-react';
+import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
@@ -141,10 +141,7 @@ const GoLive = () => {
         <Header />
         <div className="container py-20 flex items-center justify-center">
           <div className="glass-card max-w-md p-10 text-center">
-            <div className="relative inline-block mb-6">
-              <AlertCircle className="h-16 w-16 text-muted-foreground" />
-              <div className="absolute inset-0 blur-xl bg-primary/20" />
-            </div>
+            <AlertCircle className="h-14 w-14 text-muted-foreground mx-auto mb-6" />
             <h1 className="font-display text-2xl font-bold mb-3">Connect Your Wallet</h1>
             <p className="text-muted-foreground">
               You need to connect your wallet to start streaming on Base Haven.
@@ -161,17 +158,14 @@ const GoLive = () => {
         <Header />
         <div className="container py-20 flex items-center justify-center">
           <div className="glass-card max-w-md p-10 text-center">
-            <div className="relative inline-block mb-6">
-              <LogIn className="h-16 w-16 text-muted-foreground" />
-              <div className="absolute inset-0 blur-xl bg-primary/20" />
-            </div>
+            <LogIn className="h-14 w-14 text-muted-foreground mx-auto mb-6" />
             <h1 className="font-display text-2xl font-bold mb-3">Sign In Required</h1>
             <p className="text-muted-foreground mb-6">
               Sign in with your wallet to start streaming on Base Haven.
             </p>
             <Button 
               onClick={signInWithWallet} 
-              variant="neon" 
+              variant="premium" 
               size="lg"
               disabled={isAuthenticating}
               className="gap-2"
@@ -193,51 +187,40 @@ const GoLive = () => {
     <div className="min-h-screen bg-background page-enter">
       <Header />
       
-      {/* Background effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-secondary/10 rounded-full blur-[120px]" />
-      </div>
-      
-      <div className="container relative py-12">
+      <div className="container py-12">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm mb-6 animate-fade-in">
-              <Radio className="h-4 w-4" />
-              <span className="font-medium">Creator Dashboard</span>
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            </div>
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
-              Go <span className="gradient-text neon-text">Live</span>
+            <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">
+              Go Live
             </h1>
-            <p className="text-lg text-muted-foreground animate-fade-in" style={{ animationDelay: '200ms' }}>
-              Set up your stream and start broadcasting to Base Haven
+            <p className="text-muted-foreground">
+              Set up your stream and start broadcasting
             </p>
           </div>
 
           {/* Progress steps */}
-          <div className="flex items-center justify-center gap-4 mb-10 animate-fade-in" style={{ animationDelay: '300ms' }}>
-            <div className={`step-indicator ${step === 'setup' ? 'active' : step === 'creating' || step === 'ready' ? 'completed' : 'pending'}`}>
+          <div className="flex items-center justify-center gap-4 mb-10">
+            <div className={`step-dot ${step === 'setup' ? 'active' : step === 'creating' || step === 'ready' ? 'completed' : 'pending'}`}>
               {step === 'creating' || step === 'ready' ? <Check className="h-5 w-5" /> : '1'}
             </div>
-            <div className={`h-0.5 w-16 rounded ${step === 'creating' || step === 'ready' ? 'bg-gradient-to-r from-neon-green to-primary' : 'bg-muted'}`} />
-            <div className={`step-indicator ${step === 'creating' ? 'active' : step === 'ready' ? 'completed' : 'pending'}`}>
+            <div className={`h-px w-16 rounded ${step === 'creating' || step === 'ready' ? 'bg-success' : 'bg-muted'}`} />
+            <div className={`step-dot ${step === 'creating' ? 'active' : step === 'ready' ? 'completed' : 'pending'}`}>
               {step === 'ready' ? <Check className="h-5 w-5" /> : '2'}
             </div>
-            <div className={`h-0.5 w-16 rounded ${step === 'ready' ? 'bg-gradient-to-r from-primary to-neon-green' : 'bg-muted'}`} />
-            <div className={`step-indicator ${step === 'ready' ? 'active' : 'pending'}`}>
+            <div className={`h-px w-16 rounded ${step === 'ready' ? 'bg-success' : 'bg-muted'}`} />
+            <div className={`step-dot ${step === 'ready' ? 'active' : 'pending'}`}>
               3
             </div>
           </div>
 
           {/* Main card */}
-          <div className="glass-card overflow-hidden animate-fade-in" style={{ animationDelay: '400ms' }}>
+          <div className="glass-card overflow-hidden">
             {step === 'setup' && (
               <div className="p-8 space-y-6">
                 {/* Step header */}
                 <div className="flex items-center gap-3 pb-6 border-b border-border/30">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <Settings className="h-5 w-5 text-primary" />
                   </div>
                   <div>
@@ -258,7 +241,7 @@ const GoLive = () => {
                       value={title}
                       onChange={(e) => setTitle(e.target.value.slice(0, 200))}
                       placeholder="Enter your stream title..."
-                      className="bg-muted/30 border-border/50 h-12 text-base focus:border-primary/50"
+                      className="bg-muted/30 border-border/50 h-12"
                       maxLength={200}
                     />
                     {title.length > 150 && (
@@ -269,8 +252,7 @@ const GoLive = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="game" className="flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-secondary" />
+                    <Label htmlFor="game">
                       Game / Category
                     </Label>
                     <Input
@@ -278,7 +260,7 @@ const GoLive = () => {
                       value={game}
                       onChange={(e) => setGame(e.target.value)}
                       placeholder="What are you playing?"
-                      className="bg-muted/30 border-border/50 h-12 text-base focus:border-primary/50"
+                      className="bg-muted/30 border-border/50 h-12"
                     />
                   </div>
 
@@ -289,7 +271,7 @@ const GoLive = () => {
                       value={description}
                       onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
                       placeholder="Tell viewers about your stream..."
-                      className="bg-muted/30 border-border/50 min-h-28 text-base resize-none focus:border-primary/50"
+                      className="bg-muted/30 border-border/50 min-h-28 resize-none"
                       maxLength={2000}
                     />
                     {description.length > 1800 && (
@@ -304,7 +286,7 @@ const GoLive = () => {
                 <Button 
                   onClick={handleCreateStream}
                   disabled={!title.trim()}
-                  variant="neon"
+                  variant="premium"
                   size="xl"
                   className="w-full gap-2 mt-4"
                 >
@@ -316,10 +298,7 @@ const GoLive = () => {
 
             {step === 'creating' && (
               <div className="p-16 text-center">
-                <div className="relative inline-block mb-6">
-                  <Loader2 className="h-16 w-16 animate-spin text-primary" />
-                  <div className="absolute inset-0 blur-2xl bg-primary/30 animate-pulse" />
-                </div>
+                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-6" />
                 <h2 className="font-display text-2xl font-bold mb-3">Creating Your Stream</h2>
                 <p className="text-muted-foreground">Setting up your streaming credentials...</p>
               </div>
@@ -329,11 +308,8 @@ const GoLive = () => {
               <div className="p-8 space-y-6">
                 {/* Success header */}
                 <div className="text-center pb-6 border-b border-border/30">
-                  <div className="relative inline-block mb-4">
-                    <div className="w-16 h-16 rounded-full bg-neon-green/20 border border-neon-green/30 flex items-center justify-center">
-                      <Check className="h-8 w-8 text-neon-green" />
-                    </div>
-                    <div className="absolute inset-0 blur-xl bg-neon-green/30 animate-pulse" />
+                  <div className="w-14 h-14 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-4">
+                    <Check className="h-7 w-7 text-success" />
                   </div>
                   <h2 className="font-display text-2xl font-bold mb-2">Stream Ready!</h2>
                   <p className="text-muted-foreground">
@@ -355,13 +331,13 @@ const GoLive = () => {
                         className="bg-muted/30 font-mono text-sm h-12"
                       />
                       <Button
-                        variant="glass"
+                        variant="subtle"
                         size="icon"
                         className="h-12 w-12 flex-shrink-0"
                         onClick={() => copyToClipboard(streamData?.rtmp_url || '', 'rtmp')}
                       >
                         {copiedRtmp ? (
-                          <Check className="h-4 w-4 text-neon-green" />
+                          <Check className="h-4 w-4 text-success" />
                         ) : (
                           <Copy className="h-4 w-4" />
                         )}
@@ -382,13 +358,13 @@ const GoLive = () => {
                         className="bg-muted/30 font-mono text-sm h-12"
                       />
                       <Button
-                        variant="glass"
+                        variant="subtle"
                         size="icon"
                         className="h-12 w-12 flex-shrink-0"
                         onClick={() => copyToClipboard(streamData?.stream_key || '', 'key')}
                       >
                         {copiedKey ? (
-                          <Check className="h-4 w-4 text-neon-green" />
+                          <Check className="h-4 w-4 text-success" />
                         ) : (
                           <Copy className="h-4 w-4" />
                         )}
@@ -403,10 +379,7 @@ const GoLive = () => {
 
                 {/* Quick guide */}
                 <div className="bg-muted/20 rounded-xl p-5 border border-border/30">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    <h3 className="font-display font-semibold">Quick Setup Guide</h3>
-                  </div>
+                  <h3 className="font-display font-semibold mb-4">Quick Setup Guide</h3>
                   <ol className="space-y-3">
                     {[
                       'Open OBS Studio or your preferred streaming software',
@@ -414,12 +387,12 @@ const GoLive = () => {
                       'Select "Custom" as your service',
                       'Paste the RTMP URL and Stream Key above',
                       'Click "Start Streaming"'
-                    ].map((step, i) => (
+                    ].map((stepText, i) => (
                       <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
-                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-xs font-medium text-primary">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
                           {i + 1}
                         </span>
-                        {step}
+                        {stepText}
                       </li>
                     ))}
                   </ol>
@@ -428,14 +401,14 @@ const GoLive = () => {
                 {/* Actions */}
                 <div className="flex gap-3 pt-2">
                   <Button
-                    variant="glass"
+                    variant="subtle"
                     className="flex-1"
                     onClick={resetForm}
                   >
                     Create New Stream
                   </Button>
                   <Button
-                    variant="neon"
+                    variant="premium"
                     className="flex-1 gap-2"
                     onClick={handleGoLive}
                     disabled={isGoingLive}
@@ -450,14 +423,6 @@ const GoLive = () => {
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Footer tip */}
-          <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '500ms' }}>
-            <p className="text-sm text-muted-foreground">
-              Streaming powered by <span className="text-primary">Livepeer</span> • 
-              Tips are sent directly to your wallet on <span className="text-secondary">Base</span>
-            </p>
           </div>
         </div>
       </div>
