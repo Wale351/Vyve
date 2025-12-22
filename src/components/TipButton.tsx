@@ -58,7 +58,7 @@ const TipButton = ({ streamerAddress, streamerName }: TipButtonProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="neon" className="gap-2" disabled={!isConnected}>
+        <Button variant="premium" className="gap-2" disabled={!isConnected}>
           <Coins className="h-4 w-4" />
           Tip
         </Button>
@@ -77,7 +77,7 @@ const TipButton = ({ streamerAddress, streamerName }: TipButtonProps) => {
             {presetAmounts.map((preset) => (
               <Button
                 key={preset}
-                variant={amount === preset ? 'glow' : 'outline'}
+                variant={amount === preset ? 'soft' : 'outline'}
                 size="sm"
                 onClick={() => setAmount(preset)}
                 className="flex-1"
@@ -105,7 +105,7 @@ const TipButton = ({ streamerAddress, streamerName }: TipButtonProps) => {
           <Button
             onClick={handleTip}
             disabled={isPending || isConfirming || !amount}
-            variant="neon"
+            variant="premium"
             className="w-full"
             size="lg"
           >

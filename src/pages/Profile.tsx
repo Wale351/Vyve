@@ -54,21 +54,19 @@ const Profile = () => {
   const avatarUrl = profile?.avatar_url || 'https://images.unsplash.com/photo-1566577134770-3d85bb3a9cc4?w=400&q=80';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background page-enter">
       <Header />
       
       {/* Profile Header */}
       <section className="relative overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-secondary/5 to-transparent" />
-        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-primary/10 rounded-full blur-[100px]" />
-        <div className="absolute top-0 right-1/4 w-[400px] h-[300px] bg-secondary/10 rounded-full blur-[100px]" />
+        {/* Subtle background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
         
         <div className="container relative py-12">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/30 shadow-[0_0_30px_hsl(var(--primary)/0.3)]">
+              <div className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-border/50 shadow-xl">
                 <img 
                   src={avatarUrl} 
                   alt={displayName}
@@ -76,7 +74,7 @@ const Profile = () => {
                 />
               </div>
               {profile?.is_streamer && (
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full shadow-md">
                   Streamer
                 </div>
               )}
@@ -94,14 +92,14 @@ const Profile = () => {
                   {formatAddress(profileAddress || '')}
                 </span>
                 {copied ? (
-                  <Check className="h-4 w-4 text-primary" />
+                  <Check className="h-4 w-4 text-success" />
                 ) : (
                   <Copy className="h-4 w-4" />
                 )}
               </button>
 
               {profile?.bio && (
-                <p className="mt-4 text-muted-foreground max-w-xl">
+                <p className="mt-4 text-muted-foreground max-w-xl leading-relaxed">
                   {profile.bio}
                 </p>
               )}
@@ -109,22 +107,22 @@ const Profile = () => {
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 mt-6">
                 <div className="text-center">
-                  <div className="flex items-center gap-2 text-xl font-display font-bold text-primary">
-                    <Users className="h-5 w-5" />
+                  <div className="flex items-center gap-2 text-xl font-display font-bold">
+                    <Users className="h-5 w-5 text-muted-foreground" />
                     0
                   </div>
                   <p className="text-xs text-muted-foreground">Followers</p>
                 </div>
                 <div className="text-center">
-                  <div className="flex items-center gap-2 text-xl font-display font-bold text-secondary">
-                    <Coins className="h-5 w-5" />
+                  <div className="flex items-center gap-2 text-xl font-display font-bold">
+                    <Coins className="h-5 w-5 text-primary" />
                     {totalTips.toFixed(4)} ETH
                   </div>
                   <p className="text-xs text-muted-foreground">Tips Received</p>
                 </div>
                 <div className="text-center">
-                  <div className="flex items-center gap-2 text-xl font-display font-bold text-accent">
-                    <Radio className="h-5 w-5" />
+                  <div className="flex items-center gap-2 text-xl font-display font-bold">
+                    <Radio className="h-5 w-5 text-secondary" />
                     {streams.length}
                   </div>
                   <p className="text-xs text-muted-foreground">Streams</p>
@@ -135,14 +133,14 @@ const Profile = () => {
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-6">
                 {isOwnProfile ? (
                   <Link to="/go-live">
-                    <Button variant="neon" className="gap-2">
+                    <Button variant="premium" className="gap-2">
                       <Radio className="h-4 w-4" />
                       Go Live
                     </Button>
                   </Link>
                 ) : (
                   <>
-                    <Button variant="neon">Follow</Button>
+                    <Button variant="premium">Follow</Button>
                     <Button variant="outline" className="gap-2">
                       <ExternalLink className="h-4 w-4" />
                       View on Base
@@ -172,7 +170,7 @@ const Profile = () => {
               <div 
                 key={stream.id}
                 className="animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
+                style={{ animationDelay: `${index * 80}ms` }}
               >
                 <StreamCard stream={stream} />
               </div>
@@ -190,7 +188,7 @@ const Profile = () => {
             </p>
             {isOwnProfile && (
               <Link to="/go-live" className="inline-block mt-4">
-                <Button variant="glow">Start Streaming</Button>
+                <Button variant="premium">Start Streaming</Button>
               </Link>
             )}
           </div>
