@@ -11,16 +11,23 @@ import { supabase } from '@/integrations/supabase/client';
 
 type Step = 'setup' | 'creating' | 'ready';
 
+interface StreamData {
+  id: string;
+  stream_key: string;
+  rtmp_url: string;
+  playback_url: string;
+}
+
 const GoLive = () => {
   const { isConnected } = useAccount();
   const [title, setTitle] = useState('');
   const [game, setGame] = useState('');
   const [description, setDescription] = useState('');
   const [step, setStep] = useState<Step>('setup');
-  const [streamKey, setStreamKey] = useState('');
-  const [rtmpUrl, setRtmpUrl] = useState('');
+  const [streamData, setStreamData] = useState<StreamData | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedRtmp, setCopiedRtmp] = useState(false);
+  const [isGoingLive, setIsGoingLive] = useState(false);
 
   const handleCreateStream = async () => {
     if (!title.trim()) {
@@ -58,8 +65,12 @@ const GoLive = () => {
         return;
       }
 
-      setStreamKey(data.stream_key);
-      setRtmpUrl(data.rtmp_url);
+      setStreamData({
+        id: data.id,
+        stream_key: data.stream_key,
+        rtmp_url: data.rtmp_url,
+        playback_url: data.playback_url,
+      });
       setStep('ready');
       toast.success('Stream created successfully!');
     } catch (error) {
@@ -68,6 +79,37 @@ const GoLive = () => {
       }
       toast.error('Failed to create stream. Please try again.');
       setStep('setup');
+    }
+  };
+
+  const handleGoLive = async () => {
+    if (!streamData) return;
+    
+    setIsGoingLive(true);
+    try {
+      const { error } = await supabase.functions.invoke('update-stream-status', {
+        body: {
+          stream_id: streamData.id,
+          is_live: true,
+        },
+      });
+
+      if (error) {
+        if (import.meta.env.DEV) {
+          console.error('Go live error:', error);
+        }
+        toast.error('Failed to go live. Please try again.');
+        return;
+      }
+
+      toast.success('You are now live! Your stream will appear on the home page.');
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Unexpected error:', error);
+      }
+      toast.error('Failed to go live. Please try again.');
+    } finally {
+      setIsGoingLive(false);
     }
   };
 
@@ -84,8 +126,7 @@ const GoLive = () => {
   };
 
   const resetForm = () => {
-    setStreamKey('');
-    setRtmpUrl('');
+    setStreamData(null);
     setTitle('');
     setGame('');
     setDescription('');
@@ -273,7 +314,7 @@ const GoLive = () => {
                     </Label>
                     <div className="flex gap-2">
                       <Input
-                        value={rtmpUrl}
+                        value={streamData?.rtmp_url || ''}
                         readOnly
                         className="bg-muted/30 font-mono text-sm h-12"
                       />
@@ -281,7 +322,7 @@ const GoLive = () => {
                         variant="glass"
                         size="icon"
                         className="h-12 w-12 flex-shrink-0"
-                        onClick={() => copyToClipboard(rtmpUrl, 'rtmp')}
+                        onClick={() => copyToClipboard(streamData?.rtmp_url || '', 'rtmp')}
                       >
                         {copiedRtmp ? (
                           <Check className="h-4 w-4 text-neon-green" />
@@ -299,7 +340,7 @@ const GoLive = () => {
                     </Label>
                     <div className="flex gap-2">
                       <Input
-                        value={streamKey}
+                        value={streamData?.stream_key || ''}
                         readOnly
                         type="password"
                         className="bg-muted/30 font-mono text-sm h-12"
@@ -308,7 +349,7 @@ const GoLive = () => {
                         variant="glass"
                         size="icon"
                         className="h-12 w-12 flex-shrink-0"
-                        onClick={() => copyToClipboard(streamKey, 'key')}
+                        onClick={() => copyToClipboard(streamData?.stream_key || '', 'key')}
                       >
                         {copiedKey ? (
                           <Check className="h-4 w-4 text-neon-green" />
@@ -360,10 +401,15 @@ const GoLive = () => {
                   <Button
                     variant="neon"
                     className="flex-1 gap-2"
-                    onClick={() => toast.success('Your stream will appear on the home page when you go live!')}
+                    onClick={handleGoLive}
+                    disabled={isGoingLive}
                   >
-                    <Radio className="h-4 w-4" />
-                    I'm Live!
+                    {isGoingLive ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Radio className="h-4 w-4" />
+                    )}
+                    {isGoingLive ? 'Going Live...' : "I'm Live!"}
                   </Button>
                 </div>
               </div>

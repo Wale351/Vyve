@@ -27,6 +27,15 @@ serve(async (req) => {
     // Create Supabase client with user's auth context
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const livepeerApiKey = Deno.env.get("LIVEPEER_API_KEY");
+    
+    if (!livepeerApiKey) {
+      console.error("LIVEPEER_API_KEY not configured");
+      return new Response(
+        JSON.stringify({ error: "Streaming service not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -69,8 +78,38 @@ serve(async (req) => {
       );
     }
 
-    // Generate cryptographically secure stream key
-    const streamKey = `live_${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, "");
+    // Create stream on Livepeer
+    console.log("Creating Livepeer stream...");
+    const livepeerResponse = await fetch("https://livepeer.studio/api/stream", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${livepeerApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: title.trim(),
+        profiles: [
+          { name: "720p", bitrate: 2000000, fps: 30, width: 1280, height: 720 },
+          { name: "480p", bitrate: 1000000, fps: 30, width: 854, height: 480 },
+          { name: "360p", bitrate: 500000, fps: 30, width: 640, height: 360 },
+        ],
+      }),
+    });
+
+    if (!livepeerResponse.ok) {
+      const errorText = await livepeerResponse.text();
+      console.error("Livepeer API error:", livepeerResponse.status, errorText);
+      return new Response(
+        JSON.stringify({ error: "Failed to create stream with Livepeer" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const livepeerStream = await livepeerResponse.json();
+    console.log("Livepeer stream created:", livepeerStream.id);
+
+    // Construct the playback URL
+    const playbackUrl = `https://livepeercdn.studio/hls/${livepeerStream.playbackId}/index.m3u8`;
 
     // Create stream in database
     const { data: stream, error: insertError } = await supabase
@@ -80,7 +119,8 @@ serve(async (req) => {
         title: title.trim(),
         description: description?.trim() || null,
         game_category: game_category?.trim() || null,
-        stream_key: streamKey,
+        stream_key: livepeerStream.streamKey,
+        playback_url: playbackUrl,
         is_live: false,
         viewer_count: 0,
       })
@@ -104,8 +144,10 @@ serve(async (req) => {
         title: stream.title,
         description: stream.description,
         game_category: stream.game_category,
-        stream_key: streamKey,
+        stream_key: livepeerStream.streamKey,
         rtmp_url: "rtmp://rtmp.livepeer.studio/live",
+        playback_url: playbackUrl,
+        playback_id: livepeerStream.playbackId,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

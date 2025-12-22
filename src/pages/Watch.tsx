@@ -130,7 +130,7 @@ const Watch = () => {
             {/* Video Player with tip flash effect */}
             <div className={`relative rounded-xl overflow-hidden transition-all duration-300 ${showTipFlash ? 'animate-tip-flash' : ''}`}>
               <VideoPlayer 
-                playbackId={stream.playback_url || undefined}
+                playbackUrl={stream.playback_url || undefined}
                 title={stream.title}
                 isLive={stream.is_live || false}
               />
