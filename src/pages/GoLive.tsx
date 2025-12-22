@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAccount } from 'wagmi';
-import { Radio, Copy, Check, Loader2, AlertCircle, Sparkles, Settings, Zap, ArrowRight, Shield } from 'lucide-react';
+import { Radio, Copy, Check, Loader2, AlertCircle, Sparkles, Settings, Zap, ArrowRight, Shield, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 
 type Step = 'setup' | 'creating' | 'ready';
 
@@ -20,6 +21,7 @@ interface StreamData {
 
 const GoLive = () => {
   const { isConnected } = useAccount();
+  const { isAuthenticated, isAuthenticating, signInWithWallet } = useWalletAuth();
   const [title, setTitle] = useState('');
   const [game, setGame] = useState('');
   const [description, setDescription] = useState('');
@@ -147,6 +149,40 @@ const GoLive = () => {
             <p className="text-muted-foreground">
               You need to connect your wallet to start streaming on Base Haven.
             </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background page-enter">
+        <Header />
+        <div className="container py-20 flex items-center justify-center">
+          <div className="glass-card max-w-md p-10 text-center">
+            <div className="relative inline-block mb-6">
+              <LogIn className="h-16 w-16 text-muted-foreground" />
+              <div className="absolute inset-0 blur-xl bg-primary/20" />
+            </div>
+            <h1 className="font-display text-2xl font-bold mb-3">Sign In Required</h1>
+            <p className="text-muted-foreground mb-6">
+              Sign in with your wallet to start streaming on Base Haven.
+            </p>
+            <Button 
+              onClick={signInWithWallet} 
+              variant="neon" 
+              size="lg"
+              disabled={isAuthenticating}
+              className="gap-2"
+            >
+              {isAuthenticating ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <LogIn className="h-5 w-5" />
+              )}
+              {isAuthenticating ? 'Signing In...' : 'Sign In with Wallet'}
+            </Button>
           </div>
         </div>
       </div>
