@@ -45,6 +45,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "chat_messages_stream_id_fkey"
             columns: ["stream_id"]
             isOneToOne: false
@@ -92,7 +99,6 @@ export type Database = {
           is_live: boolean | null
           playback_url: string | null
           started_at: string | null
-          stream_key: string | null
           streamer_id: string
           title: string
           viewer_count: number | null
@@ -105,7 +111,6 @@ export type Database = {
           is_live?: boolean | null
           playback_url?: string | null
           started_at?: string | null
-          stream_key?: string | null
           streamer_id: string
           title: string
           viewer_count?: number | null
@@ -118,7 +123,6 @@ export type Database = {
           is_live?: boolean | null
           playback_url?: string | null
           started_at?: string | null
-          stream_key?: string | null
           streamer_id?: string
           title?: string
           viewer_count?: number | null
@@ -129,6 +133,13 @@ export type Database = {
             columns: ["streamer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "streams_streamer_id_fkey"
+            columns: ["streamer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -170,10 +181,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tips_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tips_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tips_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -208,7 +233,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          id: string | null
+          is_streamer: boolean | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_streamer?: boolean | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_streamer?: boolean | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_rate_limit: {
@@ -220,6 +271,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_my_stream_key: { Args: { p_stream_id: string }; Returns: string }
+      is_own_profile: { Args: { profile_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

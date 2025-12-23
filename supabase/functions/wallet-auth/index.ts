@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifyMessage } from "https://esm.sh/viem@2.21.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,37 +8,37 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Simple signature verification for Ethereum addresses
+// Cryptographically verify Ethereum signature using viem
 async function verifySignature(
   message: string,
   signature: string,
   address: string
 ): Promise<boolean> {
   try {
-    // Use ethers-style recovery
-    const msgHash = await crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(`\x19Ethereum Signed Message:\n${message.length}${message}`)
-    );
-    
-    // For production, use a proper library like ethers or viem
-    // This is a simplified check - the signature format validation
-    // In production, implement full ECDSA recovery
-    
-    // Basic validation: signature should be 132 chars (0x + 130 hex chars)
+    // Basic format validation
     if (!signature || signature.length !== 132 || !signature.startsWith("0x")) {
       console.error("Invalid signature format");
       return false;
     }
     
-    // Address should be valid format
     if (!address || address.length !== 42 || !address.startsWith("0x")) {
       console.error("Invalid address format");
       return false;
     }
-    
-    // For this implementation, we trust the frontend signature verification
-    // In production, use a proper crypto library to verify on-chain
+
+    // Cryptographically verify the signature and recover the address
+    const isValid = await verifyMessage({
+      message,
+      signature: signature as `0x${string}`,
+      address: address as `0x${string}`,
+    });
+
+    if (!isValid) {
+      console.error("Signature verification failed - address mismatch");
+      return false;
+    }
+
+    console.log("Signature verified successfully");
     return true;
   } catch (error) {
     console.error("Signature verification error:", error);
@@ -71,7 +72,7 @@ serve(async (req) => {
     // Normalize address to lowercase
     const normalizedAddress = wallet_address.toLowerCase();
 
-    // Verify the message contains the expected nonce pattern
+    // Verify the message contains the expected format and is recent
     if (!message.includes("Sign in to Base Haven")) {
       console.error("Invalid message format");
       return new Response(
@@ -80,7 +81,23 @@ serve(async (req) => {
       );
     }
 
-    // Verify signature
+    // Extract and validate timestamp from message to prevent replay attacks
+    const timestampMatch = message.match(/Timestamp: (\d+)/);
+    if (timestampMatch) {
+      const messageTimestamp = parseInt(timestampMatch[1], 10);
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      if (now - messageTimestamp > fiveMinutes) {
+        console.error("Message expired - timestamp too old");
+        return new Response(
+          JSON.stringify({ error: "Signature expired, please try again" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Cryptographically verify signature
     const isValid = await verifySignature(message, signature, normalizedAddress);
     if (!isValid) {
       return new Response(

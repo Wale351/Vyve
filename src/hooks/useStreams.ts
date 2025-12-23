@@ -9,15 +9,14 @@ export interface StreamWithProfile {
   is_live: boolean | null;
   viewer_count: number | null;
   playback_url: string | null;
-  stream_key: string | null;
   started_at: string | null;
   ended_at: string | null;
   streamer_id: string;
   profiles: {
     id: string;
     username: string | null;
-    wallet_address: string;
     avatar_url: string | null;
+    bio?: string | null;
   } | null;
 }
 
@@ -28,11 +27,19 @@ export const useLiveStreams = () => {
       const { data, error } = await supabase
         .from('streams')
         .select(`
-          *,
+          id,
+          title,
+          description,
+          game_category,
+          is_live,
+          viewer_count,
+          playback_url,
+          started_at,
+          ended_at,
+          streamer_id,
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            wallet_address,
             avatar_url
           )
         `)
@@ -54,11 +61,19 @@ export const useStream = (streamId: string | undefined) => {
       const { data, error } = await supabase
         .from('streams')
         .select(`
-          *,
+          id,
+          title,
+          description,
+          game_category,
+          is_live,
+          viewer_count,
+          playback_url,
+          started_at,
+          ended_at,
+          streamer_id,
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            wallet_address,
             avatar_url,
             bio
           )
@@ -82,11 +97,19 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
       const { data, error } = await supabase
         .from('streams')
         .select(`
-          *,
+          id,
+          title,
+          description,
+          game_category,
+          is_live,
+          viewer_count,
+          playback_url,
+          started_at,
+          ended_at,
+          streamer_id,
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            wallet_address,
             avatar_url
           )
         `)
