@@ -148,28 +148,34 @@ export type Database = {
         Row: {
           amount_eth: number
           created_at: string
+          from_wallet: string | null
           id: string
           receiver_id: string
           sender_id: string
           stream_id: string
+          to_wallet: string | null
           tx_hash: string
         }
         Insert: {
           amount_eth: number
           created_at?: string
+          from_wallet?: string | null
           id?: string
           receiver_id: string
           sender_id: string
           stream_id: string
+          to_wallet?: string | null
           tx_hash: string
         }
         Update: {
           amount_eth?: number
           created_at?: string
+          from_wallet?: string | null
           id?: string
           receiver_id?: string
           sender_id?: string
           stream_id?: string
+          to_wallet?: string | null
           tx_hash?: string
         }
         Relationships: [
