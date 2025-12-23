@@ -131,6 +131,7 @@ const Watch = () => {
                   <TipButton 
                     streamerId={streamerId}
                     streamerName={streamerName}
+                    streamId={stream.id}
                   />
                   
                   <Button 
