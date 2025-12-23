@@ -24,9 +24,10 @@ serve(async (req) => {
       );
     }
 
-    // Create Supabase client with user's auth context
+    // Create Supabase clients
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const livepeerApiKey = Deno.env.get("LIVEPEER_API_KEY");
     
     if (!livepeerApiKey) {
@@ -37,9 +38,13 @@ serve(async (req) => {
       );
     }
     
+    // Client with user's auth context
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
+    
+    // Service role client for private schema access
+    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -111,7 +116,7 @@ serve(async (req) => {
     // Construct the playback URL
     const playbackUrl = `https://livepeercdn.studio/hls/${livepeerStream.playbackId}/index.m3u8`;
 
-    // Create stream in database
+    // Create stream in database (without stream_key - it's stored privately)
     const { data: stream, error: insertError } = await supabase
       .from("streams")
       .insert({
@@ -119,7 +124,6 @@ serve(async (req) => {
         title: title.trim(),
         description: description?.trim() || null,
         game_category: game_category?.trim() || null,
-        stream_key: livepeerStream.streamKey,
         playback_url: playbackUrl,
         is_live: false,
         viewer_count: 0,
@@ -135,9 +139,27 @@ serve(async (req) => {
       );
     }
 
+    // Store stream key in private schema using service role
+    const { error: secretError } = await serviceSupabase
+      .from("stream_secrets")
+      .insert({
+        stream_id: stream.id,
+        stream_key: livepeerStream.streamKey,
+      });
+
+    if (secretError) {
+      console.error("Error storing stream key:", secretError);
+      // Clean up the stream if we can't store the key
+      await supabase.from("streams").delete().eq("id", stream.id);
+      return new Response(
+        JSON.stringify({ error: "Failed to configure stream" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     console.log(`Stream created successfully: ${stream.id}`);
 
-    // Return stream info (including stream key only to the owner)
+    // Return stream info including stream key (only returned once to the owner)
     return new Response(
       JSON.stringify({
         id: stream.id,

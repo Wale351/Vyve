@@ -2,10 +2,9 @@ import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import StreamCard from '@/components/StreamCard';
 import { Button } from '@/components/ui/button';
-import { useProfile, useProfileTipsReceived } from '@/hooks/useProfile';
+import { useProfile, useProfileTipsReceived, useOwnProfile } from '@/hooks/useProfile';
 import { useStreamerStreams } from '@/hooks/useStreams';
-import { formatAddress } from '@/lib/mockData';
-import { useAccount } from 'wagmi';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { 
   Users, 
   Coins, 
@@ -20,19 +19,25 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 const Profile = () => {
-  const { address: profileAddress } = useParams();
-  const { address: connectedAddress, isConnected } = useAccount();
+  const { profileId } = useParams();
+  const { user } = useWalletAuth();
   const [copied, setCopied] = useState(false);
 
-  const { data: profile, isLoading: profileLoading } = useProfile(profileAddress);
+  // Check if viewing own profile
+  const isOwnProfile = user?.id === profileId;
+
+  // Fetch public profile data
+  const { data: profile, isLoading: profileLoading } = useProfile(profileId);
+  
+  // Fetch own profile with wallet address if viewing own profile
+  const { data: ownProfile } = useOwnProfile(isOwnProfile ? profileId : undefined);
+  
   const { data: totalTips = 0 } = useProfileTipsReceived(profile?.id);
   const { data: streams = [], isLoading: streamsLoading } = useStreamerStreams(profile?.id);
-  
-  const isOwnProfile = isConnected && connectedAddress?.toLowerCase() === profileAddress?.toLowerCase();
 
   const copyAddress = async () => {
-    if (profileAddress) {
-      await navigator.clipboard.writeText(profileAddress);
+    if (ownProfile?.wallet_address) {
+      await navigator.clipboard.writeText(ownProfile.wallet_address);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success('Address copied!');
@@ -50,150 +55,170 @@ const Profile = () => {
     );
   }
 
-  const displayName = profile?.username || formatAddress(profileAddress || '');
-  const avatarUrl = profile?.avatar_url || 'https://images.unsplash.com/photo-1566577134770-3d85bb3a9cc4?w=400&q=80';
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-16 text-center">
+          <div className="glass-card p-12 max-w-md mx-auto">
+            <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h1 className="text-2xl font-display font-bold mb-2">Profile Not Found</h1>
+            <p className="text-muted-foreground mb-6">
+              This profile doesn't exist or has been removed.
+            </p>
+            <Link to="/">
+              <Button variant="premium">
+                Back to Home
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const displayName = profile.username || 'Anonymous';
+  const liveStreams = streams.filter(s => s.is_live);
+  const pastStreams = streams.filter(s => !s.is_live);
+  const joinDate = new Date(profile.created_at).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long'
+  });
 
   return (
     <div className="min-h-screen bg-background page-enter">
       <Header />
       
-      {/* Profile Header */}
-      <section className="relative overflow-hidden">
-        {/* Subtle background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        
-        <div className="container relative py-12">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+      <div className="container py-8">
+        {/* Profile Header */}
+        <div className="glass-card p-8 mb-8">
+          <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Avatar */}
-            <div className="relative">
-              <div className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-border/50 shadow-xl">
-                <img 
-                  src={avatarUrl} 
-                  alt={displayName}
-                  className="w-full h-full object-cover"
-                />
+            <div className="flex-shrink-0">
+              <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-secondary flex items-center justify-center text-primary-foreground font-bold text-4xl shadow-xl">
+                {displayName.charAt(0).toUpperCase()}
               </div>
-              {profile?.is_streamer && (
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full shadow-md">
-                  Streamer
-                </div>
-              )}
             </div>
 
             {/* Info */}
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="font-display text-3xl font-bold">{displayName}</h1>
-              
-              <button
-                onClick={copyAddress}
-                className="inline-flex items-center gap-2 mt-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <span className="font-mono text-sm">
-                  {formatAddress(profileAddress || '')}
-                </span>
-                {copied ? (
-                  <Check className="h-4 w-4 text-success" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </button>
+            <div className="flex-1">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-display font-bold mb-2">{displayName}</h1>
+                  
+                  {/* Only show wallet address to profile owner */}
+                  {isOwnProfile && ownProfile?.wallet_address && (
+                    <button
+                      onClick={copyAddress}
+                      className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-mono text-sm mb-4"
+                    >
+                      <span>{ownProfile.wallet_address.slice(0, 6)}...{ownProfile.wallet_address.slice(-4)}</span>
+                      {copied ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </button>
+                  )}
 
-              {profile?.bio && (
-                <p className="mt-4 text-muted-foreground max-w-xl leading-relaxed">
-                  {profile.bio}
-                </p>
-              )}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>Joined {joinDate}</span>
+                  </div>
+                </div>
 
-              {/* Stats */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 mt-6">
-                <div className="text-center">
-                  <div className="flex items-center gap-2 text-xl font-display font-bold">
-                    <Users className="h-5 w-5 text-muted-foreground" />
-                    0
-                  </div>
-                  <p className="text-xs text-muted-foreground">Followers</p>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center gap-2 text-xl font-display font-bold">
-                    <Coins className="h-5 w-5 text-primary" />
-                    {totalTips.toFixed(4)} ETH
-                  </div>
-                  <p className="text-xs text-muted-foreground">Tips Received</p>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center gap-2 text-xl font-display font-bold">
-                    <Radio className="h-5 w-5 text-secondary" />
-                    {streams.length}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Streams</p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-6">
-                {isOwnProfile ? (
+                {isOwnProfile && (
                   <Link to="/go-live">
                     <Button variant="premium" className="gap-2">
                       <Radio className="h-4 w-4" />
                       Go Live
                     </Button>
                   </Link>
-                ) : (
-                  <>
-                    <Button variant="premium">Follow</Button>
-                    <Button variant="outline" className="gap-2">
-                      <ExternalLink className="h-4 w-4" />
-                      View on Base
-                    </Button>
-                  </>
                 )}
+              </div>
+
+              {profile.bio && (
+                <p className="mt-4 text-muted-foreground leading-relaxed max-w-2xl">
+                  {profile.bio}
+                </p>
+              )}
+
+              {/* Stats */}
+              <div className="flex gap-6 mt-6">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Radio className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{streams.length}</p>
+                    <p className="text-xs text-muted-foreground">Streams</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Coins className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{totalTips.toFixed(3)} ETH</p>
+                    <p className="text-xs text-muted-foreground">Tips Received</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Past Streams */}
-      <section className="container py-12">
-        <div className="flex items-center gap-2 mb-8">
-          <Calendar className="h-5 w-5 text-muted-foreground" />
-          <h2 className="font-display text-2xl font-bold">Past Streams</h2>
-        </div>
-
-        {streamsLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : streams.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {streams.map((stream, index) => (
-              <div 
-                key={stream.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 80}ms` }}
-              >
-                <StreamCard stream={stream} />
+        {/* Content Tabs */}
+        <div className="space-y-8">
+          {/* Live Streams */}
+          {liveStreams.length > 0 && (
+            <section>
+              <h2 className="text-xl font-display font-semibold mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+                Live Now
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {liveStreams.map(stream => (
+                  <StreamCard key={stream.id} stream={stream} />
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 glass-card">
-            <Radio className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-display text-xl font-semibold mb-2">No Streams Yet</h3>
-            <p className="text-muted-foreground">
-              {isOwnProfile 
-                ? "You haven't streamed yet. Start your first stream!"
-                : "This creator hasn't streamed yet."
-              }
-            </p>
-            {isOwnProfile && (
-              <Link to="/go-live" className="inline-block mt-4">
-                <Button variant="premium">Start Streaming</Button>
-              </Link>
+            </section>
+          )}
+
+          {/* Past Streams */}
+          <section>
+            <h2 className="text-xl font-display font-semibold mb-4">Past Streams</h2>
+            {streamsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : pastStreams.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {pastStreams.map(stream => (
+                  <StreamCard key={stream.id} stream={stream} />
+                ))}
+              </div>
+            ) : (
+              <div className="glass-card p-12 text-center">
+                <Radio className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                <p className="text-muted-foreground">
+                  {isOwnProfile 
+                    ? "You haven't streamed yet. Start your first stream!"
+                    : "No past streams yet."}
+                </p>
+                {isOwnProfile && (
+                  <Link to="/go-live" className="mt-4 inline-block">
+                    <Button variant="premium">
+                      Start Streaming
+                    </Button>
+                  </Link>
+                )}
+              </div>
             )}
-          </div>
-        )}
-      </section>
+          </section>
+        </div>
+      </div>
     </div>
   );
 };

@@ -10,7 +10,7 @@ interface StreamCardProps {
 
 const StreamCard = ({ stream }: StreamCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const streamerName = stream.profiles?.username || formatAddress(stream.profiles?.wallet_address || '');
+  const streamerName = stream.profiles?.username || 'Anonymous';
   const thumbnailUrl = `https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80`;
   
   return (

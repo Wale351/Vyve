@@ -5,7 +5,7 @@ import LiveChat from '@/components/LiveChat';
 import TipButton from '@/components/TipButton';
 import { Button } from '@/components/ui/button';
 import { useStream } from '@/hooks/useStreams';
-import { formatViewerCount, formatDuration, formatAddress } from '@/lib/mockData';
+import { formatViewerCount, formatDuration } from '@/lib/mockData';
 import { Users, Clock, Share2, Heart, ExternalLink, Loader2, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -19,9 +19,8 @@ const Watch = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container py-20 flex flex-col items-center justify-center">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="mt-4 text-muted-foreground">Loading stream...</p>
+        <div className="container py-16 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -31,13 +30,17 @@ const Watch = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container py-20 text-center">
-          <div className="glass-card max-w-md mx-auto p-10">
-            <Play className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
-            <h1 className="font-display text-2xl font-bold mb-3">Stream Not Found</h1>
-            <p className="text-muted-foreground mb-8">This stream doesn't exist or has ended.</p>
+        <div className="container py-16 text-center">
+          <div className="glass-card p-12 max-w-md mx-auto">
+            <Play className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h1 className="text-2xl font-display font-bold mb-2">Stream Not Found</h1>
+            <p className="text-muted-foreground mb-6">
+              This stream may have ended or doesn't exist.
+            </p>
             <Link to="/">
-              <Button variant="premium" size="lg">Back to Home</Button>
+              <Button variant="premium">
+                Browse Streams
+              </Button>
             </Link>
           </div>
         </div>
@@ -50,8 +53,8 @@ const Watch = () => {
     toast.success('Link copied to clipboard!');
   };
 
-  const streamerName = stream.profiles?.username || formatAddress(stream.profiles?.wallet_address || '');
-  const streamerAddress = stream.profiles?.wallet_address || '';
+  const streamerName = stream.profiles?.username || 'Anonymous';
+  const streamerId = stream.profiles?.id || '';
 
   return (
     <div className="min-h-screen bg-background page-enter">
@@ -63,25 +66,31 @@ const Watch = () => {
           <div className="space-y-5">
             {/* Video Player */}
             <div className="rounded-2xl overflow-hidden shadow-xl">
-              <VideoPlayer 
+              <VideoPlayer
                 playbackUrl={stream.playback_url || undefined}
                 title={stream.title}
                 isLive={stream.is_live || false}
               />
             </div>
 
-            {/* Stream Info */}
+            {/* Stream Info Card */}
             <div className="glass-card p-6">
-              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                 <div className="flex-1">
-                  <h1 className="font-display text-2xl font-bold mb-4">
-                    {stream.title}
-                  </h1>
+                  <div className="flex items-center gap-3 mb-2">
+                    {stream.is_live && (
+                      <div className="live-badge flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-destructive-foreground animate-pulse-subtle" />
+                        LIVE
+                      </div>
+                    )}
+                    <h1 className="font-display text-xl font-bold">{stream.title}</h1>
+                  </div>
                   
                   <div className="flex items-center gap-4">
                     {/* Streamer info */}
                     <Link 
-                      to={`/profile/${streamerAddress}`}
+                      to={`/profile/${streamerId}`}
                       className="flex items-center gap-3 group"
                     >
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-foreground font-bold text-lg shadow-md">
@@ -90,9 +99,6 @@ const Watch = () => {
                       <div>
                         <p className="font-display font-semibold group-hover:text-primary transition-colors">
                           {streamerName}
-                        </p>
-                        <p className="text-sm text-muted-foreground font-mono">
-                          {formatAddress(streamerAddress)}
                         </p>
                       </div>
                     </Link>
@@ -123,7 +129,7 @@ const Watch = () => {
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   <TipButton 
-                    streamerAddress={streamerAddress}
+                    streamerId={streamerId}
                     streamerName={streamerName}
                   />
                   
@@ -143,7 +149,7 @@ const Watch = () => {
                     <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
                   </Button>
                   
-                  <Link to={`/profile/${streamerAddress}`}>
+                  <Link to={`/profile/${streamerId}`}>
                     <Button variant="subtle" size="icon">
                       <ExternalLink className="h-4 w-4" />
                     </Button>

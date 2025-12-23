@@ -4,29 +4,56 @@ import { supabase } from '@/integrations/supabase/client';
 export interface Profile {
   id: string;
   username: string | null;
-  wallet_address: string;
   avatar_url: string | null;
   bio: string | null;
   is_streamer: boolean | null;
   created_at: string;
 }
 
-export const useProfile = (walletAddress: string | undefined) => {
+// Full profile with wallet address - only returned for the profile owner
+export interface ProfileWithWallet extends Profile {
+  wallet_address: string;
+}
+
+// Fetch public profile by ID (without wallet address)
+export const useProfile = (profileId: string | undefined) => {
   return useQuery({
-    queryKey: ['profile', walletAddress],
+    queryKey: ['profile', profileId],
     queryFn: async () => {
-      if (!walletAddress) return null;
+      if (!profileId) return null;
       
+      // Use the public_profiles view which excludes wallet_address
       const { data, error } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('*')
-        .eq('wallet_address', walletAddress)
+        .eq('id', profileId)
         .maybeSingle();
 
       if (error) throw error;
       return data as Profile | null;
     },
-    enabled: !!walletAddress,
+    enabled: !!profileId,
+  });
+};
+
+// Fetch own profile with wallet address (for profile owner only)
+export const useOwnProfile = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ['profile', 'own', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      
+      // Direct query to profiles table - RLS ensures only own profile returns wallet_address
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as ProfileWithWallet | null;
+    },
+    enabled: !!userId,
   });
 };
 
@@ -37,7 +64,7 @@ export const useProfileById = (profileId: string | undefined) => {
       if (!profileId) return null;
       
       const { data, error } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('*')
         .eq('id', profileId)
         .maybeSingle();
