@@ -90,6 +90,122 @@ export type Database = {
         }
         Relationships: []
       }
+      stream_muted_users: {
+        Row: {
+          created_at: string
+          id: string
+          muted_by: string
+          muted_user_id: string
+          reason: string | null
+          stream_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          muted_by: string
+          muted_user_id: string
+          reason?: string | null
+          stream_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          muted_by?: string
+          muted_user_id?: string
+          reason?: string | null
+          stream_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_muted_users_muted_by_fkey"
+            columns: ["muted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_muted_users_muted_by_fkey"
+            columns: ["muted_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_muted_users_muted_user_id_fkey"
+            columns: ["muted_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_muted_users_muted_user_id_fkey"
+            columns: ["muted_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_muted_users_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      streamer_blocked_users: {
+        Row: {
+          blocked_user_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          streamer_id: string
+        }
+        Insert: {
+          blocked_user_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          streamer_id: string
+        }
+        Update: {
+          blocked_user_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          streamer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streamer_blocked_users_blocked_user_id_fkey"
+            columns: ["blocked_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "streamer_blocked_users_blocked_user_id_fkey"
+            columns: ["blocked_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "streamer_blocked_users_streamer_id_fkey"
+            columns: ["streamer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "streamer_blocked_users_streamer_id_fkey"
+            columns: ["streamer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       streams: {
         Row: {
           description: string | null
@@ -220,18 +336,24 @@ export type Database = {
         Row: {
           action_count: number | null
           action_type: string
+          last_message: string | null
+          last_message_at: string | null
           user_id: string
           window_start: string | null
         }
         Insert: {
           action_count?: number | null
           action_type: string
+          last_message?: string | null
+          last_message_at?: string | null
           user_id: string
           window_start?: string | null
         }
         Update: {
           action_count?: number | null
           action_type?: string
+          last_message?: string | null
+          last_message_at?: string | null
           user_id?: string
           window_start?: string | null
         }
@@ -268,6 +390,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_duplicate_message: {
+        Args: { p_message: string; p_user_id: string }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           p_action_type: string
@@ -279,6 +405,10 @@ export type Database = {
       }
       get_my_stream_key: { Args: { p_stream_id: string }; Returns: string }
       is_own_profile: { Args: { profile_id: string }; Returns: boolean }
+      is_user_blocked_from_stream: {
+        Args: { p_stream_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
