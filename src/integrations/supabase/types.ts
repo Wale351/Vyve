@@ -60,6 +60,36 @@ export type Database = {
           },
         ]
       }
+      games: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          thumbnail_url: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          thumbnail_url?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          thumbnail_url?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -211,11 +241,13 @@ export type Database = {
           description: string | null
           ended_at: string | null
           game_category: string | null
+          game_id: string | null
           id: string
           is_live: boolean | null
           playback_url: string | null
           started_at: string | null
           streamer_id: string
+          tags: string[] | null
           title: string
           viewer_count: number | null
         }
@@ -223,11 +255,13 @@ export type Database = {
           description?: string | null
           ended_at?: string | null
           game_category?: string | null
+          game_id?: string | null
           id?: string
           is_live?: boolean | null
           playback_url?: string | null
           started_at?: string | null
           streamer_id: string
+          tags?: string[] | null
           title: string
           viewer_count?: number | null
         }
@@ -235,15 +269,24 @@ export type Database = {
           description?: string | null
           ended_at?: string | null
           game_category?: string | null
+          game_id?: string | null
           id?: string
           is_live?: boolean | null
           playback_url?: string | null
           started_at?: string | null
           streamer_id?: string
+          tags?: string[] | null
           title?: string
           viewer_count?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "streams_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "streams_streamer_id_fkey"
             columns: ["streamer_id"]

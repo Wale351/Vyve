@@ -4,11 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAccount } from 'wagmi';
-import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn } from 'lucide-react';
+import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useGames } from '@/hooks/useGames';
 
 type Step = 'setup' | 'creating' | 'ready';
 
@@ -22,14 +31,19 @@ interface StreamData {
 const GoLive = () => {
   const { isConnected } = useAccount();
   const { isAuthenticated, isAuthenticating, signInWithWallet } = useWalletAuth();
+  const { data: games = [] } = useGames();
   const [title, setTitle] = useState('');
-  const [game, setGame] = useState('');
+  const [gameId, setGameId] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
   const [description, setDescription] = useState('');
   const [step, setStep] = useState<Step>('setup');
   const [streamData, setStreamData] = useState<StreamData | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedRtmp, setCopiedRtmp] = useState(false);
   const [isGoingLive, setIsGoingLive] = useState(false);
+  
+  const selectedGame = games.find(g => g.id === gameId);
 
   const handleCreateStream = async () => {
     if (!title.trim()) {
@@ -54,7 +68,9 @@ const GoLive = () => {
         body: {
           title: title.trim(),
           description: description.trim() || null,
-          game_category: game.trim() || null,
+          game_category: selectedGame?.name || null,
+          game_id: gameId || null,
+          tags: tags,
         },
       });
 
@@ -130,9 +146,23 @@ const GoLive = () => {
   const resetForm = () => {
     setStreamData(null);
     setTitle('');
-    setGame('');
+    setGameId('');
+    setTags([]);
+    setTagInput('');
     setDescription('');
     setStep('setup');
+  };
+  
+  const addTag = () => {
+    const tag = tagInput.trim();
+    if (tag && tags.length < 5 && !tags.includes(tag)) {
+      setTags([...tags, tag]);
+      setTagInput('');
+    }
+  };
+  
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(t => t !== tagToRemove));
   };
 
   if (!isConnected) {
@@ -252,16 +282,54 @@ const GoLive = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="game">
-                      Game / Category
+                    <Label htmlFor="game" className="flex items-center gap-2">
+                      <Gamepad2 className="h-4 w-4" />
+                      Game
                     </Label>
-                    <Input
-                      id="game"
-                      value={game}
-                      onChange={(e) => setGame(e.target.value)}
-                      placeholder="What are you playing?"
-                      className="bg-muted/30 border-border/50 h-12"
-                    />
+                    <Select value={gameId} onValueChange={setGameId}>
+                      <SelectTrigger className="bg-muted/30 border-border/50 h-12">
+                        <SelectValue placeholder="Select a game..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {games.map(game => (
+                          <SelectItem key={game.id} value={game.id}>
+                            <span className="flex items-center gap-2">
+                              {game.name}
+                              <span className="text-xs text-muted-foreground">({game.category})</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Tags (up to 5)</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                        placeholder="Add a tag..."
+                        className="bg-muted/30 border-border/50 h-10"
+                        maxLength={20}
+                      />
+                      <Button type="button" variant="subtle" size="icon" onClick={addTag} disabled={tags.length >= 5}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {tags.map(tag => (
+                          <Badge key={tag} variant="secondary" className="gap-1">
+                            {tag}
+                            <button onClick={() => removeTag(tag)} className="ml-1 hover:text-destructive">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">

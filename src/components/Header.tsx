@@ -1,7 +1,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Radio, User, Play, LogIn, LogOut, Loader2 } from 'lucide-react';
+import { Radio, User, Play, LogIn, LogOut, Loader2, Gamepad2 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 
@@ -32,6 +32,16 @@ const Header = () => {
                 size="sm"
               >
                 Browse
+              </Button>
+            </Link>
+            <Link to="/games">
+              <Button
+                variant={location.pathname.startsWith('/games') ? 'soft' : 'ghost'}
+                size="sm"
+                className="gap-2"
+              >
+                <Gamepad2 className="h-4 w-4" />
+                Games
               </Button>
             </Link>
             {isConnected && isAuthenticated && (
