@@ -11,6 +11,8 @@ import Index from "./pages/Index";
 import Watch from "./pages/Watch";
 import GoLive from "./pages/GoLive";
 import Profile from "./pages/Profile";
+import Games from "./pages/Games";
+import GameDetail from "./pages/GameDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +37,8 @@ const App = () => (
               <Route path="/watch/:streamId" element={<Watch />} />
               <Route path="/go-live" element={<GoLive />} />
               <Route path="/profile/:address" element={<Profile />} />
+              <Route path="/games" element={<Games />} />
+              <Route path="/games/:slug" element={<GameDetail />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

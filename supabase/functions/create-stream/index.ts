@@ -59,7 +59,7 @@ serve(async (req) => {
     console.log(`Creating stream for user: ${user.id}`);
 
     // Parse request body
-    const { title, description, game_category } = await req.json();
+    const { title, description, game_category, game_id, tags } = await req.json();
 
     // Validate input
     if (!title || typeof title !== "string" || title.trim().length === 0) {
@@ -124,6 +124,8 @@ serve(async (req) => {
         title: title.trim(),
         description: description?.trim() || null,
         game_category: game_category?.trim() || null,
+        game_id: game_id || null,
+        tags: Array.isArray(tags) ? tags.filter((t: string) => typeof t === 'string' && t.trim()) : [],
         playback_url: playbackUrl,
         is_live: false,
         viewer_count: 0,
@@ -166,6 +168,8 @@ serve(async (req) => {
         title: stream.title,
         description: stream.description,
         game_category: stream.game_category,
+        game_id: stream.game_id,
+        tags: stream.tags,
         stream_key: livepeerStream.streamKey,
         rtmp_url: "rtmp://rtmp.livepeer.studio/live",
         playback_url: playbackUrl,
