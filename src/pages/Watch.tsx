@@ -1,19 +1,26 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import VideoPlayer from '@/components/VideoPlayer';
 import LiveChat from '@/components/LiveChat';
 import TipButton from '@/components/TipButton';
 import { Button } from '@/components/ui/button';
 import { useStream } from '@/hooks/useStreams';
+import { useEndStream } from '@/hooks/useStreamControls';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { formatViewerCount, formatDuration } from '@/lib/mockData';
-import { Users, Clock, Share2, Heart, ExternalLink, Loader2, Play } from 'lucide-react';
+import { Users, Clock, Share2, Heart, ExternalLink, Loader2, Play, StopCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
 const Watch = () => {
   const { streamId } = useParams();
+  const navigate = useNavigate();
   const { data: stream, isLoading } = useStream(streamId);
+  const { user } = useWalletAuth();
+  const endStreamMutation = useEndStream();
   const [isLiked, setIsLiked] = useState(false);
+  
+  const isStreamOwner = user?.id && stream?.streamer_id === user.id;
 
   if (isLoading) {
     return (
@@ -128,6 +135,26 @@ const Watch = () => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
+                  {isStreamOwner && stream.is_live && (
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => {
+                        endStreamMutation.mutate(stream.id, {
+                          onSuccess: () => navigate('/'),
+                        });
+                      }}
+                      disabled={endStreamMutation.isPending}
+                      className="gap-2"
+                    >
+                      {endStreamMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <StopCircle className="h-4 w-4" />
+                      )}
+                      End Stream
+                    </Button>
+                  )}
+                  
                   <TipButton 
                     streamerId={streamerId}
                     streamerName={streamerName}
