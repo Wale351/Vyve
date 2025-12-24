@@ -11,6 +11,7 @@ export interface ChatMessageWithSender {
   profiles: {
     username: string | null;
     wallet_address: string;
+    avatar_url: string | null;
   } | null;
 }
 
@@ -28,7 +29,8 @@ export const useChatMessages = (streamId: string | undefined) => {
           *,
           profiles!chat_messages_sender_id_fkey (
             username,
-            wallet_address
+            wallet_address,
+            avatar_url
           )
         `)
         .eq('stream_id', streamId)
@@ -63,7 +65,8 @@ export const useChatMessages = (streamId: string | undefined) => {
               *,
               profiles!chat_messages_sender_id_fkey (
                 username,
-                wallet_address
+                wallet_address,
+                avatar_url
               )
             `)
             .eq('id', payload.new.id)
