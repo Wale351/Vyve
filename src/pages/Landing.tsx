@@ -1,9 +1,9 @@
 import { Play, Zap, Shield, Users, TrendingUp, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { usePrivyAuth } from '@/hooks/usePrivyAuth';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 
 const Landing = () => {
-  const { openLogin } = usePrivyAuth();
+  const { openLogin } = useWalletAuth();
 
   return (
     <div className="min-h-screen bg-background">

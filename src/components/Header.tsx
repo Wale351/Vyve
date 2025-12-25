@@ -11,13 +11,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown } from 'lucide-react';
-import { usePrivyAuth } from '@/hooks/usePrivyAuth';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated, walletAddress, signOut } = usePrivyAuth();
+  const { user, isAuthenticated, walletAddress, signOut } = useWalletAuth();
   const { data: profile } = useOwnProfile(user?.id);
   const { data: role } = useUserRole(user?.id);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

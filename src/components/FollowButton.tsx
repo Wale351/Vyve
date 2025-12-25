@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { UserPlus, UserMinus, Loader2 } from 'lucide-react';
-import { usePrivyAuth } from '@/hooks/usePrivyAuth';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useIsFollowing } from '@/hooks/useProfile';
 import { useFollow, useUnfollow } from '@/hooks/useFollow';
 
@@ -10,7 +10,7 @@ interface FollowButtonProps {
 }
 
 const FollowButton = ({ profileId, className }: FollowButtonProps) => {
-  const { user, isAuthenticated } = usePrivyAuth();
+  const { user, isAuthenticated } = useWalletAuth();
   const { data: isFollowing, isLoading: checkingFollow } = useIsFollowing(user?.id, profileId);
   const followMutation = useFollow();
   const unfollowMutation = useUnfollow();

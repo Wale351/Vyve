@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { usePrivyAuth } from './usePrivyAuth';
+import { useWalletAuth } from './useWalletAuth';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface ViewerPresence {
@@ -9,7 +9,7 @@ interface ViewerPresence {
 }
 
 export const useViewerPresence = (streamId: string | undefined): ViewerPresence => {
-  const { user } = usePrivyAuth();
+  const { user } = useWalletAuth();
   const [viewerCount, setViewerCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
 

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useStream } from '@/hooks/useStreams';
 import { useEndStream } from '@/hooks/useStreamControls';
-import { usePrivyAuth } from '@/hooks/usePrivyAuth';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useViewerPresence, useStreamRealtime } from '@/hooks/useViewerPresence';
 import { useLivepeerStatus, StreamPhase } from '@/hooks/useLivepeerStatus';
 import { formatViewerCount, formatDuration } from '@/lib/mockData';
@@ -19,7 +19,7 @@ const Watch = () => {
   const { streamId } = useParams();
   const navigate = useNavigate();
   const { data: stream, isLoading } = useStream(streamId);
-  const { user } = usePrivyAuth();
+  const { user } = useWalletAuth();
   const endStreamMutation = useEndStream();
   const [isLiked, setIsLiked] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
