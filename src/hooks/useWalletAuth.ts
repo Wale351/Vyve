@@ -212,12 +212,21 @@ export const useWalletAuth = () => {
 
   // Open RainbowKit connect modal
   const openLogin = useCallback(() => {
-    openConnectModal?.();
-  }, [openConnectModal]);
+    // Reset suppression when user explicitly wants to connect
+    shared.suppressAuthUntil = 0;
+    shared.authenticatedAddress = null;
+    authenticatedAddressRef.current = null;
+    
+    if (openConnectModal) {
+      openConnectModal();
+    } else {
+      console.warn('RainbowKit modal not ready yet');
+    }
+  }, [openConnectModal, shared]);
 
   return {
     // Wallet state (for compatibility with usePrivyAuth)
-    ready: true,
+    ready: !!openConnectModal,
     authenticated: isConnected,
     privyUser: null,
     walletAddress,
