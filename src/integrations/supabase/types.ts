@@ -92,30 +92,33 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_last_updated_at: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
           id: string
-          is_streamer: boolean | null
-          username: string | null
+          updated_at: string
+          username: string
           wallet_address: string
         }
         Insert: {
+          avatar_last_updated_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           id: string
-          is_streamer?: boolean | null
-          username?: string | null
+          updated_at?: string
+          username: string
           wallet_address: string
         }
         Update: {
+          avatar_last_updated_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           id?: string
-          is_streamer?: boolean | null
-          username?: string | null
+          updated_at?: string
+          username?: string
           wallet_address?: string
         }
         Relationships: []
@@ -416,7 +419,6 @@ export type Database = {
           bio: string | null
           created_at: string | null
           id: string | null
-          is_streamer: boolean | null
           username: string | null
         }
         Insert: {
@@ -424,7 +426,6 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           id?: string | null
-          is_streamer?: boolean | null
           username?: string | null
         }
         Update: {
@@ -432,7 +433,6 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           id?: string | null
-          is_streamer?: boolean | null
           username?: string | null
         }
         Relationships: []
@@ -454,6 +454,7 @@ export type Database = {
       }
       get_my_stream_key: { Args: { p_stream_id: string }; Returns: string }
       is_own_profile: { Args: { profile_id: string }; Returns: boolean }
+      is_profile_complete: { Args: { p_user_id: string }; Returns: boolean }
       is_user_blocked_from_stream: {
         Args: { p_stream_id: string; p_user_id: string }
         Returns: boolean

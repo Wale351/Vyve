@@ -10,8 +10,7 @@ export interface ChatMessageWithSender {
   message: string;
   created_at: string;
   profiles: {
-    username: string | null;
-    wallet_address: string;
+    username: string;
     avatar_url: string | null;
   } | null;
 }
@@ -31,7 +30,6 @@ export const useChatMessages = (streamId: string | undefined) => {
           *,
           profiles!chat_messages_sender_id_fkey (
             username,
-            wallet_address,
             avatar_url
           )
         `)
@@ -85,7 +83,6 @@ export const useChatMessages = (streamId: string | undefined) => {
               *,
               profiles!chat_messages_sender_id_fkey (
                 username,
-                wallet_address,
                 avatar_url
               )
             `)
@@ -124,8 +121,7 @@ interface SendMessageParams {
   senderId: string;
   message: string;
   senderProfile?: {
-    username: string | null;
-    wallet_address: string;
+    username: string;
     avatar_url: string | null;
   };
 }

@@ -3,9 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface UpdateProfileData {
-  username?: string;
   bio?: string;
-  avatar_url?: string;
 }
 
 export const useProfileUpdate = () => {
@@ -21,7 +19,6 @@ export const useProfileUpdate = () => {
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
-      // Invalidate all profile-related queries
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       toast.success('Profile updated!');
     },
@@ -43,9 +40,9 @@ export const useAvatarUpload = () => {
         throw new Error('Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.');
       }
 
-      // Validate file size (2MB max)
-      if (file.size > 2 * 1024 * 1024) {
-        throw new Error('File too large. Maximum size is 2MB.');
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('File too large. Maximum size is 5MB.');
       }
 
       const fileExt = file.name.split('.').pop();
@@ -63,15 +60,18 @@ export const useAvatarUpload = () => {
         .from('avatars')
         .getPublicUrl(fileName);
 
+      // Add cache buster to force refresh
+      const urlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
+
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ avatar_url: urlWithCacheBuster })
         .eq('id', userId);
 
       if (updateError) throw updateError;
 
-      return publicUrl;
+      return urlWithCacheBuster;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
@@ -79,7 +79,64 @@ export const useAvatarUpload = () => {
     },
     onError: (error: Error) => {
       console.error('Avatar upload error:', error);
-      toast.error(error.message || 'Failed to upload avatar');
+      if (error.message.includes('30 days')) {
+        toast.error(error.message);
+      } else {
+        toast.error(error.message || 'Failed to upload avatar');
+      }
+    },
+  });
+};
+
+// Create initial profile
+export const useCreateProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      userId, 
+      walletAddress, 
+      username, 
+      bio,
+      avatarUrl 
+    }: { 
+      userId: string; 
+      walletAddress: string;
+      username: string;
+      bio?: string;
+      avatarUrl: string;
+    }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          wallet_address: walletAddress,
+          username,
+          bio: bio || null,
+          avatar_url: avatarUrl,
+          avatar_last_updated_at: new Date().toISOString(),
+        });
+
+      if (error) {
+        // Handle specific error cases
+        if (error.code === '23505') {
+          if (error.message.includes('username')) {
+            throw new Error('Username is already taken. Please choose a different one.');
+          }
+          if (error.message.includes('wallet_address')) {
+            throw new Error('A profile already exists for this wallet.');
+          }
+        }
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success('Profile created!');
+    },
+    onError: (error: Error) => {
+      console.error('Profile creation error:', error);
+      toast.error(error.message || 'Failed to create profile');
     },
   });
 };

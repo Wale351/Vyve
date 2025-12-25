@@ -3,26 +3,31 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface Profile {
   id: string;
-  username: string | null;
-  avatar_url: string | null;
+  wallet_address: string;
+  username: string;
   bio: string | null;
-  is_streamer: boolean | null;
+  avatar_url: string | null;
+  avatar_last_updated_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Public profile without wallet address
+export interface PublicProfile {
+  id: string;
+  username: string;
+  bio: string | null;
+  avatar_url: string | null;
   created_at: string;
 }
 
-// Full profile with wallet address - only returned for the profile owner
-export interface ProfileWithWallet extends Profile {
-  wallet_address: string;
-}
-
-// Fetch public profile by ID (without wallet address)
+// Fetch public profile by ID
 export const useProfile = (profileId: string | undefined) => {
   return useQuery({
     queryKey: ['profile', profileId],
     queryFn: async () => {
       if (!profileId) return null;
       
-      // Use the public_profiles view which excludes wallet_address
       const { data, error } = await supabase
         .from('public_profiles')
         .select('*')
@@ -30,20 +35,19 @@ export const useProfile = (profileId: string | undefined) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as Profile | null;
+      return data as PublicProfile | null;
     },
     enabled: !!profileId,
   });
 };
 
-// Fetch own profile with wallet address (for profile owner only)
+// Fetch own profile with full details (including wallet_address)
 export const useOwnProfile = (userId: string | undefined) => {
   return useQuery({
     queryKey: ['profile', 'own', userId],
     queryFn: async () => {
       if (!userId) return null;
       
-      // Direct query to profiles table - RLS ensures only own profile returns wallet_address
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -51,7 +55,63 @@ export const useOwnProfile = (userId: string | undefined) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as ProfileWithWallet | null;
+      return data as Profile | null;
+    },
+    enabled: !!userId,
+  });
+};
+
+// Check if user has a completed profile
+export const useProfileComplete = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ['profile', 'complete', userId],
+    queryFn: async () => {
+      if (!userId) return false;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) return false;
+      
+      // Profile is complete if it exists, has username and avatar
+      return !!(data?.username && data?.avatar_url);
+    },
+    enabled: !!userId,
+  });
+};
+
+// Check if avatar can be updated (30 day cooldown)
+export const useCanUpdateAvatar = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ['profile', 'avatar-cooldown', userId],
+    queryFn: async () => {
+      if (!userId) return { canUpdate: false, nextUpdateDate: null };
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_last_updated_at')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error || !data) return { canUpdate: true, nextUpdateDate: null };
+      
+      if (!data.avatar_last_updated_at) {
+        return { canUpdate: true, nextUpdateDate: null };
+      }
+      
+      const lastUpdate = new Date(data.avatar_last_updated_at);
+      const nextUpdate = new Date(lastUpdate);
+      nextUpdate.setDate(nextUpdate.getDate() + 30);
+      
+      const canUpdate = new Date() >= nextUpdate;
+      
+      return { 
+        canUpdate, 
+        nextUpdateDate: canUpdate ? null : nextUpdate 
+      };
     },
     enabled: !!userId,
   });
@@ -70,7 +130,7 @@ export const useProfileById = (profileId: string | undefined) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as Profile | null;
+      return data as PublicProfile | null;
     },
     enabled: !!profileId,
   });
