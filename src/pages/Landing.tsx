@@ -1,8 +1,10 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { Play, Zap, Shield, Users, TrendingUp, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Landing = () => {
+  const { openConnectModal } = useConnectModal();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -15,51 +17,9 @@ const Landing = () => {
             <span className="font-display text-xl font-bold">Vyve</span>
           </div>
           
-          <ConnectButton.Custom>
-            {({
-              account,
-              chain,
-              openConnectModal,
-              openChainModal,
-              mounted,
-            }) => {
-              const ready = mounted;
-              const connected = ready && account && chain;
-
-              return (
-                <div
-                  {...(!ready && {
-                    'aria-hidden': true,
-                    style: {
-                      opacity: 0,
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    },
-                  })}
-                >
-                  {(() => {
-                    if (!connected) {
-                      return (
-                        <Button onClick={openConnectModal} variant="premium" size="sm" className="gap-2">
-                          Connect Wallet
-                        </Button>
-                      );
-                    }
-
-                    if (chain.unsupported) {
-                      return (
-                        <Button onClick={openChainModal} variant="destructive" size="sm">
-                          Wrong network
-                        </Button>
-                      );
-                    }
-
-                    return null;
-                  })()}
-                </div>
-              );
-            }}
-          </ConnectButton.Custom>
+          <Button onClick={openConnectModal} variant="premium" size="sm" className="gap-2">
+            Connect Wallet
+          </Button>
         </div>
       </header>
 
@@ -100,32 +60,10 @@ const Landing = () => {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in"
               style={{ animationDelay: '300ms' }}
             >
-              <ConnectButton.Custom>
-                {({
-                  openConnectModal,
-                  mounted,
-                }) => {
-                  const ready = mounted;
-
-                  return (
-                    <div
-                      {...(!ready && {
-                        'aria-hidden': true,
-                        style: {
-                          opacity: 0,
-                          pointerEvents: 'none',
-                          userSelect: 'none',
-                        },
-                      })}
-                    >
-                      <Button onClick={openConnectModal} variant="premium" size="lg" className="gap-2 text-lg px-8 py-6">
-                        <Play className="h-5 w-5" />
-                        Get Started
-                      </Button>
-                    </div>
-                  );
-                }}
-              </ConnectButton.Custom>
+              <Button onClick={openConnectModal} variant="premium" size="lg" className="gap-2 text-lg px-8 py-6">
+                <Play className="h-5 w-5" />
+                Get Started
+              </Button>
             </div>
           </div>
         </div>
@@ -209,32 +147,10 @@ const Landing = () => {
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
             Connect your wallet and join the future of content creation.
           </p>
-          <ConnectButton.Custom>
-            {({
-              openConnectModal,
-              mounted,
-            }) => {
-              const ready = mounted;
-
-              return (
-                <div
-                  {...(!ready && {
-                    'aria-hidden': true,
-                    style: {
-                      opacity: 0,
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    },
-                  })}
-                >
-                  <Button onClick={openConnectModal} variant="premium" size="lg" className="gap-2">
-                    <Play className="h-5 w-5" />
-                    Connect Wallet
-                  </Button>
-                </div>
-              );
-            }}
-          </ConnectButton.Custom>
+          <Button onClick={openConnectModal} variant="premium" size="lg" className="gap-2">
+            <Play className="h-5 w-5" />
+            Connect Wallet
+          </Button>
         </div>
       </section>
 
