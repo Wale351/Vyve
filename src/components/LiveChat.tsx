@@ -69,8 +69,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
         senderId: profile.id,
         message: newMessage.trim(),
         senderProfile: {
-          username: profile.username,
-          wallet_address: profile.wallet_address,
+          username: profile.username || 'Anonymous',
           avatar_url: profile.avatar_url,
         },
       });
