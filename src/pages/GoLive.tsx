@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Header from '@/components/Header';
+import ProfileGate from '@/components/ProfileGate';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -213,6 +214,7 @@ const GoLive = () => {
     <div className="min-h-screen bg-background page-enter">
       <Header />
       
+      <ProfileGate fallbackMessage="You need to complete your profile before you can go live.">
       <div className="container px-4 py-6 md:py-12">
         <div className="max-w-lg mx-auto">
           {/* Header */}
@@ -490,6 +492,7 @@ const GoLive = () => {
           </div>
         </div>
       </div>
+      </ProfileGate>
     </div>
   );
 };

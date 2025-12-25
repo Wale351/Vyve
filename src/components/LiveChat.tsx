@@ -21,11 +21,12 @@ import {
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useChatMessages, useSendMessage } from '@/hooks/useChatMessages';
-import { useOwnProfile } from '@/hooks/useProfile';
+import { useOwnProfile, useProfileComplete } from '@/hooks/useProfile';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useIsStreamOwner, useMuteUser, useBlockUser, useMutedUsers } from '@/hooks/useModeration';
 import { useStream } from '@/hooks/useStreams';
 import { toast } from 'sonner';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 interface LiveChatProps {
   streamId: string;
@@ -33,15 +34,17 @@ interface LiveChatProps {
 
 const LiveChat = ({ streamId }: LiveChatProps) => {
   const { address, isConnected } = useAccount();
-  const { user } = useWalletAuth();
+  const { user, isAuthenticated } = useWalletAuth();
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: messages = [], isLoading } = useChatMessages(streamId);
   const { data: profile } = useOwnProfile(user?.id);
+  const { data: isProfileComplete } = useProfileComplete(user?.id);
   const { data: stream } = useStream(streamId);
   const { data: isStreamOwner } = useIsStreamOwner(streamId, user?.id);
   const { data: mutedUsers = [] } = useMutedUsers(streamId);
+  const { showOnboarding, triggerOnboarding } = useOnboarding();
   const sendMessageMutation = useSendMessage();
   const muteUserMutation = useMuteUser();
   const blockUserMutation = useBlockUser();
@@ -224,7 +227,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
 
       {/* Input */}
       <div className="px-3 py-3 md:px-4 md:py-4 border-t border-border/30">
-        {isConnected ? (
+        {isConnected && isAuthenticated && isProfileComplete ? (
           <div className="flex gap-2">
             <Input
               value={newMessage}
@@ -246,6 +249,15 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
                 <Send className="h-4 w-4" />
               )}
             </Button>
+          </div>
+        ) : isConnected && isAuthenticated && !isProfileComplete ? (
+          <div className="text-center py-2 md:py-3 px-3 md:px-4 rounded-xl bg-muted/30 border border-border/30">
+            <button 
+              onClick={triggerOnboarding}
+              className="text-xs md:text-sm text-primary hover:underline"
+            >
+              Complete your profile to chat
+            </button>
           </div>
         ) : (
           <div className="text-center py-2 md:py-3 px-3 md:px-4 rounded-xl bg-muted/30 border border-border/30">
