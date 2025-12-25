@@ -32,8 +32,8 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <OnboardingModal />
           <BrowserRouter>
+            <OnboardingModal />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/watch/:streamId" element={<Watch />} />

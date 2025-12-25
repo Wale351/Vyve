@@ -1,23 +1,34 @@
 import { useState } from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Radio, User, Play, LogIn, LogOut, Loader2, Gamepad2, Menu, Home } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
 
 const Header = () => {
   const location = useLocation();
-  const { address, isConnected } = useAccount();
-  const { isAuthenticated, isAuthenticating, signInWithWallet, signOut } = useWalletAuth();
+  const navigate = useNavigate();
+  const { address } = useAccount();
+  const { user, isAuthenticated, signOut } = useWalletAuth();
+  const { data: profile } = useOwnProfile(user?.id);
+  const { data: role } = useUserRole(user?.id);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isStreamer = role === 'streamer' || role === 'admin';
 
   const navItems = [
     { path: '/', label: 'Browse', icon: Home, show: true },
     { path: '/games', label: 'Games', icon: Gamepad2, show: true },
-    { path: '/go-live', label: 'Go Live', icon: Radio, show: isConnected && isAuthenticated },
-    { path: `/profile/${address}`, label: 'Profile', icon: User, show: isConnected && isAuthenticated },
   ];
 
   const NavItem = ({ path, label, icon: Icon, isActive }: { path: string; label: string; icon: any; isActive: boolean }) => (
@@ -35,6 +46,11 @@ const Header = () => {
       </Button>
     </Link>
   );
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
@@ -67,36 +83,39 @@ const Header = () => {
                       path={item.path}
                       label={item.label}
                       icon={item.icon}
-                      isActive={item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path.split('/')[1] ? `/${item.path.split('/')[1]}` : item.path)}
+                      isActive={item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)}
                     />
                   ))}
+                  
+                  {isStreamer && (
+                    <NavItem
+                      path="/go-live"
+                      label="Go Live"
+                      icon={Radio}
+                      isActive={location.pathname === '/go-live'}
+                    />
+                  )}
                 </nav>
 
-                {/* Mobile Auth Section */}
-                <div className="p-4 border-t border-border/30 space-y-3">
-                  {isConnected && !isAuthenticated && (
+                {/* Mobile User Section */}
+                {isAuthenticated && profile && (
+                  <div className="p-4 border-t border-border/30 space-y-2">
+                    <Link to={`/profile/${address}`} onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start gap-2">
+                        <User className="h-4 w-4" />
+                        Profile
+                      </Button>
+                    </Link>
                     <Button 
-                      onClick={() => { signInWithWallet(); setMobileMenuOpen(false); }} 
-                      variant="soft" 
-                      className="w-full gap-2"
-                      disabled={isAuthenticating}
-                    >
-                      {isAuthenticating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-                      {isAuthenticating ? 'Signing...' : 'Sign In'}
-                    </Button>
-                  )}
-                  
-                  {isConnected && isAuthenticated && (
-                    <Button 
-                      onClick={() => { signOut(); setMobileMenuOpen(false); }} 
+                      onClick={() => { handleSignOut(); setMobileMenuOpen(false); }} 
                       variant="ghost" 
-                      className="w-full gap-2 text-muted-foreground"
+                      className="w-full justify-start gap-2 text-muted-foreground"
                     >
                       <LogOut className="h-4 w-4" />
                       Sign Out
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </SheetContent>
           </Sheet>
@@ -116,7 +135,7 @@ const Header = () => {
             {navItems.filter(item => item.show).map(item => (
               <Link key={item.path} to={item.path}>
                 <Button
-                  variant={item.path === '/' ? (location.pathname === '/' ? 'soft' : 'ghost') : (location.pathname.startsWith(item.path.split('/')[1] ? `/${item.path.split('/')[1]}` : item.path) ? 'soft' : 'ghost')}
+                  variant={item.path === '/' ? (location.pathname === '/' ? 'soft' : 'ghost') : (location.pathname.startsWith(item.path) ? 'soft' : 'ghost')}
                   size="sm"
                   className="gap-2"
                 >
@@ -129,126 +148,65 @@ const Header = () => {
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
-          {/* Desktop Sign In / Sign Out */}
-          {isConnected && !isAuthenticated && (
-            <Button 
-              onClick={signInWithWallet} 
-              variant="soft" 
-              size="sm"
-              disabled={isAuthenticating}
-              className="hidden md:flex gap-2"
-            >
-              {isAuthenticating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-              {isAuthenticating ? 'Signing...' : 'Sign In'}
-            </Button>
-          )}
-          
-          {isConnected && isAuthenticated && (
-            <Button 
-              onClick={signOut} 
-              variant="ghost" 
-              size="sm"
-              className="hidden md:flex gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Button>
+          {/* Go Live Button for streamers */}
+          {isStreamer && (
+            <Link to="/go-live" className="hidden md:block">
+              <Button variant="premium" size="sm" className="gap-2">
+                <Radio className="h-4 w-4" />
+                Go Live
+              </Button>
+            </Link>
           )}
 
-          {/* Wallet Connect */}
-          <ConnectButton.Custom>
-            {({
-              account,
-              chain,
-              openAccountModal,
-              openChainModal,
-              openConnectModal,
-              mounted,
-            }) => {
-              const ready = mounted;
-              const connected = ready && account && chain;
-
-              return (
-                <div
-                  {...(!ready && {
-                    'aria-hidden': true,
-                    style: {
-                      opacity: 0,
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    },
-                  })}
-                >
-                  {(() => {
-                    if (!connected) {
-                      return (
-                        <Button onClick={openConnectModal} variant="premium" size="sm" className="gap-2 text-sm">
-                          <span className="hidden sm:inline">Connect</span>
-                          <span className="sm:hidden">Connect</span>
-                        </Button>
-                      );
-                    }
-
-                    if (chain.unsupported) {
-                      return (
-                        <Button onClick={openChainModal} variant="destructive" size="sm">
-                          Wrong network
-                        </Button>
-                      );
-                    }
-
-                    return (
-                      <div className="flex items-center gap-1.5 md:gap-2">
-                        {/* Chain selector - hidden on mobile */}
-                        <Button
-                          onClick={openChainModal}
-                          variant="subtle"
-                          size="sm"
-                          className="hidden lg:flex gap-2 px-2"
-                        >
-                          {chain.hasIcon && (
-                            <div
-                              className="w-5 h-5 rounded-full overflow-hidden"
-                              style={{ background: chain.iconBackground }}
-                            >
-                              {chain.iconUrl && (
-                                <img
-                                  alt={chain.name ?? 'Chain icon'}
-                                  src={chain.iconUrl}
-                                  className="w-5 h-5"
-                                />
-                              )}
-                            </div>
-                          )}
-                          <span className="hidden xl:inline">{chain.name}</span>
-                        </Button>
-
-                        {/* Account button */}
-                        <Button 
-                          onClick={openAccountModal} 
-                          variant="subtle"
-                          size="sm"
-                          className="gap-1.5 md:gap-2 px-2 md:px-3"
-                        >
-                          <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[9px] md:text-[10px] font-bold text-primary-foreground">
-                            {account.displayName.charAt(0).toUpperCase()}
-                          </div>
-                          
-                          <span className="font-medium text-sm hidden sm:inline">{account.displayName}</span>
-                          
-                          {account.displayBalance && (
-                            <span className="hidden lg:inline text-muted-foreground text-xs">
-                              {account.displayBalance}
-                            </span>
-                          )}
-                        </Button>
-                      </div>
-                    );
-                  })()}
+          {/* Profile Avatar Dropdown */}
+          {isAuthenticated && profile && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2 px-2">
+                  <Avatar className="h-8 w-8 border border-border">
+                    {profile.avatar_url ? (
+                      <AvatarImage src={profile.avatar_url} alt={profile.username || 'Profile'} />
+                    ) : (
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-xs">
+                        {profile.username?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <p className="font-medium">{profile.username}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{role || 'Viewer'}</p>
                 </div>
-              );
-            }}
-          </ConnectButton.Custom>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to={`/profile/${address}`} className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                {isStreamer && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/go-live" className="cursor-pointer">
+                      <Radio className="mr-2 h-4 w-4" />
+                      Go Live
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem disabled className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </header>
