@@ -55,7 +55,7 @@ const Header = () => {
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                       <Play className="h-4 w-4 text-primary-foreground" fill="currentColor" />
                     </div>
-                    <span className="font-display text-xl font-bold">Base Haven</span>
+                    <span className="font-display text-xl font-bold">Vyve</span>
                   </Link>
                 </div>
 
@@ -107,7 +107,7 @@ const Header = () => {
               <Play className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary-foreground" fill="currentColor" />
             </div>
             <span className="font-display text-lg md:text-xl font-bold hidden sm:inline">
-              Base Haven
+              Vyve
             </span>
           </Link>
 

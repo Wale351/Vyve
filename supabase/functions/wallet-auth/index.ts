@@ -73,7 +73,7 @@ serve(async (req) => {
     const normalizedAddress = wallet_address.toLowerCase();
 
     // Verify the message contains the expected format and is recent
-    if (!message.includes("Sign in to Base Haven")) {
+    if (!message.includes("Sign in to Vyve")) {
       console.error("Invalid message format");
       return new Response(
         JSON.stringify({ error: "Invalid message format" }),
@@ -109,7 +109,7 @@ serve(async (req) => {
     console.log(`Authenticating wallet: ${normalizedAddress}`);
 
     // Create email from wallet address for Supabase auth
-    const email = `${normalizedAddress}@wallet.basehaven.app`;
+    const email = `${normalizedAddress}@wallet.vyve.app`;
     const password = `wallet_${normalizedAddress}_${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.slice(-16)}`;
 
     // Try to sign in first

@@ -107,7 +107,7 @@ const Watch = () => {
         );
       case 'waiting':
         return (
-          <div className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-warning/20 text-warning-foreground border border-warning/30">
+          <div className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-warning/20 text-warning border border-warning/30">
             <Loader2 className="w-2 h-2 animate-spin" />
             STARTING
           </div>

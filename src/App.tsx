@@ -14,6 +14,7 @@ import Profile from "./pages/Profile";
 import Games from "./pages/Games";
 import GameDetail from "./pages/GameDetail";
 import NotFound from "./pages/NotFound";
+import OnboardingModal from "./components/OnboardingModal";
 
 const queryClient = new QueryClient();
 
@@ -22,8 +23,8 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <RainbowKitProvider
         theme={darkTheme({
-          accentColor: 'hsl(180, 100%, 50%)',
-          accentColorForeground: 'hsl(220, 20%, 6%)',
+          accentColor: 'hsl(230, 65%, 60%)',
+          accentColorForeground: 'hsl(220, 10%, 98%)',
           borderRadius: 'medium',
           overlayBlur: 'small',
         })}
@@ -31,6 +32,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <OnboardingModal />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />

@@ -73,7 +73,7 @@ const OnboardingModal = () => {
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
           </div>
-          <DialogTitle className="font-display text-2xl">Welcome to Base Haven!</DialogTitle>
+          <DialogTitle className="font-display text-2xl">Welcome to Vyve!</DialogTitle>
           <DialogDescription>
             Set up your profile to get started. You can always update these later.
           </DialogDescription>
