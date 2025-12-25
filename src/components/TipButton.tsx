@@ -9,12 +9,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Coins, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
+import { Coins, Loader2, CheckCircle2, Sparkles, UserX } from 'lucide-react';
 import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { useProfileComplete } from '@/hooks/useProfile';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 interface TipButtonProps {
   streamerId: string;
@@ -24,6 +27,9 @@ interface TipButtonProps {
 
 const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
   const { isConnected, address } = useAccount();
+  const { user, isAuthenticated } = useWalletAuth();
+  const { data: isProfileComplete } = useProfileComplete(user?.id);
+  const { triggerOnboarding } = useOnboarding();
   const [amount, setAmount] = useState('0.01');
   const [isOpen, setIsOpen] = useState(false);
   const [streamerWallet, setStreamerWallet] = useState<string | null>(null);
@@ -147,6 +153,17 @@ const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
 
   const isProcessing = isPending || isConfirming || isSavingTip;
 
+  // Check if user can tip (connected, authenticated, profile complete)
+  const canTip = isConnected && isAuthenticated && isProfileComplete;
+
+  const handleTipClick = () => {
+    if (!isProfileComplete && isAuthenticated) {
+      triggerOnboarding();
+      return;
+    }
+    setIsOpen(true);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!isProcessing) {
@@ -158,7 +175,17 @@ const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
       }
     }}>
       <DialogTrigger asChild>
-        <Button variant="premium" className="gap-2" disabled={!isConnected}>
+        <Button 
+          variant="premium" 
+          className="gap-2" 
+          disabled={!isConnected}
+          onClick={(e) => {
+            if (!canTip) {
+              e.preventDefault();
+              handleTipClick();
+            }
+          }}
+        >
           <Coins className="h-4 w-4" />
           Tip
         </Button>

@@ -62,9 +62,14 @@ export const useOnboarding = () => {
     setProfileExists(true);
   };
 
+  const triggerOnboarding = () => {
+    setShowOnboarding(true);
+  };
+
   return {
     showOnboarding,
     completeOnboarding,
+    triggerOnboarding,
     isLoading,
     profileExists,
     userId: user?.id,
