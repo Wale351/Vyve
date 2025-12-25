@@ -41,11 +41,13 @@ export const useWalletAuth = () => {
     setIsAuthenticating(true);
     
     try {
-      // Generate a nonce for security
-      const nonce = Math.random().toString(36).substring(2, 15);
+      // Generate a cryptographically secure nonce
+      const array = new Uint8Array(16);
+      crypto.getRandomValues(array);
+      const nonce = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
       const timestamp = Date.now();
       
-      const message = `Sign in to Base Haven\n\nWallet: ${address}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
+      const message = `Sign in to Vyve\n\nWallet: ${address}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
 
       // Request signature from wallet
       const signature = await signMessageAsync({ 

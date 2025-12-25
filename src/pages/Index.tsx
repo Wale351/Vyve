@@ -155,7 +155,7 @@ const Index = () => {
               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <Play className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary-foreground" fill="currentColor" />
               </div>
-              <span className="font-display text-lg md:text-xl font-bold">Base Haven</span>
+              <span className="font-display text-lg md:text-xl font-bold">Vyve</span>
             </div>
             
             <p className="text-xs md:text-sm text-muted-foreground text-center">
