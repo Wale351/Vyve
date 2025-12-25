@@ -110,84 +110,93 @@ serve(async (req) => {
 
     // Create email from wallet address for Supabase auth
     const email = `${normalizedAddress}@wallet.vyve.app`;
-    const password = `wallet_${normalizedAddress}_${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.slice(-16)}`;
 
-    // Try to sign in first
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Check if user already exists using admin API
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === email);
 
-    if (signInData?.session) {
-      console.log(`Existing user signed in: ${normalizedAddress}`);
+    let userId: string;
+
+    if (existingUser) {
+      console.log(`Existing user found: ${normalizedAddress}`);
+      userId = existingUser.id;
       
       // Update profile with wallet address if needed
       await supabase
         .from("profiles")
         .upsert({
-          id: signInData.user.id,
+          id: userId,
           wallet_address: normalizedAddress,
         }, { onConflict: "id" });
-
-      return new Response(
-        JSON.stringify({
-          session: signInData.session,
-          user: signInData.user,
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // User doesn't exist, create new account
-    console.log(`Creating new user for wallet: ${normalizedAddress}`);
-    
-    const { data: signUpData, error: signUpError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        wallet_address: normalizedAddress,
-      },
-    });
-
-    if (signUpError) {
-      console.error("Sign up error:", signUpError);
-      return new Response(
-        JSON.stringify({ error: "Failed to create account" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Create profile for new user
-    if (signUpData?.user) {
-      await supabase
-        .from("profiles")
-        .insert({
-          id: signUpData.user.id,
+    } else {
+      // Create new user with admin API (no password needed)
+      console.log(`Creating new user for wallet: ${normalizedAddress}`);
+      
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        user_metadata: {
           wallet_address: normalizedAddress,
-        });
+        },
+      });
+
+      if (createError || !newUser?.user) {
+        console.error("Create user error:", createError);
+        return new Response(
+          JSON.stringify({ error: "Failed to create account" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      userId = newUser.user.id;
+      console.log(`New user created: ${normalizedAddress}`);
     }
 
-    // Sign in the newly created user
-    const { data: newSignIn, error: newSignInError } = await supabase.auth.signInWithPassword({
+    // Generate a magic link to create a session (works without email provider)
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: "magiclink",
       email,
-      password,
     });
 
-    if (newSignInError || !newSignIn?.session) {
-      console.error("New user sign in error:", newSignInError);
+    if (linkError || !linkData) {
+      console.error("Generate link error:", linkError);
       return new Response(
-        JSON.stringify({ error: "Failed to sign in new user" }),
+        JSON.stringify({ error: "Failed to generate session" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`New user created and signed in: ${normalizedAddress}`);
+    // Extract the token from the link and verify it to get a session
+    const token = linkData.properties?.hashed_token;
+    if (!token) {
+      console.error("No token in link data");
+      return new Response(
+        JSON.stringify({ error: "Failed to generate session token" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify the OTP to get a session
+    const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
+      email,
+      token: linkData.properties.email_otp,
+      type: "magiclink",
+    });
+
+    if (sessionError || !sessionData?.session) {
+      console.error("Verify OTP error:", sessionError);
+      return new Response(
+        JSON.stringify({ error: "Failed to create session" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Session created for wallet: ${normalizedAddress}`);
 
     return new Response(
       JSON.stringify({
-        session: newSignIn.session,
-        user: newSignIn.user,
+        session: sessionData.session,
+        user: sessionData.user,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
