@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import VideoPlayer from '@/components/VideoPlayer';
@@ -9,8 +9,9 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useStream } from '@/hooks/useStreams';
 import { useEndStream } from '@/hooks/useStreamControls';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useViewerPresence, useStreamRealtime } from '@/hooks/useViewerPresence';
 import { formatViewerCount, formatDuration } from '@/lib/mockData';
-import { Users, Clock, Share2, Heart, ExternalLink, Loader2, Play, StopCircle, MessageCircle, ChevronUp } from 'lucide-react';
+import { Users, Clock, Share2, Heart, ExternalLink, Loader2, Play, StopCircle, MessageCircle, ChevronUp, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Watch = () => {
@@ -21,6 +22,13 @@ const Watch = () => {
   const endStreamMutation = useEndStream();
   const [isLiked, setIsLiked] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  
+  // Real-time viewer presence tracking
+  const { viewerCount: liveViewerCount, isConnected } = useViewerPresence(streamId);
+  const realtimeStream = useStreamRealtime(streamId);
+  
+  // Use real-time viewer count if available, otherwise fall back to database value
+  const displayViewerCount = liveViewerCount > 0 ? liveViewerCount : (realtimeStream?.viewer_count ?? stream?.viewer_count ?? 0);
   
   const isStreamOwner = user?.id && stream?.streamer_id === user.id;
 
@@ -169,7 +177,10 @@ const Watch = () => {
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/50 text-xs md:text-sm">
                       <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="font-medium">{formatViewerCount(stream.viewer_count || 0)}</span>
+                      <span className="font-medium">{formatViewerCount(displayViewerCount)}</span>
+                      {isConnected && (
+                        <Radio className="h-2.5 w-2.5 text-success animate-pulse" />
+                      )}
                     </div>
                     
                     {stream.started_at && (
