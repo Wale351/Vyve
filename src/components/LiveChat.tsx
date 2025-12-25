@@ -73,7 +73,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
         message: newMessage.trim(),
         senderProfile: {
           username: profile.username || 'Anonymous',
-          profile_image_url: profile.profile_image_url,
+          avatar_url: profile.avatar_url,
         },
       });
       setNewMessage('');
@@ -149,8 +149,8 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
                   <div className="flex items-start gap-2 md:gap-2.5">
                     {/* Avatar */}
                     <Avatar className="flex-shrink-0 w-6 h-6 md:w-7 md:h-7">
-                      {msg.profiles?.profile_image_url ? (
-                        <AvatarImage src={msg.profiles.profile_image_url} alt={senderName} />
+                      {msg.profiles?.avatar_url ? (
+                        <AvatarImage src={msg.profiles.avatar_url} alt={senderName} />
                       ) : (
                         <AvatarFallback className="bg-gradient-to-br from-primary/60 to-secondary/60 text-[9px] md:text-[10px] font-bold text-foreground">
                           {senderName.charAt(0).toUpperCase()}
