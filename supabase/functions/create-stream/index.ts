@@ -127,6 +127,7 @@ serve(async (req) => {
         game_id: game_id || null,
         tags: Array.isArray(tags) ? tags.filter((t: string) => typeof t === 'string' && t.trim()) : [],
         playback_url: playbackUrl,
+        playback_id: livepeerStream.playbackId,
         is_live: false,
         viewer_count: 0,
       })

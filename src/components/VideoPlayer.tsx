@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -7,77 +7,164 @@ import Hls from 'hls.js';
 
 interface VideoPlayerProps {
   playbackUrl?: string;
+  playbackId?: string;
   title: string;
   isLive?: boolean;
   thumbnailUrl?: string;
 }
 
-const VideoPlayer = ({ playbackUrl, title, isLive = false, thumbnailUrl }: VideoPlayerProps) => {
+const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnailUrl }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted for autoplay
   const [volume, setVolume] = useState([75]);
   const [showControls, setShowControls] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isWaitingForStream, setIsWaitingForStream] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-  useEffect(() => {
+  // Construct the playback URL from playbackId if not provided
+  const effectivePlaybackUrl = playbackUrl || (playbackId ? `https://livepeercdn.studio/hls/${playbackId}/index.m3u8` : undefined);
+
+  const destroyHls = useCallback(() => {
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  }, []);
+
+  const initializePlayback = useCallback(() => {
     const video = videoRef.current;
-    if (!video || !playbackUrl) {
+    if (!video || !effectivePlaybackUrl) {
       setIsLoading(false);
       return;
     }
 
+    destroyHls();
     setIsLoading(true);
     setHasError(false);
+    setErrorMessage('');
+    setIsWaitingForStream(false);
+
+    console.log('[VideoPlayer] Initializing playback:', effectivePlaybackUrl);
 
     // Check if the browser supports HLS natively (Safari)
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = playbackUrl;
-      video.addEventListener('loadedmetadata', () => {
+      video.src = effectivePlaybackUrl;
+      
+      const handleLoadedMetadata = () => {
+        console.log('[VideoPlayer] Native HLS: Loaded metadata');
         setIsLoading(false);
-        video.play().then(() => setIsPlaying(true)).catch(() => {});
-      });
-      video.addEventListener('error', () => {
-        setIsLoading(false);
-        setHasError(true);
-      });
+        setRetryCount(0);
+        video.play().then(() => setIsPlaying(true)).catch((e) => {
+          console.log('[VideoPlayer] Autoplay prevented:', e.message);
+        });
+      };
+      
+      const handleError = () => {
+        console.error('[VideoPlayer] Native HLS error');
+        handlePlaybackError('Stream unavailable');
+      };
+      
+      video.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+      video.addEventListener('error', handleError, { once: true });
+      
     } else if (Hls.isSupported()) {
-      // Use HLS.js for other browsers
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
+        liveSyncDurationCount: 3,
+        liveMaxLatencyDurationCount: 10,
+        manifestLoadingTimeOut: 10000,
+        manifestLoadingMaxRetry: 3,
+        levelLoadingTimeOut: 10000,
+        levelLoadingMaxRetry: 3,
+        fragLoadingTimeOut: 20000,
+        fragLoadingMaxRetry: 3,
       });
       
       hlsRef.current = hls;
-      hls.loadSource(playbackUrl);
+      hls.loadSource(effectivePlaybackUrl);
       hls.attachMedia(video);
       
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.log('[VideoPlayer] HLS.js: Manifest parsed successfully');
         setIsLoading(false);
-        video.play().then(() => setIsPlaying(true)).catch(() => {});
+        setIsWaitingForStream(false);
+        setRetryCount(0);
+        video.play().then(() => setIsPlaying(true)).catch((e) => {
+          console.log('[VideoPlayer] Autoplay prevented:', e.message);
+        });
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
+        console.error('[VideoPlayer] HLS.js error:', {
+          type: data.type,
+          details: data.details,
+          fatal: data.fatal,
+          response: data.response,
+        });
+        
         if (data.fatal) {
-          console.error('HLS fatal error:', data);
-          setIsLoading(false);
-          setHasError(true);
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              // Network error - stream might not be active yet
+              if (data.response?.code === 404 || data.details === 'manifestLoadError') {
+                handlePlaybackError('Waiting for stream to start...');
+                setIsWaitingForStream(true);
+              } else {
+                handlePlaybackError('Network error - retrying...');
+              }
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.log('[VideoPlayer] Attempting to recover from media error');
+              hls.recoverMediaError();
+              break;
+            default:
+              handlePlaybackError('Playback error occurred');
+              break;
+          }
         }
       });
     } else {
       setIsLoading(false);
       setHasError(true);
+      setErrorMessage('HLS playback not supported in this browser');
     }
+  }, [effectivePlaybackUrl, destroyHls]);
 
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-  }, [playbackUrl]);
+  const handlePlaybackError = useCallback((message: string) => {
+    console.log('[VideoPlayer] Playback error:', message, 'Retry count:', retryCount);
+    setIsLoading(false);
+    setErrorMessage(message);
+    
+    // If stream is live but not playing, retry automatically
+    if (isLive && retryCount < 30) {
+      setIsWaitingForStream(true);
+      const delay = Math.min(3000 + retryCount * 1000, 10000); // 3s to 10s delay
+      console.log(`[VideoPlayer] Retrying in ${delay}ms...`);
+      
+      retryTimeoutRef.current = setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        initializePlayback();
+      }, delay);
+    } else {
+      setHasError(true);
+    }
+  }, [isLive, retryCount, initializePlayback]);
+
+  useEffect(() => {
+    initializePlayback();
+    return destroyHls;
+  }, [effectivePlaybackUrl, initializePlayback, destroyHls]);
 
   // Sync volume with video element
   useEffect(() => {
@@ -119,8 +206,13 @@ const VideoPlayer = ({ playbackUrl, title, isLive = false, thumbnailUrl }: Video
     }
   };
 
-  // Show offline/loading state if no playback URL
-  if (!playbackUrl) {
+  const handleRetry = () => {
+    setRetryCount(0);
+    initializePlayback();
+  };
+
+  // Show waiting/offline state if no playback URL or waiting for stream
+  if (!effectivePlaybackUrl) {
     return (
       <div className="relative aspect-video bg-background rounded-xl overflow-hidden">
         {thumbnailUrl ? (
@@ -134,7 +226,7 @@ const VideoPlayer = ({ playbackUrl, title, isLive = false, thumbnailUrl }: Video
               <Play className="h-8 w-8 text-muted-foreground" />
             </div>
             <p className="text-muted-foreground">
-              {isLive ? 'Stream starting soon...' : 'Stream offline'}
+              Stream not configured
             </p>
           </div>
         </div>
@@ -153,11 +245,12 @@ const VideoPlayer = ({ playbackUrl, title, isLive = false, thumbnailUrl }: Video
         ref={videoRef}
         className="w-full h-full object-contain bg-black"
         playsInline
+        muted={isMuted}
         poster={thumbnailUrl}
       />
 
       {/* Loading state */}
-      {isLoading && (
+      {isLoading && !isWaitingForStream && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80">
           <div className="relative">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -166,18 +259,44 @@ const VideoPlayer = ({ playbackUrl, title, isLive = false, thumbnailUrl }: Video
         </div>
       )}
 
+      {/* Waiting for stream state */}
+      {isWaitingForStream && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/90">
+          <div className="text-center px-4">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+            <p className="text-foreground font-medium mb-2">Waiting for stream...</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              The streamer hasn't started broadcasting yet
+            </p>
+            {retryCount > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Checking... ({retryCount}/30)
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Error state */}
-      {hasError && (
+      {hasError && !isWaitingForStream && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-          <div className="text-center">
+          <div className="text-center px-4">
             <p className="text-muted-foreground mb-2">Unable to load stream</p>
-            <p className="text-sm text-muted-foreground/70">The stream may be offline or unavailable</p>
+            <p className="text-sm text-muted-foreground/70 mb-4">
+              {errorMessage || 'The stream may be offline or unavailable'}
+            </p>
+            <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </Button>
           </div>
         </div>
       )}
 
       {/* Live indicator */}
-      {isLive && !hasError && (
+      {isLive && !hasError && !isWaitingForStream && (
         <div className="absolute top-4 left-4 live-badge flex items-center gap-1.5">
           <span className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
           LIVE
@@ -188,7 +307,7 @@ const VideoPlayer = ({ playbackUrl, title, isLive = false, thumbnailUrl }: Video
       <div 
         className={cn(
           "absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-background/20 transition-opacity duration-300",
-          showControls && !isLoading && !hasError ? "opacity-100" : "opacity-0"
+          showControls && !isLoading && !hasError && !isWaitingForStream ? "opacity-100" : "opacity-0"
         )}
       >
         {/* Center play button */}

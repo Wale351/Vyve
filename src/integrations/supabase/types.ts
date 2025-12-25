@@ -244,6 +244,7 @@ export type Database = {
           game_id: string | null
           id: string
           is_live: boolean | null
+          playback_id: string | null
           playback_url: string | null
           started_at: string | null
           streamer_id: string
@@ -258,6 +259,7 @@ export type Database = {
           game_id?: string | null
           id?: string
           is_live?: boolean | null
+          playback_id?: string | null
           playback_url?: string | null
           started_at?: string | null
           streamer_id: string
@@ -272,6 +274,7 @@ export type Database = {
           game_id?: string | null
           id?: string
           is_live?: boolean | null
+          playback_id?: string | null
           playback_url?: string | null
           started_at?: string | null
           streamer_id?: string
