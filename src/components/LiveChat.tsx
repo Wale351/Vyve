@@ -17,7 +17,6 @@ import {
   MoreVertical,
   VolumeX,
   Ban,
-  Shield,
   Crown
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
@@ -59,7 +58,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
   const handleSend = async () => {
     if (!newMessage.trim() || !isConnected || !profile?.id) {
       if (!profile?.id && isConnected) {
-        toast.error('Profile not found. Please try reconnecting your wallet.');
+        toast.error('Profile not found. Please try reconnecting.');
       }
       return;
     }
@@ -75,9 +74,9 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
       if (error?.message?.includes('blocked') || error?.message?.includes('muted')) {
         toast.error('You are muted from this chat');
       } else if (error?.message?.includes('rate')) {
-        toast.error('Slow down! Wait a few seconds before sending another message');
+        toast.error('Slow down!');
       } else {
-        toast.error('Failed to send message');
+        toast.error('Failed to send');
       }
     }
   };
@@ -107,27 +106,27 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full glass-card overflow-hidden">
+    <div className="flex flex-col h-full bg-card lg:glass-card overflow-hidden lg:rounded-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border/30">
+      <div className="flex items-center justify-between px-4 py-3 md:px-5 md:py-4 border-b border-border/30">
         <div className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5 text-primary" />
-          <h3 className="font-display font-semibold">Live Chat</h3>
+          <MessageCircle className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+          <h3 className="font-display font-semibold text-sm md:text-base">Live Chat</h3>
         </div>
-        <span className="text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-lg">
-          {messages.length} messages
+        <span className="text-[10px] md:text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg">
+          {messages.length}
         </span>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 px-4 py-3" ref={scrollRef}>
+      <ScrollArea className="flex-1 px-3 py-2 md:px-4 md:py-3" ref={scrollRef}>
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="mt-3 text-sm text-muted-foreground">Loading chat...</p>
+          <div className="flex flex-col items-center justify-center py-8 md:py-12">
+            <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-primary" />
+            <p className="mt-2 md:mt-3 text-xs md:text-sm text-muted-foreground">Loading chat...</p>
           </div>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-0.5 md:space-y-1">
             {messages.map((msg) => {
               const senderName = msg.profiles?.username || formatAddress(msg.sender_id || '');
               const timestamp = new Date(msg.created_at);
@@ -138,33 +137,33 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
               return (
                 <div 
                   key={msg.id} 
-                  className={`group py-2 px-2 -mx-2 rounded-lg hover:bg-muted/30 transition-colors ${isMuted ? 'opacity-50' : ''}`}
+                  className={`group py-1.5 md:py-2 px-1.5 md:px-2 -mx-1.5 md:-mx-2 rounded-lg hover:bg-muted/30 transition-colors ${isMuted ? 'opacity-50' : ''}`}
                 >
-                  <div className="flex items-start gap-2.5">
+                  <div className="flex items-start gap-2 md:gap-2.5">
                     {/* Avatar */}
-                    <Avatar className="flex-shrink-0 w-7 h-7">
+                    <Avatar className="flex-shrink-0 w-6 h-6 md:w-7 md:h-7">
                       {msg.profiles?.avatar_url ? (
                         <AvatarImage src={msg.profiles.avatar_url} alt={senderName} />
                       ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-primary/60 to-secondary/60 text-[10px] font-bold text-foreground">
+                        <AvatarFallback className="bg-gradient-to-br from-primary/60 to-secondary/60 text-[9px] md:text-[10px] font-bold text-foreground">
                           {senderName.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       )}
                     </Avatar>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
                         {/* Streamer badge */}
                         {isStreamer && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/20 text-primary text-[10px] font-medium">
-                            <Crown className="h-2.5 w-2.5" />
-                            Streamer
+                          <span className="inline-flex items-center gap-0.5 md:gap-1 px-1 md:px-1.5 py-0.5 rounded bg-primary/20 text-primary text-[9px] md:text-[10px] font-medium">
+                            <Crown className="h-2 w-2 md:h-2.5 md:w-2.5" />
+                            <span className="hidden sm:inline">Streamer</span>
                           </span>
                         )}
-                        <span className="text-sm font-medium text-foreground">
+                        <span className="text-xs md:text-sm font-medium text-foreground truncate max-w-[100px] md:max-w-none">
                           {senderName}
                         </span>
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-[10px] md:text-[11px] text-muted-foreground">
                           {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         
@@ -175,31 +174,31 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-4 w-4 md:h-5 md:w-5 opacity-0 group-hover:opacity-100 transition-opacity"
                               >
-                                <MoreVertical className="h-3 w-3" />
+                                <MoreVertical className="h-2.5 w-2.5 md:h-3 md:w-3" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuContent align="end" className="w-36 md:w-40">
                               <DropdownMenuItem 
                                 onClick={() => handleMuteUser(msg.sender_id)}
-                                className="gap-2 text-destructive focus:text-destructive"
+                                className="gap-2 text-destructive focus:text-destructive text-xs md:text-sm"
                               >
-                                <VolumeX className="h-4 w-4" />
-                                Mute in Chat
+                                <VolumeX className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                Mute
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => handleBlockUser(msg.sender_id)}
-                                className="gap-2 text-destructive focus:text-destructive"
+                                className="gap-2 text-destructive focus:text-destructive text-xs md:text-sm"
                               >
-                                <Ban className="h-4 w-4" />
-                                Block User
+                                <Ban className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                Block
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground mt-0.5 break-words leading-relaxed">
+                      <p className="text-xs md:text-sm text-muted-foreground mt-0.5 break-words leading-relaxed">
                         {msg.message}
                       </p>
                     </div>
@@ -209,10 +208,10 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
             })}
             
             {messages.length === 0 && (
-              <div className="text-center py-12">
-                <MessageCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground text-sm">No messages yet</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">Be the first to chat!</p>
+              <div className="text-center py-8 md:py-12">
+                <MessageCircle className="h-8 w-8 md:h-10 md:w-10 text-muted-foreground mx-auto mb-2 md:mb-3" />
+                <p className="text-muted-foreground text-xs md:text-sm">No messages yet</p>
+                <p className="text-muted-foreground/60 text-[10px] md:text-xs mt-1">Be the first to chat!</p>
               </div>
             )}
           </div>
@@ -220,7 +219,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
       </ScrollArea>
 
       {/* Input */}
-      <div className="px-4 py-4 border-t border-border/30">
+      <div className="px-3 py-3 md:px-4 md:py-4 border-t border-border/30">
         {isConnected ? (
           <div className="flex gap-2">
             <Input
@@ -228,14 +227,14 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
               onChange={(e) => setNewMessage(e.target.value.slice(0, 500))}
               onKeyDown={handleKeyDown}
               placeholder="Send a message..."
-              className="flex-1 bg-muted/30 border-border/50"
+              className="flex-1 bg-muted/30 border-border/50 h-9 md:h-10 text-sm"
               maxLength={500}
             />
             <Button
               onClick={handleSend}
               disabled={!newMessage.trim() || sendMessageMutation.isPending}
               size="icon"
-              className="flex-shrink-0"
+              className="flex-shrink-0 h-9 w-9 md:h-10 md:w-10"
             >
               {sendMessageMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -245,9 +244,9 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
             </Button>
           </div>
         ) : (
-          <div className="text-center py-3 px-4 rounded-xl bg-muted/30 border border-border/30">
-            <p className="text-sm text-muted-foreground">
-              Connect your wallet to chat
+          <div className="text-center py-2 md:py-3 px-3 md:px-4 rounded-xl bg-muted/30 border border-border/30">
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Connect wallet to chat
             </p>
           </div>
         )}
