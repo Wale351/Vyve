@@ -139,6 +139,40 @@ export const useProfileById = (profileId: string | undefined) => {
   });
 };
 
+// Fetch profile by wallet address
+export const useProfileByWallet = (walletAddress: string | undefined) => {
+  return useQuery({
+    queryKey: ['profile', 'wallet', walletAddress?.toLowerCase()],
+    queryFn: async () => {
+      if (!walletAddress) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .ilike('wallet_address', walletAddress)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+      
+      // Also fetch role from user_roles
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.id)
+        .order('role')
+        .limit(1)
+        .maybeSingle();
+      
+      return {
+        ...data,
+        role: (roleData?.role || 'viewer') as UserRole,
+      } as PublicProfile & { wallet_address: string };
+    },
+    enabled: !!walletAddress,
+  });
+};
+
 export const useProfileTipsReceived = (profileId: string | undefined) => {
   return useQuery({
     queryKey: ['tips', 'received', profileId],
