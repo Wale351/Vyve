@@ -1,20 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
-export const usePrivyAuth = () => {
-  const { ready, authenticated, user: privyUser, login, logout: privyLogout } = usePrivy();
-  const { wallets } = useWallets();
+export const useWalletAuth = () => {
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { openConnectModal } = useConnectModal();
+  const { signMessageAsync } = useSignMessage();
+  
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Get the wallet address from Privy
-  const wallet = wallets.find(w => w.walletClientType !== 'privy');
-  const walletAddress = wallet?.address || privyUser?.wallet?.address;
+  const walletAddress = address;
 
   // Listen for Supabase auth state changes
   useEffect(() => {
@@ -35,21 +37,16 @@ export const usePrivyAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Auto-authenticate with Supabase when Privy connects
+  // Auto-authenticate with Supabase when wallet connects
   useEffect(() => {
     const authenticateWithSupabase = async () => {
-      if (!ready || !authenticated || !walletAddress || isAuthenticating || session) {
+      if (!isConnected || !walletAddress || isAuthenticating || session) {
         return;
       }
 
       setIsAuthenticating(true);
       
       try {
-        // Get the wallet client to sign
-        if (!wallet) {
-          throw new Error('No wallet found');
-        }
-
         // Generate a cryptographically secure nonce
         const array = new Uint8Array(16);
         crypto.getRandomValues(array);
@@ -58,8 +55,8 @@ export const usePrivyAuth = () => {
         
         const message = `Sign in to Vyve\n\nWallet: ${walletAddress}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
 
-        // Request signature from wallet via Privy
-        const signature = await wallet.sign(message);
+        // Request signature from wallet
+        const signature = await signMessageAsync({ message, account: walletAddress as `0x${string}` });
 
         // Send to backend for verification and session creation
         const { data, error } = await supabase.functions.invoke('wallet-auth', {
@@ -98,29 +95,29 @@ export const usePrivyAuth = () => {
     };
 
     authenticateWithSupabase();
-  }, [ready, authenticated, walletAddress, wallet, session, isAuthenticating]);
+  }, [isConnected, walletAddress, session, isAuthenticating, signMessageAsync]);
 
-  // Sign out from both Privy and Supabase
+  // Sign out from Supabase and disconnect wallet
   const signOut = useCallback(async () => {
     try {
       await supabase.auth.signOut();
-      await privyLogout();
+      disconnect();
       toast.success('Signed out');
     } catch (error) {
       console.error('Sign out error:', error);
     }
-  }, [privyLogout]);
+  }, [disconnect]);
 
-  // Open Privy login modal
+  // Open RainbowKit connect modal
   const openLogin = useCallback(() => {
-    login();
-  }, [login]);
+    openConnectModal?.();
+  }, [openConnectModal]);
 
   return {
-    // Privy state
-    ready,
-    authenticated,
-    privyUser,
+    // Wallet state (for compatibility with usePrivyAuth)
+    ready: true,
+    authenticated: isConnected,
+    privyUser: null,
     walletAddress,
     
     // Supabase state
@@ -128,10 +125,13 @@ export const usePrivyAuth = () => {
     user,
     isAuthenticated: !!session,
     isAuthenticating,
-    isInitialized: ready && isInitialized,
+    isInitialized,
     
     // Actions
     openLogin,
     signOut,
   };
 };
+
+// Re-export as usePrivyAuth for backward compatibility
+export const usePrivyAuth = useWalletAuth;

@@ -3,10 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider } from 'wagmi';
+import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { config } from './lib/wagmi';
-import { PRIVY_APP_ID, privyConfig } from './lib/privy';
 import Index from "./pages/Index";
 import Watch from "./pages/Watch";
 import GoLive from "./pages/GoLive";
@@ -16,12 +15,20 @@ import GameDetail from "./pages/GameDetail";
 import NotFound from "./pages/NotFound";
 import OnboardingModal from "./components/OnboardingModal";
 
+import '@rainbow-me/rainbowkit/styles.css';
+
 const queryClient = new QueryClient();
 
 const App = () => (
-  <PrivyProvider appId={PRIVY_APP_ID} config={privyConfig}>
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
+  <WagmiProvider config={config}>
+    <QueryClientProvider client={queryClient}>
+      <RainbowKitProvider 
+        theme={darkTheme({
+          accentColor: '#8B5CF6',
+          accentColorForeground: 'white',
+          borderRadius: 'medium',
+        })}
+      >
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -38,9 +45,9 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
-  </PrivyProvider>
+      </RainbowKitProvider>
+    </QueryClientProvider>
+  </WagmiProvider>
 );
 
 export default App;

@@ -16,7 +16,7 @@ import {
 import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { usePrivyAuth } from '@/hooks/usePrivyAuth';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useGames } from '@/hooks/useGames';
 
 type Step = 'setup' | 'creating' | 'ready';
@@ -29,7 +29,7 @@ interface StreamData {
 }
 
 const GoLive = () => {
-  const { authenticated, isAuthenticated, isAuthenticating, openLogin } = usePrivyAuth();
+  const { authenticated, isAuthenticated, isAuthenticating, openLogin } = useWalletAuth();
   const { data: games = [] } = useGames();
   const [title, setTitle] = useState('');
   const [gameId, setGameId] = useState('');

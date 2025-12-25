@@ -19,7 +19,7 @@ import {
   useCanUpdateProfileImage,
 } from '@/hooks/useProfile';
 import { useStreamerStreams } from '@/hooks/useStreams';
-import { usePrivyAuth } from '@/hooks/usePrivyAuth';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useProfileUpdate, useProfileImageUpload, useRequestStreamerRole } from '@/hooks/useProfileUpdate';
 import { 
   Users, 
@@ -41,7 +41,7 @@ import { toast } from 'sonner';
 
 const Profile = () => {
   const { address: addressParam } = useParams();
-  const { user, isAuthenticated } = usePrivyAuth();
+  const { user, isAuthenticated } = useWalletAuth();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editBio, setEditBio] = useState('');

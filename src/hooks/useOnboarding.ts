@@ -1,79 +1,78 @@
 import { useState, useEffect, useCallback } from 'react';
-import { usePrivyAuth } from './usePrivyAuth';
+import { useWalletAuth } from './useWalletAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useOnboarding = () => {
-  const { user, isAuthenticated, isInitialized, walletAddress } = usePrivyAuth();
+  const { user, isAuthenticated, isInitialized, walletAddress } = useWalletAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileExists, setProfileExists] = useState<boolean | null>(null);
 
-  const checkProfile = useCallback(async () => {
-    if (!isInitialized) return;
-    
-    if (!isAuthenticated || !user?.id) {
-      setShowOnboarding(false);
-      setProfileExists(null);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error checking profile:', error);
-        setProfileExists(false);
-        setShowOnboarding(true);
-      } else if (!data) {
-        // No profile exists
-        setProfileExists(false);
-        setShowOnboarding(true);
-      } else if (!data.username || !data.avatar_url) {
-        // Profile exists but incomplete
-        setProfileExists(true);
-        setShowOnboarding(true);
-      } else {
-        // Profile is complete
-        setProfileExists(true);
-        setShowOnboarding(false);
+  // Check if user has completed profile setup
+  useEffect(() => {
+    const checkProfile = async () => {
+      if (!isInitialized) {
+        return;
       }
-    } catch (err) {
-      console.error('Error checking profile:', err);
-      setProfileExists(false);
-      setShowOnboarding(true);
-    } finally {
-      setIsLoading(false);
-    }
+
+      if (!isAuthenticated || !user?.id) {
+        setIsLoading(false);
+        setShowOnboarding(false);
+        setProfileExists(null);
+        return;
+      }
+
+      try {
+        // Check if profile exists with required fields
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error checking profile:', error);
+          setProfileExists(false);
+          setShowOnboarding(true);
+        } else if (!data || !data.username || !data.avatar_url) {
+          // Profile doesn't exist or is incomplete
+          setProfileExists(false);
+          setShowOnboarding(true);
+        } else {
+          // Profile is complete
+          setProfileExists(true);
+          setShowOnboarding(false);
+        }
+      } catch (err) {
+        console.error('Error in profile check:', err);
+        setProfileExists(false);
+        setShowOnboarding(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkProfile();
   }, [isAuthenticated, isInitialized, user?.id]);
 
-  useEffect(() => {
-    checkProfile();
-  }, [checkProfile]);
-
+  // Complete onboarding (called after profile creation)
   const completeOnboarding = useCallback(() => {
     setShowOnboarding(false);
     setProfileExists(true);
   }, []);
 
+  // Force show onboarding (for testing or re-triggering)
   const triggerOnboarding = useCallback(() => {
     setShowOnboarding(true);
   }, []);
 
   return {
     showOnboarding,
-    completeOnboarding,
-    triggerOnboarding,
     isLoading,
     profileExists,
-    userId: user?.id,
+    completeOnboarding,
+    triggerOnboarding,
     walletAddress,
-    refetchProfile: checkProfile,
+    userId: user?.id,
   };
 };

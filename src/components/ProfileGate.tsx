@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { usePrivyAuth } from '@/hooks/usePrivyAuth';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { Loader2, UserX, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -18,7 +18,7 @@ interface ProfileGateProps {
  * - Access profile pages
  */
 const ProfileGate = ({ children, fallbackMessage }: ProfileGateProps) => {
-  const { isAuthenticated, isInitialized, openLogin } = usePrivyAuth();
+  const { isAuthenticated, isInitialized, openLogin } = useWalletAuth();
   const { showOnboarding, isLoading, profileExists } = useOnboarding();
 
   // Still initializing
