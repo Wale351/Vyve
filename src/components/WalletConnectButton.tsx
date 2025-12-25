@@ -1,8 +1,7 @@
-import { ReactNode, useCallback } from 'react';
+import { ReactNode } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 
 type WalletConnectButtonProps = {
   children: ReactNode;
@@ -32,47 +31,6 @@ export default function WalletConnectButton({
         const ready = mounted;
         const connected = ready && account && chain;
 
-        const onClickConnect = useCallback(() => {
-          if (import.meta.env.DEV) {
-            console.debug('[WalletConnectButton] click connect', {
-              mounted,
-              hasOpenConnectModal: !!openConnectModal,
-            });
-          }
-
-          if (!openConnectModal) {
-            toast('Wallet UI is still loading. Please try again.');
-            return;
-          }
-
-          openConnectModal();
-        }, [mounted, openConnectModal]);
-
-        const onClickAccount = useCallback(() => {
-          if (import.meta.env.DEV) {
-            console.debug('[WalletConnectButton] click account', {
-              mounted,
-              hasOpenAccountModal: !!openAccountModal,
-              address: account?.address,
-            });
-          }
-
-          if (!openAccountModal) {
-            toast('Wallet UI is still loading. Please try again.');
-            return;
-          }
-
-          openAccountModal();
-        }, [account?.address, mounted, openAccountModal]);
-
-        const onClickChain = useCallback(() => {
-          if (!openChainModal) {
-            toast('Wallet UI is still loading. Please try again.');
-            return;
-          }
-          openChainModal();
-        }, [openChainModal]);
-
         if (!ready) {
           return (
             <Button variant={variant} size={size} className={cn(className)} disabled>
@@ -87,7 +45,7 @@ export default function WalletConnectButton({
               variant={variant}
               size={size}
               className={cn(className)}
-              onClick={onClickConnect}
+              onClick={() => openConnectModal()}
               disabled={disabled}
               type="button"
             >
@@ -102,7 +60,7 @@ export default function WalletConnectButton({
               variant={variant}
               size={size}
               className={cn(className)}
-              onClick={onClickChain}
+              onClick={() => openChainModal()}
               disabled={disabled}
               type="button"
             >
@@ -116,7 +74,7 @@ export default function WalletConnectButton({
             variant={variant}
             size={size}
             className={cn(className)}
-            onClick={onClickAccount}
+            onClick={() => openAccountModal()}
             disabled={disabled}
             type="button"
             title={connectedTitle || account?.displayName}
