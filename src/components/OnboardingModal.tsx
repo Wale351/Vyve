@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Camera, Loader2, AlertCircle, Sparkles, ArrowRight, Lock } from 'lucide-react';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { useCreateProfile, useAvatarUpload } from '@/hooks/useProfileUpdate';
+import { useCreateProfile, useProfileImageUpload } from '@/hooks/useProfileUpdate';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -22,9 +22,9 @@ const OnboardingModal = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const createProfile = useCreateProfile();
-  const avatarUpload = useAvatarUpload();
+  const imageUpload = useProfileImageUpload();
   
-  const isLoading = createProfile.isPending || avatarUpload.isPending;
+  const isLoading = createProfile.isPending || imageUpload.isPending;
 
   // Validate username format
   const validateUsernameFormat = (value: string) => {
@@ -42,21 +42,21 @@ const OnboardingModal = () => {
 
   // Check username uniqueness with debounce
   useEffect(() => {
+    if (!username || username.length < 3) {
+      setUsernameError(null);
+      return;
+    }
+
     const formatError = validateUsernameFormat(username);
     if (formatError) {
       setUsernameError(formatError);
       return;
     }
 
-    if (!username || username.length < 3) {
-      setUsernameError(null);
-      return;
-    }
-
     const timer = setTimeout(async () => {
       setIsCheckingUsername(true);
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('profiles')
           .select('id')
           .eq('username', username)
@@ -122,8 +122,8 @@ const OnboardingModal = () => {
     }
 
     try {
-      // Upload avatar first
-      const avatarUrl = await avatarUpload.mutateAsync({ userId, file: avatarFile });
+      // Upload profile image first
+      const profileImageUrl = await imageUpload.mutateAsync({ userId, file: avatarFile });
 
       // Create profile
       await createProfile.mutateAsync({ 
@@ -131,7 +131,7 @@ const OnboardingModal = () => {
         walletAddress,
         username: username.trim(),
         bio: bio.trim() || undefined,
-        avatarUrl,
+        profileImageUrl,
       });
 
       completeOnboarding();
@@ -244,14 +244,14 @@ const OnboardingModal = () => {
             <Textarea
               id="bio"
               value={bio}
-              onChange={(e) => setBio(e.target.value.slice(0, 200))}
+              onChange={(e) => setBio(e.target.value.slice(0, 500))}
               placeholder="Tell others about yourself..."
               className="bg-muted/30 resize-none"
               rows={3}
-              maxLength={200}
+              maxLength={500}
             />
-            {bio.length > 150 && (
-              <p className="text-xs text-muted-foreground text-right">{bio.length}/200</p>
+            {bio.length > 400 && (
+              <p className="text-xs text-muted-foreground text-right">{bio.length}/500</p>
             )}
           </div>
         </div>
