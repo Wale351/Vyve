@@ -19,7 +19,7 @@ import {
 } from '@/hooks/useProfile';
 import { useStreamerStreams } from '@/hooks/useStreams';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
-import { useProfileUpdate, useProfileImageUpload, useRequestStreamerStatus } from '@/hooks/useProfileUpdate';
+import { useProfileUpdate, useProfileImageUpload, useRequestStreamerRole } from '@/hooks/useProfileUpdate';
 import { 
   Users, 
   Coins, 
@@ -43,7 +43,6 @@ const Profile = () => {
   const { user, isAuthenticated } = useWalletAuth();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editDisplayName, setEditDisplayName] = useState('');
   const [editBio, setEditBio] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -60,7 +59,7 @@ const Profile = () => {
 
   const profileUpdate = useProfileUpdate();
   const imageUpload = useProfileImageUpload();
-  const requestStreamer = useRequestStreamerStatus();
+  const requestStreamer = useRequestStreamerRole();
   const isUpdating = profileUpdate.isPending || imageUpload.isPending;
 
   const copyAddress = async () => {
@@ -73,7 +72,6 @@ const Profile = () => {
   };
 
   const startEditing = () => {
-    setEditDisplayName(profile?.display_name || '');
     setEditBio(profile?.bio || '');
     setAvatarPreview(null);
     setAvatarFile(null);
@@ -114,10 +112,7 @@ const Profile = () => {
         await imageUpload.mutateAsync({ userId: user.id, file: avatarFile });
       }
 
-      const updateData: { display_name?: string | null; bio?: string | null } = {};
-      if (editDisplayName.trim() !== (profile?.display_name || '')) {
-        updateData.display_name = editDisplayName.trim() || null;
-      }
+      const updateData: { bio?: string | null } = {};
       if (editBio.trim() !== (profile?.bio || '')) {
         updateData.bio = editBio.trim() || null;
       }
@@ -175,8 +170,8 @@ const Profile = () => {
     );
   }
 
-  const displayName = profile.display_name || profile.username;
-  const displayAvatar = avatarPreview || profile.profile_image_url;
+  const displayName = profile.username;
+  const displayAvatar = avatarPreview || profile.avatar_url;
   const liveStreams = streams.filter(s => s.is_live);
   const pastStreams = streams.filter(s => !s.is_live);
   const joinDate = new Date(profile.created_at).toLocaleDateString('en-US', {
@@ -221,8 +216,8 @@ const Profile = () => {
                 </div>
               ) : (
                 <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-border shadow-xl">
-                  {profile.profile_image_url ? (
-                    <AvatarImage src={profile.profile_image_url} alt={displayName} />
+                  {profile.avatar_url ? (
+                    <AvatarImage src={profile.avatar_url} alt={displayName} />
                   ) : (
                     <AvatarFallback className="bg-gradient-to-br from-primary via-primary/80 to-secondary text-primary-foreground font-bold text-2xl md:text-4xl">
                       {displayName.charAt(0).toUpperCase()}
@@ -232,7 +227,7 @@ const Profile = () => {
               )}
               
               {/* Verification badge overlay */}
-              {profile.verification_status === 'verified' && (
+              {profile.verified_creator && (
                 <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center border-2 border-background">
                   <BadgeCheck className="h-5 w-5 text-primary-foreground" />
                 </div>
@@ -249,17 +244,7 @@ const Profile = () => {
                     <p className="text-lg font-semibold">@{profile.username}</p>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="displayName" className="text-sm">Display Name</Label>
-                    <Input
-                      id="displayName"
-                      value={editDisplayName}
-                      onChange={(e) => setEditDisplayName(e.target.value.slice(0, 50))}
-                      placeholder="Enter a display name..."
-                      className="bg-muted/30 h-10"
-                      maxLength={50}
-                    />
-                  </div>
+                  
                   
                   <div className="space-y-2">
                     <Label htmlFor="bio" className="text-sm">Bio</Label>
