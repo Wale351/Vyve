@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useProfileComplete } from '@/hooks/useProfile';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
 
 interface TipButtonProps {
@@ -27,7 +27,7 @@ interface TipButtonProps {
 
 const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
   const { isConnected, address } = useAccount();
-  const { user, isAuthenticated } = useWalletAuth();
+  const { user, isAuthenticated } = usePrivyAuth();
   const { data: isProfileComplete } = useProfileComplete(user?.id);
   const { triggerOnboarding } = useOnboarding();
   const [amount, setAmount] = useState('0.01');

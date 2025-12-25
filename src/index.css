@@ -263,10 +263,6 @@
   background: hsl(220 12% 35%);
 }
 
-/* RainbowKit overrides */
-[data-rk] {
-  --rk-colors-accentColor: hsl(var(--primary)) !important;
-}
 
 /* Subtle background pattern */
 .bg-pattern {
