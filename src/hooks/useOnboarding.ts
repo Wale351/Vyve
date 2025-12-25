@@ -24,7 +24,7 @@ export const useOnboarding = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, username, profile_image_url')
+          .select('id, username, avatar_url')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -36,7 +36,7 @@ export const useOnboarding = () => {
           // No profile exists
           setProfileExists(false);
           setShowOnboarding(true);
-        } else if (!data.username || !data.profile_image_url) {
+        } else if (!data.username || !data.avatar_url) {
           // Profile exists but incomplete
           setProfileExists(true);
           setShowOnboarding(true);

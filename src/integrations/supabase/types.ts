@@ -142,42 +142,36 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_last_updated_at: string | null
+          avatar_url: string | null
           bio: string | null
           created_at: string
-          display_name: string | null
           id: string
-          last_profile_image_update: string | null
-          profile_image_url: string | null
-          role: Database["public"]["Enums"]["user_role"]
           updated_at: string
           username: string
-          verification_status: Database["public"]["Enums"]["verification_status"]
+          verified_creator: boolean | null
           wallet_address: string
         }
         Insert: {
+          avatar_last_updated_at?: string | null
+          avatar_url?: string | null
           bio?: string | null
           created_at?: string
-          display_name?: string | null
           id: string
-          last_profile_image_update?: string | null
-          profile_image_url?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           username: string
-          verification_status?: Database["public"]["Enums"]["verification_status"]
+          verified_creator?: boolean | null
           wallet_address: string
         }
         Update: {
+          avatar_last_updated_at?: string | null
+          avatar_url?: string | null
           bio?: string | null
           created_at?: string
-          display_name?: string | null
           id?: string
-          last_profile_image_update?: string | null
-          profile_image_url?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           username?: string
-          verification_status?: Database["public"]["Enums"]["verification_status"]
+          verified_creator?: boolean | null
           wallet_address?: string
         }
         Relationships: []
@@ -470,44 +464,56 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       public_profiles: {
         Row: {
+          avatar_url: string | null
           bio: string | null
           created_at: string | null
-          display_name: string | null
           id: string | null
-          profile_image_url: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
+          role: Database["public"]["Enums"]["app_role"] | null
           username: string | null
-          verification_status:
-            | Database["public"]["Enums"]["verification_status"]
-            | null
+          verified_creator: boolean | null
         }
         Insert: {
+          avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
-          display_name?: string | null
           id?: string | null
-          profile_image_url?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
+          role?: never
           username?: string | null
-          verification_status?:
-            | Database["public"]["Enums"]["verification_status"]
-            | null
+          verified_creator?: boolean | null
         }
         Update: {
+          avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
-          display_name?: string | null
           id?: string | null
-          profile_image_url?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
+          role?: never
           username?: string | null
-          verification_status?:
-            | Database["public"]["Enums"]["verification_status"]
-            | null
+          verified_creator?: boolean | null
         }
         Relationships: []
       }
@@ -529,6 +535,22 @@ export type Database = {
       get_follower_count: { Args: { p_profile_id: string }; Returns: number }
       get_following_count: { Args: { p_profile_id: string }; Returns: number }
       get_my_stream_key: { Args: { p_stream_id: string }; Returns: string }
+      get_profile_by_wallet: {
+        Args: { p_wallet_address: string }
+        Returns: string
+      }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      grant_streamer_role: { Args: { p_user_id: string }; Returns: undefined }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_own_profile: { Args: { profile_id: string }; Returns: boolean }
       is_profile_complete: { Args: { p_user_id: string }; Returns: boolean }
       is_streamer: { Args: { p_user_id: string }; Returns: boolean }
@@ -542,8 +564,7 @@ export type Database = {
       }
     }
     Enums: {
-      user_role: "viewer" | "streamer"
-      verification_status: "unverified" | "pending" | "verified"
+      app_role: "viewer" | "streamer" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -671,8 +692,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["viewer", "streamer"],
-      verification_status: ["unverified", "pending", "verified"],
+      app_role: ["viewer", "streamer", "admin"],
     },
   },
 } as const

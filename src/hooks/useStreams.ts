@@ -18,7 +18,7 @@ export interface StreamWithProfile {
   profiles: {
     id: string;
     username: string;
-    profile_image_url: string | null;
+    avatar_url: string | null;
     bio?: string | null;
   } | null;
   games?: {
@@ -52,7 +52,7 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            profile_image_url
+            avatar_url
           ),
           games (
             id,
@@ -71,7 +71,7 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
 
       if (error) throw error;
       
-      let results = data as StreamWithProfile[];
+      let results = data as unknown as StreamWithProfile[];
       
       // Filter by category client-side (games.category)
       if (filters?.category) {
@@ -108,7 +108,7 @@ export const useStream = (streamId: string | undefined) => {
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            profile_image_url,
+            avatar_url,
             bio
           ),
           games (
@@ -122,7 +122,7 @@ export const useStream = (streamId: string | undefined) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as StreamWithProfile | null;
+      return data as unknown as StreamWithProfile | null;
     },
     enabled: !!streamId,
   });
@@ -153,7 +153,7 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            profile_image_url
+            avatar_url
           ),
           games (
             id,
@@ -166,7 +166,7 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
         .order('started_at', { ascending: false });
 
       if (error) throw error;
-      return data as StreamWithProfile[];
+      return data as unknown as StreamWithProfile[];
     },
     enabled: !!streamerId,
   });
@@ -197,7 +197,7 @@ export const useStreamsByGame = (gameId: string | undefined) => {
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            profile_image_url
+            avatar_url
           ),
           games (
             id,
@@ -211,7 +211,7 @@ export const useStreamsByGame = (gameId: string | undefined) => {
         .order('viewer_count', { ascending: false });
 
       if (error) throw error;
-      return data as StreamWithProfile[];
+      return data as unknown as StreamWithProfile[];
     },
     enabled: !!gameId,
   });

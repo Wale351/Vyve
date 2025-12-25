@@ -1,32 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'viewer' | 'streamer';
-export type VerificationStatus = 'unverified' | 'pending' | 'verified';
+export type UserRole = 'viewer' | 'streamer' | 'admin';
 
 export interface Profile {
   id: string;
   wallet_address: string;
   username: string;
-  display_name: string | null;
   bio: string | null;
-  profile_image_url: string | null;
-  role: UserRole;
-  verification_status: VerificationStatus;
-  last_profile_image_update: string | null;
+  avatar_url: string | null;
+  verified_creator: boolean;
+  avatar_last_updated_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
-// Public profile without wallet address
 export interface PublicProfile {
   id: string;
   username: string;
-  display_name: string | null;
   bio: string | null;
-  profile_image_url: string | null;
+  avatar_url: string | null;
+  verified_creator: boolean;
   role: UserRole;
-  verification_status: VerificationStatus;
   created_at: string;
 }
 
@@ -79,14 +74,13 @@ export const useProfileComplete = (userId: string | undefined) => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, profile_image_url')
+        .select('id, username, avatar_url')
         .eq('id', userId)
         .maybeSingle();
 
       if (error) return false;
       
-      // Profile is complete if it exists, has username and profile image
-      return !!(data?.username && data?.profile_image_url);
+      return !!(data?.username && data?.avatar_url);
     },
     enabled: !!userId,
   });
@@ -101,17 +95,17 @@ export const useCanUpdateProfileImage = (userId: string | undefined) => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('last_profile_image_update')
+        .select('avatar_last_updated_at')
         .eq('id', userId)
         .maybeSingle();
 
       if (error || !data) return { canUpdate: true, nextUpdateDate: null };
       
-      if (!data.last_profile_image_update) {
+      if (!data.avatar_last_updated_at) {
         return { canUpdate: true, nextUpdateDate: null };
       }
       
-      const lastUpdate = new Date(data.last_profile_image_update);
+      const lastUpdate = new Date(data.avatar_last_updated_at);
       const nextUpdate = new Date(lastUpdate);
       nextUpdate.setDate(nextUpdate.getDate() + 30);
       
@@ -221,5 +215,27 @@ export const useIsFollowing = (currentUserId: string | undefined, profileId: str
       return !!data;
     },
     enabled: !!currentUserId && !!profileId && currentUserId !== profileId,
+  });
+};
+
+// Get user role from user_roles table
+export const useUserRole = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ['user-role', userId],
+    queryFn: async () => {
+      if (!userId) return 'viewer' as UserRole;
+      
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .order('role')
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !data) return 'viewer' as UserRole;
+      return data.role as UserRole;
+    },
+    enabled: !!userId,
   });
 };

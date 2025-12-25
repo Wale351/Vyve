@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface UpdateProfileData {
-  display_name?: string | null;
   bio?: string | null;
 }
 
@@ -67,7 +66,7 @@ export const useProfileImageUpload = () => {
       // Update profile with new image URL
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ profile_image_url: urlWithCacheBuster })
+        .update({ avatar_url: urlWithCacheBuster })
         .eq('id', userId);
 
       if (updateError) throw updateError;
@@ -99,13 +98,13 @@ export const useCreateProfile = () => {
       walletAddress, 
       username, 
       bio,
-      profileImageUrl 
+      avatarUrl 
     }: { 
       userId: string; 
       walletAddress: string;
       username: string;
       bio?: string;
-      profileImageUrl: string;
+      avatarUrl: string;
     }) => {
       const { error } = await supabase
         .from('profiles')
@@ -114,8 +113,8 @@ export const useCreateProfile = () => {
           wallet_address: walletAddress,
           username,
           bio: bio || null,
-          profile_image_url: profileImageUrl,
-          last_profile_image_update: new Date().toISOString(),
+          avatar_url: avatarUrl,
+          avatar_last_updated_at: new Date().toISOString(),
         });
 
       if (error) {
@@ -142,23 +141,18 @@ export const useCreateProfile = () => {
   });
 };
 
-// Request streamer status
-export const useRequestStreamerStatus = () => {
+// Request streamer role (uses RPC to grant role securely)
+export const useRequestStreamerRole = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      // For now, just update to streamer role directly
-      // In production, this might set a pending status for admin approval
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: 'streamer' })
-        .eq('id', userId);
-
+      const { error } = await supabase.rpc('grant_streamer_role', { p_user_id: userId });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user-role'] });
       toast.success('You are now a streamer!');
     },
     onError: (error) => {

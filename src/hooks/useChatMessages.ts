@@ -11,7 +11,7 @@ export interface ChatMessageWithSender {
   created_at: string;
   profiles: {
     username: string;
-    profile_image_url: string | null;
+    avatar_url: string | null;
   } | null;
 }
 
@@ -30,7 +30,7 @@ export const useChatMessages = (streamId: string | undefined) => {
           *,
           profiles!chat_messages_sender_id_fkey (
             username,
-            profile_image_url
+            avatar_url
           )
         `)
         .eq('stream_id', streamId)
@@ -38,7 +38,7 @@ export const useChatMessages = (streamId: string | undefined) => {
         .limit(100);
 
       if (error) throw error;
-      return data as ChatMessageWithSender[];
+      return data as unknown as ChatMessageWithSender[];
     },
     enabled: !!streamId,
     staleTime: Infinity, // Don't refetch - rely on realtime
@@ -83,7 +83,7 @@ export const useChatMessages = (streamId: string | undefined) => {
               *,
               profiles!chat_messages_sender_id_fkey (
                 username,
-                profile_image_url
+                avatar_url
               )
             `)
             .eq('id', newMsg.id)
@@ -92,7 +92,7 @@ export const useChatMessages = (streamId: string | undefined) => {
           if (data) {
             queryClient.setQueryData<ChatMessageWithSender[]>(
               ['chat', streamId],
-              (old) => [...(old || []), data as ChatMessageWithSender]
+              (old) => [...(old || []), data as unknown as ChatMessageWithSender]
             );
           }
         }
@@ -122,7 +122,7 @@ interface SendMessageParams {
   message: string;
   senderProfile?: {
     username: string;
-    profile_image_url: string | null;
+    avatar_url: string | null;
   };
 }
 
