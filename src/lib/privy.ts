@@ -1,8 +1,9 @@
 import { base } from 'viem/chains';
 import type { PrivyClientConfig } from '@privy-io/react-auth';
 
-// Privy App ID - this is a publishable key
-export const PRIVY_APP_ID = 'cm6b6g3mn005t12oaz9xsmxyv';
+// Privy App ID - Get yours from https://dashboard.privy.io
+// This is a publishable key, safe to include in frontend code
+export const PRIVY_APP_ID = 'clpispdty00ycl80fpueukbhl';
 
 export const privyConfig: PrivyClientConfig = {
   appearance: {

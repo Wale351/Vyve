@@ -13,11 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useAccount } from 'wagmi';
 import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { useGames } from '@/hooks/useGames';
 
 type Step = 'setup' | 'creating' | 'ready';
@@ -30,8 +29,7 @@ interface StreamData {
 }
 
 const GoLive = () => {
-  const { isConnected } = useAccount();
-  const { isAuthenticated, isAuthenticating, signInWithWallet } = useWalletAuth();
+  const { authenticated, isAuthenticated, isAuthenticating, openLogin } = usePrivyAuth();
   const { data: games = [] } = useGames();
   const [title, setTitle] = useState('');
   const [gameId, setGameId] = useState('');
@@ -160,26 +158,8 @@ const GoLive = () => {
     setTags(tags.filter(t => t !== tagToRemove));
   };
 
-  // Not connected state
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-background page-enter">
-        <Header />
-        <div className="container px-4 py-12 md:py-20 flex items-center justify-center">
-          <div className="glass-card max-w-sm md:max-w-md p-6 md:p-10 text-center w-full">
-            <AlertCircle className="h-10 w-10 md:h-14 md:w-14 text-muted-foreground mx-auto mb-4 md:mb-6" />
-            <h1 className="font-display text-xl md:text-2xl font-bold mb-2 md:mb-3">Connect Your Wallet</h1>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Connect your wallet to start streaming.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Not authenticated state
-  if (!isAuthenticated) {
+  // Not authenticated state - Privy handles both connection and auth
+  if (!authenticated || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-background page-enter">
         <Header />
@@ -188,10 +168,10 @@ const GoLive = () => {
             <LogIn className="h-10 w-10 md:h-14 md:w-14 text-muted-foreground mx-auto mb-4 md:mb-6" />
             <h1 className="font-display text-xl md:text-2xl font-bold mb-2 md:mb-3">Sign In Required</h1>
             <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
-              Sign in with your wallet to start streaming.
+              Connect your wallet to start streaming.
             </p>
             <Button 
-              onClick={signInWithWallet} 
+              onClick={openLogin} 
               variant="premium" 
               size="lg"
               disabled={isAuthenticating}
@@ -202,7 +182,7 @@ const GoLive = () => {
               ) : (
                 <LogIn className="h-4 w-4 md:h-5 md:w-5" />
               )}
-              {isAuthenticating ? 'Signing In...' : 'Sign In'}
+              {isAuthenticating ? 'Signing In...' : 'Connect Wallet'}
             </Button>
           </div>
         </div>

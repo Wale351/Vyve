@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { Loader2, UserX, LogIn } from 'lucide-react';
-import ConnectWalletButton from '@/components/ConnectWalletButton';
+import { Button } from '@/components/ui/button';
 
 interface ProfileGateProps {
   children: ReactNode;
@@ -18,7 +18,7 @@ interface ProfileGateProps {
  * - Access profile pages
  */
 const ProfileGate = ({ children, fallbackMessage }: ProfileGateProps) => {
-  const { isAuthenticated, isInitialized } = useWalletAuth();
+  const { isAuthenticated, isInitialized, openLogin } = usePrivyAuth();
   const { showOnboarding, isLoading, profileExists } = useOnboarding();
 
   // Still initializing
@@ -42,7 +42,7 @@ const ProfileGate = ({ children, fallbackMessage }: ProfileGateProps) => {
         <p className="text-muted-foreground mb-4 max-w-sm">
           Connect your wallet to access this feature.
         </p>
-        <ConnectWalletButton variant="premium" size="sm">Connect Wallet</ConnectWalletButton>
+        <Button onClick={openLogin} variant="premium" size="sm">Connect Wallet</Button>
       </div>
     );
   }
@@ -70,4 +70,3 @@ const ProfileGate = ({ children, fallbackMessage }: ProfileGateProps) => {
 };
 
 export default ProfileGate;
-
