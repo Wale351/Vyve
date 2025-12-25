@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { BadgeCheck, Star, Coins, Radio, Clock } from 'lucide-react';
+import { BadgeCheck, Star, Coins, Radio } from 'lucide-react';
 import { PublicProfile } from '@/hooks/useProfile';
 
 interface ProfileBadgesProps {
@@ -11,7 +11,7 @@ const ProfileBadges = ({ profile, tipsReceived = 0 }: ProfileBadgesProps) => {
   const badges = [];
 
   // Verified badge
-  if (profile.verification_status === 'verified') {
+  if (profile.verified_creator) {
     badges.push(
       <Badge key="verified" variant="default" className="gap-1 bg-primary/20 text-primary border-primary/30">
         <BadgeCheck className="h-3 w-3" />
@@ -21,7 +21,7 @@ const ProfileBadges = ({ profile, tipsReceived = 0 }: ProfileBadgesProps) => {
   }
 
   // Streamer badge
-  if (profile.role === 'streamer') {
+  if (profile.role === 'streamer' || profile.role === 'admin') {
     badges.push(
       <Badge key="streamer" variant="secondary" className="gap-1">
         <Radio className="h-3 w-3" />

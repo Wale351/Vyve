@@ -26,21 +26,13 @@ const OnboardingModal = () => {
   
   const isLoading = createProfile.isPending || imageUpload.isPending;
 
-  // Validate username format
   const validateUsernameFormat = (value: string) => {
-    if (value.length < 3) {
-      return 'Username must be at least 3 characters';
-    }
-    if (value.length > 30) {
-      return 'Username must be 30 characters or less';
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(value)) {
-      return 'Username can only contain letters, numbers, and underscores';
-    }
+    if (value.length < 3) return 'Username must be at least 3 characters';
+    if (value.length > 30) return 'Username must be 30 characters or less';
+    if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Username can only contain letters, numbers, and underscores';
     return null;
   };
 
-  // Check username uniqueness with debounce
   useEffect(() => {
     if (!username || username.length < 3) {
       setUsernameError(null);
@@ -62,11 +54,7 @@ const OnboardingModal = () => {
           .eq('username', username)
           .maybeSingle();
 
-        if (data) {
-          setUsernameError('Username is already taken');
-        } else {
-          setUsernameError(null);
-        }
+        setUsernameError(data ? 'Username is already taken' : null);
       } catch (err) {
         console.error('Error checking username:', err);
       } finally {
@@ -85,12 +73,10 @@ const OnboardingModal = () => {
         toast.error('Please upload a JPEG, PNG, WebP, or GIF image');
         return;
       }
-      
       if (file.size > 5 * 1024 * 1024) {
         toast.error('Maximum file size is 5MB');
         return;
       }
-      
       setAvatarFile(file);
       const reader = new FileReader();
       reader.onload = () => setAvatarPreview(reader.result as string);
@@ -103,40 +89,32 @@ const OnboardingModal = () => {
       toast.error('Please connect your wallet first');
       return;
     }
-
-    // Validate required fields
     if (!avatarFile) {
       toast.error('Please upload a profile picture');
       return;
     }
-
     const formatError = validateUsernameFormat(username);
     if (formatError) {
       toast.error(formatError);
       return;
     }
-
     if (usernameError) {
       toast.error(usernameError);
       return;
     }
 
     try {
-      // Upload profile image first
-      const profileImageUrl = await imageUpload.mutateAsync({ userId, file: avatarFile });
-
-      // Create profile
+      const avatarUrl = await imageUpload.mutateAsync({ userId, file: avatarFile });
       await createProfile.mutateAsync({ 
         userId, 
         walletAddress,
         username: username.trim(),
         bio: bio.trim() || undefined,
-        profileImageUrl,
+        avatarUrl,
       });
-
       completeOnboarding();
     } catch (error) {
-      // Error handling is done in the mutation hooks
+      // Error handling done in mutation hooks
     }
   };
 
@@ -158,17 +136,13 @@ const OnboardingModal = () => {
           </div>
           <DialogTitle className="font-display text-2xl">Welcome to Vyve!</DialogTitle>
           <DialogDescription>
-            Create your profile to get started. Your username is permanent and cannot be changed later.
+            Create your profile to get started. Your username is permanent.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Avatar Upload - Required */}
           <div className="flex flex-col items-center gap-3">
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="relative cursor-pointer group"
-            >
+            <div onClick={() => fileInputRef.current?.click()} className="relative cursor-pointer group">
               <Avatar className="w-24 h-24 border-2 border-border">
                 {avatarPreview ? (
                   <AvatarImage src={avatarPreview} alt="Avatar preview" />
@@ -182,106 +156,41 @@ const OnboardingModal = () => {
                 <Camera className="h-6 w-6" />
               </div>
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleFileChange} className="hidden" />
             <div className="text-center">
-              <p className="text-sm font-medium">
-                Profile Picture <span className="text-destructive">*</span>
-              </p>
-              <p className="text-xs text-muted-foreground">Max 5MB • JPEG, PNG, WebP, GIF</p>
+              <p className="text-sm font-medium">Profile Picture <span className="text-destructive">*</span></p>
+              <p className="text-xs text-muted-foreground">Max 5MB</p>
             </div>
-            {!avatarFile && (
-              <p className="text-xs text-destructive flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Required
-              </p>
-            )}
+            {!avatarFile && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />Required</p>}
           </div>
 
-          {/* Username - Required, Permanent */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="username">
-                Username <span className="text-destructive">*</span>
-              </Label>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Lock className="h-3 w-3" />
-                <span>Permanent</span>
-              </div>
+              <Label htmlFor="username">Username <span className="text-destructive">*</span></Label>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /><span>Permanent</span></div>
             </div>
             <div className="relative">
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase().slice(0, 30))}
-                placeholder="Choose a unique username..."
-                className={`bg-muted/30 ${usernameError ? 'border-destructive' : ''}`}
-                maxLength={30}
-              />
-              {isCheckingUsername && (
-                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-              )}
+              <Input id="username" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().slice(0, 30))} placeholder="Choose a unique username..." className={`bg-muted/30 ${usernameError ? 'border-destructive' : ''}`} maxLength={30} />
+              {isCheckingUsername && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
-            {usernameError && (
-              <p className="text-xs text-destructive flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {usernameError}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              3-30 characters. Letters, numbers, and underscores only.
-            </p>
+            {usernameError && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{usernameError}</p>}
           </div>
 
-          {/* Bio - Optional */}
           <div className="space-y-2">
             <Label htmlFor="bio">Bio (optional)</Label>
-            <Textarea
-              id="bio"
-              value={bio}
-              onChange={(e) => setBio(e.target.value.slice(0, 500))}
-              placeholder="Tell others about yourself..."
-              className="bg-muted/30 resize-none"
-              rows={3}
-              maxLength={500}
-            />
-            {bio.length > 400 && (
-              <p className="text-xs text-muted-foreground text-right">{bio.length}/500</p>
-            )}
+            <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value.slice(0, 500))} placeholder="Tell others about yourself..." className="bg-muted/30 resize-none" rows={3} maxLength={500} />
           </div>
         </div>
 
-        {/* Important Notice */}
         <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 mb-4">
           <p className="text-xs text-warning flex items-start gap-2">
             <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <span>
-              <strong>Important:</strong> Your username cannot be changed after profile creation. 
-              Choose wisely!
-            </span>
+            <span><strong>Important:</strong> Your username cannot be changed after profile creation.</span>
           </p>
         </div>
 
-        {/* Action Button */}
-        <Button
-          variant="premium"
-          onClick={handleComplete}
-          className="w-full gap-2"
-          disabled={!canSubmit || isLoading}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <>
-              Create Profile
-              <ArrowRight className="h-4 w-4" />
-            </>
-          )}
+        <Button variant="premium" onClick={handleComplete} className="w-full gap-2" disabled={!canSubmit || isLoading}>
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><span>Create Profile</span><ArrowRight className="h-4 w-4" /></>}
         </Button>
       </DialogContent>
     </Dialog>
