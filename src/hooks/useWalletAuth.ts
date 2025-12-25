@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useAccountModal, useConnectModal } from '@rainbow-me/rainbowkit';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -32,6 +32,7 @@ export const useWalletAuth = () => {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { openConnectModal } = useConnectModal();
+  const { openAccountModal } = useAccountModal();
   const { signMessageAsync } = useSignMessage();
 
   const [session, setSession] = useState<Session | null>(null);
@@ -54,9 +55,22 @@ export const useWalletAuth = () => {
     signMessageAsyncRef.current = signMessageAsync;
   }, [signMessageAsync]);
 
+  // Keep an up-to-date reference to RainbowKit modal openers (avoid stale closures).
+  const openConnectModalRef = useRef(openConnectModal);
+  useEffect(() => {
+    openConnectModalRef.current = openConnectModal;
+  }, [openConnectModal]);
+
+  const openAccountModalRef = useRef(openAccountModal);
+  useEffect(() => {
+    openAccountModalRef.current = openAccountModal;
+  }, [openAccountModal]);
+
   // Listen for Supabase auth state changes
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
@@ -210,23 +224,38 @@ export const useWalletAuth = () => {
     }
   }, [disconnect, shared]);
 
-  // Open RainbowKit connect modal
+  // Open RainbowKit connect/account modal
   const openLogin = useCallback(() => {
+    // If user is already connected, open the account modal (so they can switch/disconnect).
+    if (isConnected) {
+      const openAccount = openAccountModalRef.current;
+      if (openAccount) {
+        openAccount();
+        return;
+      }
+    }
+
     // Reset suppression when user explicitly wants to connect
     shared.suppressAuthUntil = 0;
     shared.authenticatedAddress = null;
     authenticatedAddressRef.current = null;
-    
-    if (openConnectModal) {
-      openConnectModal();
-    } else {
-      console.warn('RainbowKit modal not ready yet');
+
+    const openConnect = openConnectModalRef.current;
+    if (openConnect) {
+      openConnect();
+      return;
     }
-  }, [openConnectModal, shared]);
+
+    // RainbowKit modal can be briefly undefined during provider init.
+    toast('Wallet modal is still loading. Try again in a moment.');
+    setTimeout(() => {
+      openConnectModalRef.current?.();
+    }, 150);
+  }, [isConnected, shared]);
 
   return {
     // Wallet state (for compatibility with usePrivyAuth)
-    ready: !!openConnectModal,
+    ready: true,
     authenticated: isConnected,
     privyUser: null,
     walletAddress,
