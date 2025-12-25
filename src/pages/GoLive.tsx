@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Header from '@/components/Header';
 import ProfileGate from '@/components/ProfileGate';
+import WalletConnectButton from '@/components/WalletConnectButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,7 +30,7 @@ interface StreamData {
 }
 
 const GoLive = () => {
-  const { authenticated, isAuthenticated, isAuthenticating, openLogin } = useWalletAuth();
+  const { authenticated, isAuthenticated, isAuthenticating } = useWalletAuth();
   const { data: games = [] } = useGames();
   const [title, setTitle] = useState('');
   const [gameId, setGameId] = useState('');
@@ -170,8 +171,7 @@ const GoLive = () => {
             <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
               Connect your wallet to start streaming.
             </p>
-            <Button 
-              onClick={openLogin} 
+            <WalletConnectButton 
               variant="premium" 
               size="lg"
               disabled={isAuthenticating}
@@ -183,7 +183,7 @@ const GoLive = () => {
                 <LogIn className="h-4 w-4 md:h-5 md:w-5" />
               )}
               {isAuthenticating ? 'Signing In...' : 'Connect Wallet'}
-            </Button>
+            </WalletConnectButton>
           </div>
         </div>
       </div>

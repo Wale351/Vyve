@@ -1,10 +1,7 @@
 import { Play, Zap, Shield, Users, TrendingUp, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import WalletConnectButton from '@/components/WalletConnectButton';
 
 const Landing = () => {
-  const { openLogin } = useWalletAuth();
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -16,10 +13,10 @@ const Landing = () => {
             </div>
             <span className="font-display text-xl font-bold">Vyve</span>
           </div>
-          
-          <Button onClick={openLogin} variant="premium" size="sm" className="gap-2">
+
+          <WalletConnectButton variant="premium" size="sm" className="gap-2">
             Connect Wallet
-          </Button>
+          </WalletConnectButton>
         </div>
       </header>
 
@@ -66,10 +63,10 @@ const Landing = () => {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in"
               style={{ animationDelay: '300ms' }}
             >
-              <Button onClick={openLogin} variant="premium" size="lg" className="gap-2 text-lg px-8 py-6">
+              <WalletConnectButton variant="premium" size="lg" className="gap-2 text-lg px-8 py-6">
                 <Play className="h-5 w-5" />
                 Get Started
-              </Button>
+              </WalletConnectButton>
             </div>
           </div>
         </div>
