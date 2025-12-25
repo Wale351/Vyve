@@ -452,6 +452,10 @@ export type Database = {
         Args: { p_stream_id: string; p_user_id: string }
         Returns: boolean
       }
+      store_stream_key: {
+        Args: { p_stream_id: string; p_stream_key: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
