@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
   useProfile, 
+  useProfileByWallet,
   useProfileTipsReceived, 
   useOwnProfile,
   useFollowerCount,
@@ -39,7 +40,7 @@ import {
 import { toast } from 'sonner';
 
 const Profile = () => {
-  const { address: profileId } = useParams();
+  const { address: addressParam } = useParams();
   const { user, isAuthenticated } = useWalletAuth();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -48,8 +49,22 @@ const Profile = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Detect if the param is a wallet address (starts with 0x) or a UUID
+  const isWalletAddress = addressParam?.startsWith('0x');
+  
+  // Fetch profile by wallet address or by ID
+  const { data: profileByWallet, isLoading: walletLoading } = useProfileByWallet(
+    isWalletAddress ? addressParam : undefined
+  );
+  const { data: profileById, isLoading: idLoading } = useProfile(
+    !isWalletAddress ? addressParam : undefined
+  );
+  
+  const profile = isWalletAddress ? profileByWallet : profileById;
+  const profileLoading = isWalletAddress ? walletLoading : idLoading;
+  const profileId = profile?.id;
+
   const isOwnProfile = user?.id === profileId;
-  const { data: profile, isLoading: profileLoading } = useProfile(profileId);
   const { data: ownProfile } = useOwnProfile(isOwnProfile ? profileId : undefined);
   const { data: totalTips = 0 } = useProfileTipsReceived(profileId);
   const { data: streams = [], isLoading: streamsLoading } = useStreamerStreams(profileId);
@@ -134,8 +149,12 @@ const Profile = () => {
     await requestStreamer.mutateAsync(user.id);
   };
 
-  // Redirect if no profile exists (should not happen with mandatory onboarding)
-  if (!profileLoading && !profile && isAuthenticated && isOwnProfile) {
+  // Check if viewing own profile by wallet address
+  const isViewingOwnWallet = isWalletAddress && 
+    user?.user_metadata?.wallet_address?.toLowerCase() === addressParam?.toLowerCase();
+  
+  // Redirect if no profile exists for own wallet (should trigger onboarding instead)
+  if (!profileLoading && !profile && isAuthenticated && isViewingOwnWallet) {
     return <Navigate to="/" replace />;
   }
 
