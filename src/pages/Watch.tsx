@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import VideoPlayer from '@/components/VideoPlayer';
@@ -10,8 +10,9 @@ import { useStream } from '@/hooks/useStreams';
 import { useEndStream } from '@/hooks/useStreamControls';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useViewerPresence, useStreamRealtime } from '@/hooks/useViewerPresence';
+import { useLivepeerStatus, StreamPhase } from '@/hooks/useLivepeerStatus';
 import { formatViewerCount, formatDuration } from '@/lib/mockData';
-import { Users, Clock, Share2, Heart, ExternalLink, Loader2, Play, StopCircle, MessageCircle, ChevronUp, Radio } from 'lucide-react';
+import { Users, Clock, Share2, Heart, ExternalLink, Loader2, Play, StopCircle, MessageCircle, ChevronUp, Radio, AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Watch = () => {
@@ -27,10 +28,31 @@ const Watch = () => {
   const { viewerCount: liveViewerCount, isConnected } = useViewerPresence(streamId);
   const realtimeStream = useStreamRealtime(streamId);
   
+  // Livepeer status polling - polls every 5s until stream is live
+  const livepeerStatus = useLivepeerStatus({
+    playbackId: stream?.playback_id || undefined,
+    streamId: stream?.id,
+    isLive: stream?.is_live || false,
+    endedAt: stream?.ended_at,
+    pollInterval: 5000,
+  });
+  
   // Use real-time viewer count if available, otherwise fall back to database value
   const displayViewerCount = liveViewerCount > 0 ? liveViewerCount : (realtimeStream?.viewer_count ?? stream?.viewer_count ?? 0);
   
   const isStreamOwner = user?.id && stream?.streamer_id === user.id;
+
+  // Determine the effective stream phase
+  const getStreamPhase = (): StreamPhase => {
+    if (!stream) return 'idle';
+    if (stream.ended_at) return 'ended';
+    if (livepeerStatus.isActive) return 'live';
+    if (stream.is_live && !livepeerStatus.isActive) return 'waiting'; // DB says live but Livepeer not ready
+    if (stream.playback_id) return 'waiting';
+    return 'idle';
+  };
+  
+  const streamPhase = getStreamPhase();
 
   if (isLoading) {
     return (
@@ -73,6 +95,34 @@ const Watch = () => {
   const streamerName = stream.profiles?.username || 'Anonymous';
   const streamerId = stream.profiles?.id || '';
 
+  // Stream phase indicator component
+  const StreamPhaseIndicator = () => {
+    switch (streamPhase) {
+      case 'live':
+        return (
+          <div className="live-badge flex items-center gap-1 text-[10px] px-2 py-0.5">
+            <span className="w-1 h-1 rounded-full bg-destructive-foreground animate-pulse-subtle" />
+            LIVE
+          </div>
+        );
+      case 'waiting':
+        return (
+          <div className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-warning/20 text-warning-foreground border border-warning/30">
+            <Loader2 className="w-2 h-2 animate-spin" />
+            STARTING
+          </div>
+        );
+      case 'ended':
+        return (
+          <div className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            ENDED
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background page-enter">
       <Header />
@@ -86,10 +136,12 @@ const Watch = () => {
             {/* Video Player - Full width on mobile */}
             <div className="w-full lg:rounded-2xl lg:overflow-hidden lg:shadow-xl">
               <VideoPlayer
-                playbackUrl={stream.playback_url || undefined}
+                playbackUrl={livepeerStatus.playbackUrl || stream.playback_url || undefined}
                 playbackId={stream.playback_id || undefined}
                 title={stream.title}
-                isLive={stream.is_live || false}
+                isLive={streamPhase === 'live'}
+                streamPhase={streamPhase}
+                onRetry={livepeerStatus.retry}
               />
             </div>
 
@@ -101,12 +153,7 @@ const Watch = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
-                        {stream.is_live && (
-                          <div className="live-badge flex items-center gap-1 text-[10px] px-2 py-0.5">
-                            <span className="w-1 h-1 rounded-full bg-destructive-foreground animate-pulse-subtle" />
-                            LIVE
-                          </div>
-                        )}
+                        <StreamPhaseIndicator />
                       </div>
                       <h1 className="font-display text-lg md:text-xl font-bold line-clamp-2">{stream.title}</h1>
                     </div>
@@ -150,7 +197,7 @@ const Watch = () => {
                     </Link>
                     
                     {/* Owner end stream button - inline on mobile */}
-                    {isStreamOwner && stream.is_live && (
+                    {isStreamOwner && streamPhase === 'live' && (
                       <Button 
                         variant="destructive" 
                         size="sm"
@@ -178,12 +225,12 @@ const Watch = () => {
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/50 text-xs md:text-sm">
                       <Users className="h-3.5 w-3.5 text-muted-foreground" />
                       <span className="font-medium">{formatViewerCount(displayViewerCount)}</span>
-                      {isConnected && (
+                      {isConnected && streamPhase === 'live' && (
                         <Radio className="h-2.5 w-2.5 text-success animate-pulse" />
                       )}
                     </div>
                     
-                    {stream.started_at && (
+                    {stream.started_at && streamPhase === 'live' && (
                       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/50 text-xs md:text-sm">
                         <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                         <span>{formatDuration(new Date(stream.started_at))}</span>
@@ -193,6 +240,13 @@ const Watch = () => {
                     {stream.game_category && (
                       <div className="px-2.5 py-1 rounded-lg bg-primary/10 text-xs md:text-sm text-primary font-medium">
                         {stream.game_category}
+                      </div>
+                    )}
+                    
+                    {livepeerStatus.isChecking && streamPhase === 'waiting' && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Checking...
                       </div>
                     )}
                   </div>

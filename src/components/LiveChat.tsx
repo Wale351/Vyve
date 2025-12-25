@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useChatMessages, useSendMessage } from '@/hooks/useChatMessages';
-import { useProfile } from '@/hooks/useProfile';
+import { useOwnProfile } from '@/hooks/useProfile';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useIsStreamOwner, useMuteUser, useBlockUser, useMutedUsers } from '@/hooks/useModeration';
 import { useStream } from '@/hooks/useStreams';
@@ -38,7 +38,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: messages = [], isLoading } = useChatMessages(streamId);
-  const { data: profile } = useProfile(user?.id);
+  const { data: profile } = useOwnProfile(user?.id);
   const { data: stream } = useStream(streamId);
   const { data: isStreamOwner } = useIsStreamOwner(streamId, user?.id);
   const { data: mutedUsers = [] } = useMutedUsers(streamId);
@@ -68,6 +68,11 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
         streamId,
         senderId: profile.id,
         message: newMessage.trim(),
+        senderProfile: {
+          username: profile.username,
+          wallet_address: profile.wallet_address,
+          avatar_url: profile.avatar_url,
+        },
       });
       setNewMessage('');
     } catch (error: any) {

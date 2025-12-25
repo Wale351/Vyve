@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Loader2, RefreshCw } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Loader2, RefreshCw, Radio, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import Hls from 'hls.js';
+import { StreamPhase } from '@/hooks/useLivepeerStatus';
 
 interface VideoPlayerProps {
   playbackUrl?: string;
@@ -11,20 +12,29 @@ interface VideoPlayerProps {
   title: string;
   isLive?: boolean;
   thumbnailUrl?: string;
+  streamPhase?: StreamPhase;
+  onRetry?: () => void;
 }
 
-const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnailUrl }: VideoPlayerProps) => {
+const VideoPlayer = ({ 
+  playbackUrl, 
+  playbackId, 
+  title, 
+  isLive = false, 
+  thumbnailUrl,
+  streamPhase = 'idle',
+  onRetry,
+}: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Start muted for autoplay
+  const [isMuted, setIsMuted] = useState(true);
   const [volume, setVolume] = useState([75]);
   const [showControls, setShowControls] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isWaitingForStream, setIsWaitingForStream] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
   // Construct the playback URL from playbackId if not provided
@@ -52,7 +62,6 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
     setIsLoading(true);
     setHasError(false);
     setErrorMessage('');
-    setIsWaitingForStream(false);
 
     console.log('[VideoPlayer] Initializing playback:', effectivePlaybackUrl);
 
@@ -98,7 +107,6 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         console.log('[VideoPlayer] HLS.js: Manifest parsed successfully');
         setIsLoading(false);
-        setIsWaitingForStream(false);
         setRetryCount(0);
         video.play().then(() => setIsPlaying(true)).catch((e) => {
           console.log('[VideoPlayer] Autoplay prevented:', e.message);
@@ -116,10 +124,8 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              // Network error - stream might not be active yet
               if (data.response?.code === 404 || data.details === 'manifestLoadError') {
-                handlePlaybackError('Waiting for stream to start...');
-                setIsWaitingForStream(true);
+                handlePlaybackError('Stream not available');
               } else {
                 handlePlaybackError('Network error - retrying...');
               }
@@ -146,10 +152,9 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
     setIsLoading(false);
     setErrorMessage(message);
     
-    // If stream is live but not playing, retry automatically
-    if (isLive && retryCount < 30) {
-      setIsWaitingForStream(true);
-      const delay = Math.min(3000 + retryCount * 1000, 10000); // 3s to 10s delay
+    // Auto-retry for live streams
+    if (isLive && retryCount < 10) {
+      const delay = Math.min(3000 + retryCount * 1000, 8000);
       console.log(`[VideoPlayer] Retrying in ${delay}ms...`);
       
       retryTimeoutRef.current = setTimeout(() => {
@@ -161,10 +166,13 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
     }
   }, [isLive, retryCount, initializePlayback]);
 
+  // Only initialize playback when stream is actually live
   useEffect(() => {
-    initializePlayback();
+    if (streamPhase === 'live' && effectivePlaybackUrl) {
+      initializePlayback();
+    }
     return destroyHls;
-  }, [effectivePlaybackUrl, initializePlayback, destroyHls]);
+  }, [streamPhase, effectivePlaybackUrl, initializePlayback, destroyHls]);
 
   // Sync volume with video element
   useEffect(() => {
@@ -208,11 +216,16 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
 
   const handleRetry = () => {
     setRetryCount(0);
-    initializePlayback();
+    setHasError(false);
+    if (onRetry) {
+      onRetry();
+    } else {
+      initializePlayback();
+    }
   };
 
-  // Show waiting/offline state if no playback URL or waiting for stream
-  if (!effectivePlaybackUrl) {
+  // IDLE state - no stream configured
+  if (streamPhase === 'idle' || !effectivePlaybackUrl) {
     return (
       <div className="relative aspect-video bg-background rounded-xl overflow-hidden">
         {thumbnailUrl ? (
@@ -221,11 +234,11 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
           <div className="w-full h-full bg-gradient-to-br from-muted to-background" />
         )}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
+          <div className="text-center px-4">
             <div className="w-16 h-16 rounded-full bg-muted/50 backdrop-blur-sm border border-border/50 flex items-center justify-center mb-4 mx-auto">
               <Play className="h-8 w-8 text-muted-foreground" />
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground font-medium">
               Stream not configured
             </p>
           </div>
@@ -234,6 +247,64 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
     );
   }
 
+  // WAITING state - stream created but not broadcasting yet
+  if (streamPhase === 'waiting') {
+    return (
+      <div className="relative aspect-video bg-background rounded-xl overflow-hidden">
+        {thumbnailUrl ? (
+          <img src={thumbnailUrl} alt={title} className="w-full h-full object-cover opacity-30" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
+        )}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center px-4 max-w-sm">
+            <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 mx-auto relative">
+              <Radio className="h-8 w-8 text-primary" />
+              <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
+            </div>
+            <h3 className="text-lg font-display font-semibold text-foreground mb-2">
+              Waiting for streamer...
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              The stream will start automatically when the streamer begins broadcasting
+            </p>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Checking every 5 seconds
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ENDED state
+  if (streamPhase === 'ended') {
+    return (
+      <div className="relative aspect-video bg-background rounded-xl overflow-hidden">
+        {thumbnailUrl ? (
+          <img src={thumbnailUrl} alt={title} className="w-full h-full object-cover opacity-30" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-muted to-background" />
+        )}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center px-4">
+            <div className="w-16 h-16 rounded-full bg-muted/50 backdrop-blur-sm border border-border/50 flex items-center justify-center mb-4 mx-auto">
+              <Clock className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-display font-semibold text-foreground mb-2">
+              Stream Ended
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              This stream has finished
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // LIVE state - actual video playback
   return (
     <div 
       className="relative aspect-video bg-background rounded-xl overflow-hidden group"
@@ -250,7 +321,7 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
       />
 
       {/* Loading state */}
-      {isLoading && !isWaitingForStream && (
+      {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80">
           <div className="relative">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -259,28 +330,8 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
         </div>
       )}
 
-      {/* Waiting for stream state */}
-      {isWaitingForStream && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/90">
-          <div className="text-center px-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-            <p className="text-foreground font-medium mb-2">Waiting for stream...</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              The streamer hasn't started broadcasting yet
-            </p>
-            {retryCount > 0 && (
-              <p className="text-xs text-muted-foreground">
-                Checking... ({retryCount}/30)
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Error state */}
-      {hasError && !isWaitingForStream && (
+      {hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80">
           <div className="text-center px-4">
             <p className="text-muted-foreground mb-2">Unable to load stream</p>
@@ -296,7 +347,7 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
       )}
 
       {/* Live indicator */}
-      {isLive && !hasError && !isWaitingForStream && (
+      {isLive && !hasError && !isLoading && (
         <div className="absolute top-4 left-4 live-badge flex items-center gap-1.5">
           <span className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
           LIVE
@@ -307,7 +358,7 @@ const VideoPlayer = ({ playbackUrl, playbackId, title, isLive = false, thumbnail
       <div 
         className={cn(
           "absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-background/20 transition-opacity duration-300",
-          showControls && !isLoading && !hasError && !isWaitingForStream ? "opacity-100" : "opacity-0"
+          showControls && !isLoading && !hasError ? "opacity-100" : "opacity-0"
         )}
       >
         {/* Center play button */}

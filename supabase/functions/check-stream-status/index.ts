@@ -1,0 +1,118 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { playback_id, stream_id } = await req.json();
+
+    if (!playback_id) {
+      return new Response(
+        JSON.stringify({ error: "playback_id is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const livepeerApiKey = Deno.env.get("LIVEPEER_API_KEY");
+    if (!livepeerApiKey) {
+      console.error("LIVEPEER_API_KEY not configured");
+      return new Response(
+        JSON.stringify({ error: "Streaming service not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Query Livepeer for stream status using playback ID
+    console.log(`[check-stream-status] Checking status for playback_id: ${playback_id}`);
+    
+    const livepeerResponse = await fetch(
+      `https://livepeer.studio/api/playback/${playback_id}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${livepeerApiKey}`,
+        },
+      }
+    );
+
+    if (!livepeerResponse.ok) {
+      const errorText = await livepeerResponse.text();
+      console.error(`[check-stream-status] Livepeer API error: ${livepeerResponse.status}`, errorText);
+      
+      // 404 means stream doesn't exist or isn't active yet
+      if (livepeerResponse.status === 404) {
+        return new Response(
+          JSON.stringify({ 
+            isActive: false, 
+            phase: "waiting",
+            message: "Stream not active yet"
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ error: "Failed to check stream status" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const playbackInfo = await livepeerResponse.json();
+    console.log(`[check-stream-status] Playback info:`, JSON.stringify(playbackInfo));
+
+    // Determine if stream is active
+    // Livepeer playback API returns meta.live for live streams
+    const isActive = playbackInfo?.meta?.live === true || 
+                     playbackInfo?.type === "live" ||
+                     (playbackInfo?.meta?.source?.some((s: any) => s.type === "live"));
+    
+    const phase = isActive ? "live" : "waiting";
+
+    // If stream_id provided and status changed, update database
+    if (stream_id && isActive) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
+
+      const { error: updateError } = await serviceSupabase
+        .from("streams")
+        .update({ 
+          is_live: true, 
+          started_at: new Date().toISOString() 
+        })
+        .eq("id", stream_id)
+        .eq("is_live", false); // Only update if not already live
+
+      if (updateError) {
+        console.error("[check-stream-status] Failed to update stream status:", updateError);
+      } else {
+        console.log(`[check-stream-status] Updated stream ${stream_id} to live`);
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        isActive,
+        phase,
+        playbackUrl: isActive ? `https://livepeercdn.studio/hls/${playback_id}/index.m3u8` : null,
+        meta: playbackInfo?.meta || null,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("[check-stream-status] Unexpected error:", error);
+    return new Response(
+      JSON.stringify({ error: "Internal server error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
