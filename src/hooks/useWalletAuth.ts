@@ -25,24 +25,8 @@ const getSharedState = (): SharedWalletAuthState => {
   return g.__vyve_wallet_auth__;
 };
 
-const clearWalletConnectionPersistence = () => {
-  try {
-    // Clear common Wagmi/RainbowKit/WalletConnect persistence keys so "Disconnect" actually sticks.
-    const keysToClear = Object.keys(localStorage).filter((k) => {
-      const key = k.toLowerCase();
-      return (
-        key.startsWith('wagmi') ||
-        key.startsWith('rk-') ||
-        key.startsWith('rainbowkit') ||
-        key.includes('walletconnect')
-      );
-    });
-
-    keysToClear.forEach((k) => localStorage.removeItem(k));
-  } catch {
-    // ignore storage errors (private mode, blocked storage, etc.)
-  }
-};
+// Note: We don't aggressively clear localStorage anymore as it corrupts wagmi's internal state.
+// Instead, we rely on wagmi's disconnect() and the suppressAuthUntil timestamp to prevent re-auth.
 
 export const useWalletAuth = () => {
   const { address, isConnected } = useAccount();
@@ -217,10 +201,7 @@ export const useWalletAuth = () => {
 
       await supabase.auth.signOut();
 
-      // Clear persisted wallet connection state so we don't instantly reconnect.
-      clearWalletConnectionPersistence();
-
-      // Disconnect the wallet (UI state)
+      // Disconnect the wallet (UI state) - wagmi handles its own cleanup
       disconnect();
 
       toast.success('Signed out');
