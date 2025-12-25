@@ -60,6 +60,56 @@ export type Database = {
           },
         ]
       }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       games: {
         Row: {
           category: string
@@ -92,33 +142,42 @@ export type Database = {
       }
       profiles: {
         Row: {
-          avatar_last_updated_at: string | null
-          avatar_url: string | null
           bio: string | null
           created_at: string
+          display_name: string | null
           id: string
+          last_profile_image_update: string | null
+          profile_image_url: string | null
+          role: Database["public"]["Enums"]["user_role"]
           updated_at: string
           username: string
+          verification_status: Database["public"]["Enums"]["verification_status"]
           wallet_address: string
         }
         Insert: {
-          avatar_last_updated_at?: string | null
-          avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          display_name?: string | null
           id: string
+          last_profile_image_update?: string | null
+          profile_image_url?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           username: string
+          verification_status?: Database["public"]["Enums"]["verification_status"]
           wallet_address: string
         }
         Update: {
-          avatar_last_updated_at?: string | null
-          avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          display_name?: string | null
           id?: string
+          last_profile_image_update?: string | null
+          profile_image_url?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           username?: string
+          verification_status?: Database["public"]["Enums"]["verification_status"]
           wallet_address?: string
         }
         Relationships: []
@@ -415,25 +474,40 @@ export type Database = {
     Views: {
       public_profiles: {
         Row: {
-          avatar_url: string | null
           bio: string | null
           created_at: string | null
+          display_name: string | null
           id: string | null
+          profile_image_url: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
           username: string | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
         }
         Insert: {
-          avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          display_name?: string | null
           id?: string | null
+          profile_image_url?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           username?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
         }
         Update: {
-          avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          display_name?: string | null
           id?: string | null
+          profile_image_url?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           username?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
         }
         Relationships: []
       }
@@ -452,9 +526,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_follower_count: { Args: { p_profile_id: string }; Returns: number }
+      get_following_count: { Args: { p_profile_id: string }; Returns: number }
       get_my_stream_key: { Args: { p_stream_id: string }; Returns: string }
       is_own_profile: { Args: { profile_id: string }; Returns: boolean }
       is_profile_complete: { Args: { p_user_id: string }; Returns: boolean }
+      is_streamer: { Args: { p_user_id: string }; Returns: boolean }
       is_user_blocked_from_stream: {
         Args: { p_stream_id: string; p_user_id: string }
         Returns: boolean
@@ -465,7 +542,8 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "viewer" | "streamer"
+      verification_status: "unverified" | "pending" | "verified"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -592,6 +670,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["viewer", "streamer"],
+      verification_status: ["unverified", "pending", "verified"],
+    },
   },
 } as const

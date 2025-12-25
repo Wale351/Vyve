@@ -1,16 +1,25 @@
 import { useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import StreamCard from '@/components/StreamCard';
+import ProfileBadges from '@/components/ProfileBadges';
+import FollowButton from '@/components/FollowButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { useProfile, useProfileTipsReceived, useOwnProfile } from '@/hooks/useProfile';
+import { 
+  useProfile, 
+  useProfileTipsReceived, 
+  useOwnProfile,
+  useFollowerCount,
+  useFollowingCount,
+  useCanUpdateProfileImage,
+} from '@/hooks/useProfile';
 import { useStreamerStreams } from '@/hooks/useStreams';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
-import { useProfileUpdate, useAvatarUpload } from '@/hooks/useProfileUpdate';
+import { useProfileUpdate, useProfileImageUpload, useRequestStreamerStatus } from '@/hooks/useProfileUpdate';
 import { 
   Users, 
   Coins, 
@@ -22,16 +31,19 @@ import {
   Camera,
   Pencil,
   X,
-  Save
+  Save,
+  UserPlus,
+  Shield,
+  BadgeCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Profile = () => {
-  const { profileId } = useParams();
-  const { user } = useWalletAuth();
+  const { address: profileId } = useParams();
+  const { user, isAuthenticated } = useWalletAuth();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editUsername, setEditUsername] = useState('');
+  const [editDisplayName, setEditDisplayName] = useState('');
   const [editBio, setEditBio] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -40,12 +52,16 @@ const Profile = () => {
   const isOwnProfile = user?.id === profileId;
   const { data: profile, isLoading: profileLoading } = useProfile(profileId);
   const { data: ownProfile } = useOwnProfile(isOwnProfile ? profileId : undefined);
-  const { data: totalTips = 0 } = useProfileTipsReceived(profile?.id);
-  const { data: streams = [], isLoading: streamsLoading } = useStreamerStreams(profile?.id);
+  const { data: totalTips = 0 } = useProfileTipsReceived(profileId);
+  const { data: streams = [], isLoading: streamsLoading } = useStreamerStreams(profileId);
+  const { data: followerCount = 0 } = useFollowerCount(profileId);
+  const { data: followingCount = 0 } = useFollowingCount(profileId);
+  const { data: imageUpdateInfo } = useCanUpdateProfileImage(isOwnProfile ? profileId : undefined);
 
   const profileUpdate = useProfileUpdate();
-  const avatarUpload = useAvatarUpload();
-  const isUpdating = profileUpdate.isPending || avatarUpload.isPending;
+  const imageUpload = useProfileImageUpload();
+  const requestStreamer = useRequestStreamerStatus();
+  const isUpdating = profileUpdate.isPending || imageUpload.isPending;
 
   const copyAddress = async () => {
     if (ownProfile?.wallet_address) {
@@ -57,7 +73,7 @@ const Profile = () => {
   };
 
   const startEditing = () => {
-    setEditUsername(profile?.username || '');
+    setEditDisplayName(profile?.display_name || '');
     setEditBio(profile?.bio || '');
     setAvatarPreview(null);
     setAvatarFile(null);
@@ -78,8 +94,8 @@ const Profile = () => {
         toast.error('Please upload a valid image');
         return;
       }
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error('Max file size is 2MB');
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Max file size is 5MB');
         return;
       }
       
@@ -94,15 +110,15 @@ const Profile = () => {
     if (!user?.id) return;
 
     try {
-      if (avatarFile) {
-        await avatarUpload.mutateAsync({ userId: user.id, file: avatarFile });
+      if (avatarFile && imageUpdateInfo?.canUpdate) {
+        await imageUpload.mutateAsync({ userId: user.id, file: avatarFile });
       }
 
-      const updateData: { username?: string; bio?: string } = {};
-      if (editUsername.trim() !== profile?.username) {
-        updateData.username = editUsername.trim() || null;
+      const updateData: { display_name?: string | null; bio?: string | null } = {};
+      if (editDisplayName.trim() !== (profile?.display_name || '')) {
+        updateData.display_name = editDisplayName.trim() || null;
       }
-      if (editBio.trim() !== profile?.bio) {
+      if (editBio.trim() !== (profile?.bio || '')) {
         updateData.bio = editBio.trim() || null;
       }
 
@@ -117,6 +133,16 @@ const Profile = () => {
       // Error handling done in mutation hooks
     }
   };
+
+  const handleRequestStreamer = async () => {
+    if (!user?.id) return;
+    await requestStreamer.mutateAsync(user.id);
+  };
+
+  // Redirect if no profile exists (should not happen with mandatory onboarding)
+  if (!profileLoading && !profile && isAuthenticated && isOwnProfile) {
+    return <Navigate to="/" replace />;
+  }
 
   if (profileLoading) {
     return (
@@ -149,8 +175,8 @@ const Profile = () => {
     );
   }
 
-  const displayName = profile.username || 'Anonymous';
-  const displayAvatar = avatarPreview || profile.avatar_url;
+  const displayName = profile.display_name || profile.username;
+  const displayAvatar = avatarPreview || profile.profile_image_url;
   const liveStreams = streams.filter(s => s.is_live);
   const pastStreams = streams.filter(s => !s.is_live);
   const joinDate = new Date(profile.created_at).toLocaleDateString('en-US', {
@@ -163,12 +189,12 @@ const Profile = () => {
       <Header />
       
       <div className="container px-4 py-4 md:py-8">
-        {/* Profile Header - Stacked on mobile, row on desktop */}
+        {/* Profile Header */}
         <div className="glass-card p-4 md:p-8 mb-6 md:mb-8">
           <div className="flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-4 md:gap-8">
             {/* Avatar */}
             <div className="flex-shrink-0 relative">
-              {isEditing ? (
+              {isEditing && imageUpdateInfo?.canUpdate ? (
                 <div 
                   onClick={() => fileInputRef.current?.click()}
                   className="relative cursor-pointer group"
@@ -178,7 +204,7 @@ const Profile = () => {
                       <AvatarImage src={displayAvatar} alt="Avatar" />
                     ) : (
                       <AvatarFallback className="bg-gradient-to-br from-primary via-primary/80 to-secondary text-primary-foreground font-bold text-2xl md:text-4xl">
-                        {(editUsername || displayName).charAt(0).toUpperCase()}
+                        {displayName.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     )}
                   </Avatar>
@@ -195,8 +221,8 @@ const Profile = () => {
                 </div>
               ) : (
                 <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-border shadow-xl">
-                  {profile.avatar_url ? (
-                    <AvatarImage src={profile.avatar_url} alt={displayName} />
+                  {profile.profile_image_url ? (
+                    <AvatarImage src={profile.profile_image_url} alt={displayName} />
                   ) : (
                     <AvatarFallback className="bg-gradient-to-br from-primary via-primary/80 to-secondary text-primary-foreground font-bold text-2xl md:text-4xl">
                       {displayName.charAt(0).toUpperCase()}
@@ -204,38 +230,59 @@ const Profile = () => {
                   )}
                 </Avatar>
               )}
+              
+              {/* Verification badge overlay */}
+              {profile.verification_status === 'verified' && (
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center border-2 border-background">
+                  <BadgeCheck className="h-5 w-5 text-primary-foreground" />
+                </div>
+              )}
             </div>
 
             {/* Info */}
             <div className="flex-1 w-full">
               {isEditing ? (
                 <div className="space-y-3 md:space-y-4 max-w-md mx-auto md:mx-0">
+                  {/* Username (read-only) */}
                   <div className="space-y-2">
-                    <Label htmlFor="username" className="text-sm">Display Name</Label>
+                    <Label className="text-sm text-muted-foreground">Username (cannot change)</Label>
+                    <p className="text-lg font-semibold">@{profile.username}</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName" className="text-sm">Display Name</Label>
                     <Input
-                      id="username"
-                      value={editUsername}
-                      onChange={(e) => setEditUsername(e.target.value.slice(0, 50))}
+                      id="displayName"
+                      value={editDisplayName}
+                      onChange={(e) => setEditDisplayName(e.target.value.slice(0, 50))}
                       placeholder="Enter a display name..."
                       className="bg-muted/30 h-10"
                       maxLength={50}
                     />
                   </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="bio" className="text-sm">Bio</Label>
                     <Textarea
                       id="bio"
                       value={editBio}
-                      onChange={(e) => setEditBio(e.target.value.slice(0, 200))}
+                      onChange={(e) => setEditBio(e.target.value.slice(0, 500))}
                       placeholder="Tell others about yourself..."
                       className="bg-muted/30 resize-none"
                       rows={3}
-                      maxLength={200}
+                      maxLength={500}
                     />
-                    {editBio.length > 150 && (
-                      <p className="text-xs text-muted-foreground text-right">{editBio.length}/200</p>
+                    {editBio.length > 400 && (
+                      <p className="text-xs text-muted-foreground text-right">{editBio.length}/500</p>
                     )}
                   </div>
+                  
+                  {/* Image update notice */}
+                  {!imageUpdateInfo?.canUpdate && imageUpdateInfo?.nextUpdateDate && (
+                    <p className="text-xs text-muted-foreground">
+                      Profile image can be changed on {imageUpdateInfo.nextUpdateDate.toLocaleDateString()}
+                    </p>
+                  )}
                   
                   {/* Edit actions */}
                   <div className="flex gap-2 justify-center md:justify-start pt-2">
@@ -266,7 +313,13 @@ const Profile = () => {
                 </div>
               ) : (
                 <>
-                  <h1 className="text-2xl md:text-3xl font-display font-bold mb-1 md:mb-2">{displayName}</h1>
+                  {/* Name and badges */}
+                  <div className="flex items-center gap-2 justify-center md:justify-start flex-wrap mb-1">
+                    <h1 className="text-2xl md:text-3xl font-display font-bold">{displayName}</h1>
+                    <ProfileBadges profile={profile} tipsReceived={totalTips} />
+                  </div>
+                  
+                  <p className="text-muted-foreground text-sm mb-2">@{profile.username}</p>
                   
                   {/* Wallet address - only visible to owner */}
                   {isOwnProfile && ownProfile?.wallet_address && (
@@ -295,7 +348,27 @@ const Profile = () => {
                   )}
 
                   {/* Stats */}
-                  <div className="flex gap-4 md:gap-6 mt-4 md:mt-6 justify-center md:justify-start">
+                  <div className="flex gap-4 md:gap-6 mt-4 md:mt-6 justify-center md:justify-start flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
+                        <Users className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm md:text-base">{followerCount}</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">Followers</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
+                        <UserPlus className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm md:text-base">{followingCount}</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">Following</p>
+                      </div>
+                    </div>
+                    
                     <div className="flex items-center gap-2">
                       <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
                         <Radio className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
@@ -317,26 +390,50 @@ const Profile = () => {
                     </div>
                   </div>
 
-                  {/* Owner actions */}
-                  {isOwnProfile && !isEditing && (
-                    <div className="flex gap-2 mt-4 md:mt-6 justify-center md:justify-start">
-                      <Button
-                        variant="subtle"
-                        size="sm"
-                        onClick={startEditing}
-                        className="gap-2"
-                      >
-                        <Pencil className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                        Edit
-                      </Button>
-                      <Link to="/go-live">
-                        <Button variant="premium" size="sm" className="gap-2">
-                          <Radio className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                          Go Live
+                  {/* Actions */}
+                  <div className="flex gap-2 mt-4 md:mt-6 justify-center md:justify-start flex-wrap">
+                    {isOwnProfile ? (
+                      <>
+                        <Button
+                          variant="subtle"
+                          size="sm"
+                          onClick={startEditing}
+                          className="gap-2"
+                        >
+                          <Pencil className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                          Edit
                         </Button>
-                      </Link>
-                    </div>
-                  )}
+                        
+                        {profile.role === 'viewer' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRequestStreamer}
+                            disabled={requestStreamer.isPending}
+                            className="gap-2"
+                          >
+                            {requestStreamer.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Shield className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                            )}
+                            Become Streamer
+                          </Button>
+                        )}
+                        
+                        {profile.role === 'streamer' && (
+                          <Link to="/go-live">
+                            <Button variant="premium" size="sm" className="gap-2">
+                              <Radio className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                              Go Live
+                            </Button>
+                          </Link>
+                        )}
+                      </>
+                    ) : (
+                      <FollowButton profileId={profileId!} />
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -361,36 +458,38 @@ const Profile = () => {
           )}
 
           {/* Past Streams */}
-          <section>
-            <h2 className="text-lg md:text-xl font-display font-semibold mb-3 md:mb-4">Past Streams</h2>
-            {streamsLoading ? (
-              <div className="flex items-center justify-center py-8 md:py-12">
-                <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-primary" />
-              </div>
-            ) : pastStreams.length > 0 ? (
-              <div className="flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
-                {pastStreams.map(stream => (
-                  <StreamCard key={stream.id} stream={stream} />
-                ))}
-              </div>
-            ) : (
-              <div className="glass-card p-8 md:p-12 text-center">
-                <Radio className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-muted-foreground/50" />
-                <p className="text-sm md:text-base text-muted-foreground">
-                  {isOwnProfile 
-                    ? "No streams yet. Start your first!"
-                    : "No past streams."}
-                </p>
-                {isOwnProfile && (
-                  <Link to="/go-live" className="mt-4 inline-block">
-                    <Button variant="premium" size="sm">
-                      Start Streaming
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            )}
-          </section>
+          {profile.role === 'streamer' && (
+            <section>
+              <h2 className="text-lg md:text-xl font-display font-semibold mb-3 md:mb-4">Past Streams</h2>
+              {streamsLoading ? (
+                <div className="flex items-center justify-center py-8 md:py-12">
+                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-primary" />
+                </div>
+              ) : pastStreams.length > 0 ? (
+                <div className="flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
+                  {pastStreams.map(stream => (
+                    <StreamCard key={stream.id} stream={stream} />
+                  ))}
+                </div>
+              ) : (
+                <div className="glass-card p-8 md:p-12 text-center">
+                  <Radio className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-muted-foreground/50" />
+                  <p className="text-sm md:text-base text-muted-foreground">
+                    {isOwnProfile 
+                      ? "No streams yet. Start your first!"
+                      : "No past streams."}
+                  </p>
+                  {isOwnProfile && (
+                    <Link to="/go-live" className="mt-4 inline-block">
+                      <Button variant="premium" size="sm">
+                        Start Streaming
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
         </div>
       </div>
     </div>

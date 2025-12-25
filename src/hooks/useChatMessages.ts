@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { mapDatabaseError } from '@/lib/errorHandler';
 
@@ -11,7 +11,7 @@ export interface ChatMessageWithSender {
   created_at: string;
   profiles: {
     username: string;
-    avatar_url: string | null;
+    profile_image_url: string | null;
   } | null;
 }
 
@@ -30,7 +30,7 @@ export const useChatMessages = (streamId: string | undefined) => {
           *,
           profiles!chat_messages_sender_id_fkey (
             username,
-            avatar_url
+            profile_image_url
           )
         `)
         .eq('stream_id', streamId)
@@ -83,7 +83,7 @@ export const useChatMessages = (streamId: string | undefined) => {
               *,
               profiles!chat_messages_sender_id_fkey (
                 username,
-                avatar_url
+                profile_image_url
               )
             `)
             .eq('id', newMsg.id)
@@ -122,7 +122,7 @@ interface SendMessageParams {
   message: string;
   senderProfile?: {
     username: string;
-    avatar_url: string | null;
+    profile_image_url: string | null;
   };
 }
 

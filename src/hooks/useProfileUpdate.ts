@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface UpdateProfileData {
-  bio?: string;
+  display_name?: string | null;
+  bio?: string | null;
 }
 
 export const useProfileUpdate = () => {
@@ -18,7 +19,7 @@ export const useProfileUpdate = () => {
 
       if (error) throw error;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       toast.success('Profile updated!');
     },
@@ -29,7 +30,7 @@ export const useProfileUpdate = () => {
   });
 };
 
-export const useAvatarUpload = () => {
+export const useProfileImageUpload = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -46,7 +47,7 @@ export const useAvatarUpload = () => {
       }
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}/avatar.${fileExt}`;
+      const fileName = `${userId}/profile.${fileExt}`;
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage
@@ -63,10 +64,10 @@ export const useAvatarUpload = () => {
       // Add cache buster to force refresh
       const urlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
 
-      // Update profile with new avatar URL
+      // Update profile with new image URL
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: urlWithCacheBuster })
+        .update({ profile_image_url: urlWithCacheBuster })
         .eq('id', userId);
 
       if (updateError) throw updateError;
@@ -75,14 +76,14 @@ export const useAvatarUpload = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      toast.success('Avatar updated!');
+      toast.success('Profile image updated!');
     },
     onError: (error: Error) => {
-      console.error('Avatar upload error:', error);
+      console.error('Profile image upload error:', error);
       if (error.message.includes('30 days')) {
         toast.error(error.message);
       } else {
-        toast.error(error.message || 'Failed to upload avatar');
+        toast.error(error.message || 'Failed to upload profile image');
       }
     },
   });
@@ -98,13 +99,13 @@ export const useCreateProfile = () => {
       walletAddress, 
       username, 
       bio,
-      avatarUrl 
+      profileImageUrl 
     }: { 
       userId: string; 
       walletAddress: string;
       username: string;
       bio?: string;
-      avatarUrl: string;
+      profileImageUrl: string;
     }) => {
       const { error } = await supabase
         .from('profiles')
@@ -113,8 +114,8 @@ export const useCreateProfile = () => {
           wallet_address: walletAddress,
           username,
           bio: bio || null,
-          avatar_url: avatarUrl,
-          avatar_last_updated_at: new Date().toISOString(),
+          profile_image_url: profileImageUrl,
+          last_profile_image_update: new Date().toISOString(),
         });
 
       if (error) {
@@ -137,6 +138,32 @@ export const useCreateProfile = () => {
     onError: (error: Error) => {
       console.error('Profile creation error:', error);
       toast.error(error.message || 'Failed to create profile');
+    },
+  });
+};
+
+// Request streamer status
+export const useRequestStreamerStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      // For now, just update to streamer role directly
+      // In production, this might set a pending status for admin approval
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'streamer' })
+        .eq('id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success('You are now a streamer!');
+    },
+    onError: (error) => {
+      console.error('Request streamer error:', error);
+      toast.error('Failed to update status');
     },
   });
 };

@@ -1,13 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export type UserRole = 'viewer' | 'streamer';
+export type VerificationStatus = 'unverified' | 'pending' | 'verified';
+
 export interface Profile {
   id: string;
   wallet_address: string;
   username: string;
+  display_name: string | null;
   bio: string | null;
-  avatar_url: string | null;
-  avatar_last_updated_at: string | null;
+  profile_image_url: string | null;
+  role: UserRole;
+  verification_status: VerificationStatus;
+  last_profile_image_update: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -16,8 +22,11 @@ export interface Profile {
 export interface PublicProfile {
   id: string;
   username: string;
+  display_name: string | null;
   bio: string | null;
-  avatar_url: string | null;
+  profile_image_url: string | null;
+  role: UserRole;
+  verification_status: VerificationStatus;
   created_at: string;
 }
 
@@ -70,39 +79,39 @@ export const useProfileComplete = (userId: string | undefined) => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url')
+        .select('id, username, profile_image_url')
         .eq('id', userId)
         .maybeSingle();
 
       if (error) return false;
       
-      // Profile is complete if it exists, has username and avatar
-      return !!(data?.username && data?.avatar_url);
+      // Profile is complete if it exists, has username and profile image
+      return !!(data?.username && data?.profile_image_url);
     },
     enabled: !!userId,
   });
 };
 
-// Check if avatar can be updated (30 day cooldown)
-export const useCanUpdateAvatar = (userId: string | undefined) => {
+// Check if profile image can be updated (30 day cooldown)
+export const useCanUpdateProfileImage = (userId: string | undefined) => {
   return useQuery({
-    queryKey: ['profile', 'avatar-cooldown', userId],
+    queryKey: ['profile', 'image-cooldown', userId],
     queryFn: async () => {
       if (!userId) return { canUpdate: false, nextUpdateDate: null };
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('avatar_last_updated_at')
+        .select('last_profile_image_update')
         .eq('id', userId)
         .maybeSingle();
 
       if (error || !data) return { canUpdate: true, nextUpdateDate: null };
       
-      if (!data.avatar_last_updated_at) {
+      if (!data.last_profile_image_update) {
         return { canUpdate: true, nextUpdateDate: null };
       }
       
-      const lastUpdate = new Date(data.avatar_last_updated_at);
+      const lastUpdate = new Date(data.last_profile_image_update);
       const nextUpdate = new Date(lastUpdate);
       nextUpdate.setDate(nextUpdate.getDate() + 30);
       
@@ -153,5 +162,64 @@ export const useProfileTipsReceived = (profileId: string | undefined) => {
       return total;
     },
     enabled: !!profileId,
+  });
+};
+
+// Get follower count
+export const useFollowerCount = (profileId: string | undefined) => {
+  return useQuery({
+    queryKey: ['followers', 'count', profileId],
+    queryFn: async () => {
+      if (!profileId) return 0;
+      
+      const { count, error } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', profileId);
+
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!profileId,
+  });
+};
+
+// Get following count
+export const useFollowingCount = (profileId: string | undefined) => {
+  return useQuery({
+    queryKey: ['following', 'count', profileId],
+    queryFn: async () => {
+      if (!profileId) return 0;
+      
+      const { count, error } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', profileId);
+
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!profileId,
+  });
+};
+
+// Check if current user follows a profile
+export const useIsFollowing = (currentUserId: string | undefined, profileId: string | undefined) => {
+  return useQuery({
+    queryKey: ['follows', currentUserId, profileId],
+    queryFn: async () => {
+      if (!currentUserId || !profileId) return false;
+      
+      const { data, error } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', currentUserId)
+        .eq('following_id', profileId)
+        .maybeSingle();
+
+      if (error) return false;
+      return !!data;
+    },
+    enabled: !!currentUserId && !!profileId && currentUserId !== profileId,
   });
 };

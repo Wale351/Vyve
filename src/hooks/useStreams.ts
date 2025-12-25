@@ -17,8 +17,8 @@ export interface StreamWithProfile {
   streamer_id: string;
   profiles: {
     id: string;
-    username: string | null;
-    avatar_url: string | null;
+    username: string;
+    profile_image_url: string | null;
     bio?: string | null;
   } | null;
   games?: {
@@ -52,7 +52,7 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            avatar_url
+            profile_image_url
           ),
           games (
             id,
@@ -108,7 +108,7 @@ export const useStream = (streamId: string | undefined) => {
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            avatar_url,
+            profile_image_url,
             bio
           ),
           games (
@@ -153,7 +153,7 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            avatar_url
+            profile_image_url
           ),
           games (
             id,
@@ -197,7 +197,7 @@ export const useStreamsByGame = (gameId: string | undefined) => {
           profiles!streams_streamer_id_fkey (
             id,
             username,
-            avatar_url
+            profile_image_url
           ),
           games (
             id,
