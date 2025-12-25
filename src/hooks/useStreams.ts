@@ -11,6 +11,7 @@ export interface StreamWithProfile {
   is_live: boolean | null;
   viewer_count: number | null;
   playback_url: string | null;
+  playback_id: string | null;
   started_at: string | null;
   ended_at: string | null;
   streamer_id: string;
@@ -44,6 +45,7 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
           is_live,
           viewer_count,
           playback_url,
+          playback_id,
           started_at,
           ended_at,
           streamer_id,
@@ -99,6 +101,7 @@ export const useStream = (streamId: string | undefined) => {
           is_live,
           viewer_count,
           playback_url,
+          playback_id,
           started_at,
           ended_at,
           streamer_id,
@@ -143,6 +146,7 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
           is_live,
           viewer_count,
           playback_url,
+          playback_id,
           started_at,
           ended_at,
           streamer_id,
@@ -186,6 +190,7 @@ export const useStreamsByGame = (gameId: string | undefined) => {
           is_live,
           viewer_count,
           playback_url,
+          playback_id,
           started_at,
           ended_at,
           streamer_id,

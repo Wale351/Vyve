@@ -79,6 +79,7 @@ const Watch = () => {
             <div className="w-full lg:rounded-2xl lg:overflow-hidden lg:shadow-xl">
               <VideoPlayer
                 playbackUrl={stream.playback_url || undefined}
+                playbackId={stream.playback_id || undefined}
                 title={stream.title}
                 isLive={stream.is_live || false}
               />
