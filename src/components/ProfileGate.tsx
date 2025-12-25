@@ -1,9 +1,8 @@
 import { ReactNode } from 'react';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
-import { Button } from '@/components/ui/button';
 import { Loader2, UserX, LogIn } from 'lucide-react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import ConnectWalletButton from '@/components/ConnectWalletButton';
 
 interface ProfileGateProps {
   children: ReactNode;
@@ -43,7 +42,7 @@ const ProfileGate = ({ children, fallbackMessage }: ProfileGateProps) => {
         <p className="text-muted-foreground mb-4 max-w-sm">
           Connect your wallet to access this feature.
         </p>
-        <ConnectButton />
+        <ConnectWalletButton variant="premium" size="sm">Connect Wallet</ConnectWalletButton>
       </div>
     );
   }
@@ -71,3 +70,4 @@ const ProfileGate = ({ children, fallbackMessage }: ProfileGateProps) => {
 };
 
 export default ProfileGate;
+

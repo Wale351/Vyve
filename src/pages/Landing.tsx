@@ -1,9 +1,55 @@
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { Play, Zap, Shield, Users, TrendingUp, Sparkles } from 'lucide-react';
+import { Play, Zap, Shield, Users, TrendingUp, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ConnectWalletButton from '@/components/ConnectWalletButton';
+import { useAccount } from 'wagmi';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 
 const Landing = () => {
-  const { openConnectModal } = useConnectModal();
+  const { isConnected } = useAccount();
+  const { isAuthenticated, isAuthenticating, signInWithWallet } = useWalletAuth();
+
+  const PrimaryCta = () => {
+    if (!isConnected) {
+      return (
+        <ConnectWalletButton variant="premium" size="lg" className="gap-2 text-lg px-8 py-6">
+          <Play className="h-5 w-5" />
+          Get Started
+        </ConnectWalletButton>
+      );
+    }
+
+    if (!isAuthenticated) {
+      return (
+        <Button onClick={signInWithWallet} variant="premium" size="lg" className="gap-2 text-lg px-8 py-6" disabled={isAuthenticating}>
+          {isAuthenticating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />}
+          {isAuthenticating ? 'Signing in…' : 'Sign In'}
+        </Button>
+      );
+    }
+
+    return null;
+  };
+
+  const TopRightCta = () => {
+    if (!isConnected) {
+      return (
+        <ConnectWalletButton variant="premium" size="sm" className="gap-2">
+          Connect Wallet
+        </ConnectWalletButton>
+      );
+    }
+
+    if (!isAuthenticated) {
+      return (
+        <Button onClick={signInWithWallet} variant="premium" size="sm" className="gap-2" disabled={isAuthenticating}>
+          {isAuthenticating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          {isAuthenticating ? 'Signing…' : 'Sign In'}
+        </Button>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -16,10 +62,7 @@ const Landing = () => {
             </div>
             <span className="font-display text-xl font-bold">Vyve</span>
           </div>
-          
-          <Button onClick={openConnectModal} variant="premium" size="sm" className="gap-2">
-            Connect Wallet
-          </Button>
+          <TopRightCta />
         </div>
       </header>
 
@@ -60,10 +103,7 @@ const Landing = () => {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in"
               style={{ animationDelay: '300ms' }}
             >
-              <Button onClick={openConnectModal} variant="premium" size="lg" className="gap-2 text-lg px-8 py-6">
-                <Play className="h-5 w-5" />
-                Get Started
-              </Button>
+              <PrimaryCta />
             </div>
           </div>
         </div>
@@ -147,10 +187,18 @@ const Landing = () => {
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
             Connect your wallet and join the future of content creation.
           </p>
-          <Button onClick={openConnectModal} variant="premium" size="lg" className="gap-2">
-            <Play className="h-5 w-5" />
-            Connect Wallet
-          </Button>
+
+          {!isConnected ? (
+            <ConnectWalletButton variant="premium" size="lg" className="gap-2">
+              <Play className="h-5 w-5" />
+              Connect Wallet
+            </ConnectWalletButton>
+          ) : !isAuthenticated ? (
+            <Button onClick={signInWithWallet} variant="premium" size="lg" className="gap-2" disabled={isAuthenticating}>
+              {isAuthenticating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />}
+              {isAuthenticating ? 'Signing in…' : 'Sign In'}
+            </Button>
+          ) : null}
         </div>
       </section>
 
@@ -188,3 +236,4 @@ const Landing = () => {
 };
 
 export default Landing;
+
