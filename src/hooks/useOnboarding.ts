@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useWalletAuth } from './useWalletAuth';
-import { useAccount } from 'wagmi';
+import { usePrivyAuth } from './usePrivyAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useOnboarding = () => {
-  const { user, isAuthenticated, isInitialized } = useWalletAuth();
-  const { address } = useAccount();
+  const { user, isAuthenticated, isInitialized, walletAddress } = usePrivyAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileExists, setProfileExists] = useState<boolean | null>(null);
@@ -67,9 +65,6 @@ export const useOnboarding = () => {
   const triggerOnboarding = useCallback(() => {
     setShowOnboarding(true);
   }, []);
-
-  // Get wallet address from user metadata or wagmi
-  const walletAddress = user?.user_metadata?.wallet_address || address;
 
   return {
     showOnboarding,

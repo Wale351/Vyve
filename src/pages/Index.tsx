@@ -1,14 +1,11 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import Landing from './Landing';
 import Home from './Home';
 import { Loader2 } from 'lucide-react';
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, isInitialized } = useWalletAuth();
+  const { isAuthenticated, isInitialized, isAuthenticating } = usePrivyAuth();
   const { showOnboarding, isLoading: onboardingLoading, profileExists } = useOnboarding();
 
   // Show loading while checking auth state
@@ -18,6 +15,18 @@ const Index = () => {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show authenticating state
+  if (isAuthenticating) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Signing in...</p>
         </div>
       </div>
     );

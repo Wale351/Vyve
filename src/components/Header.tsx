@@ -11,15 +11,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown } from 'lucide-react';
-import { useAccount } from 'wagmi';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { usePrivyAuth } from '@/hooks/usePrivyAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { address } = useAccount();
-  const { user, isAuthenticated, signOut } = useWalletAuth();
+  const { user, isAuthenticated, walletAddress, signOut } = usePrivyAuth();
   const { data: profile } = useOwnProfile(user?.id);
   const { data: role } = useUserRole(user?.id);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -100,7 +98,7 @@ const Header = () => {
                 {/* Mobile User Section */}
                 {isAuthenticated && profile && (
                   <div className="p-4 border-t border-border/30 space-y-2">
-                    <Link to={`/profile/${address}`} onClick={() => setMobileMenuOpen(false)}>
+                    <Link to={`/profile/${walletAddress}`} onClick={() => setMobileMenuOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start gap-2">
                         <User className="h-4 w-4" />
                         Profile
@@ -112,7 +110,7 @@ const Header = () => {
                       className="w-full justify-start gap-2 text-muted-foreground"
                     >
                       <LogOut className="h-4 w-4" />
-                      Sign Out
+                      Disconnect
                     </Button>
                   </div>
                 )}
@@ -182,7 +180,7 @@ const Header = () => {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to={`/profile/${address}`} className="cursor-pointer">
+                  <Link to={`/profile/${walletAddress}`} className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </Link>
@@ -202,7 +200,7 @@ const Header = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
+                  Disconnect
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
