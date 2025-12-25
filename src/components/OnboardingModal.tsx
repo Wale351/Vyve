@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const OnboardingModal = () => {
+  const navigate = useNavigate();
   const { showOnboarding, completeOnboarding, userId, walletAddress } = useOnboarding();
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
@@ -112,7 +114,12 @@ const OnboardingModal = () => {
         bio: bio.trim() || undefined,
         avatarUrl,
       });
+      
       completeOnboarding();
+      toast.success('Profile created successfully!');
+      
+      // Navigate to profile page
+      navigate(`/profile/${walletAddress}`);
     } catch (error) {
       // Error handling done in mutation hooks
     }
