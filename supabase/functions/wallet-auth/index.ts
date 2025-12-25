@@ -55,9 +55,10 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
-    // Use service role to create/manage users
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Use service role for admin operations + anon for session creation (verifyOtp)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
 
     const { wallet_address, signature, message } = await req.json();
 
@@ -108,31 +109,42 @@ serve(async (req) => {
 
     console.log(`Authenticating wallet: ${normalizedAddress}`);
 
-    // Create email from wallet address for Supabase auth
-    const email = `${normalizedAddress}@wallet.vyve.app`;
+    // Prevent duplicate wallet_address constraint issues by reusing existing profile/user when present
+    const { data: existingProfile, error: profileLookupError } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("wallet_address", normalizedAddress)
+      .maybeSingle();
 
-    // Check if user already exists using admin API
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(u => u.email === email);
+    if (profileLookupError) {
+      console.error("Profile lookup error:", profileLookupError);
+    }
 
-    let userId: string;
+    let userId: string | null = existingProfile?.id ?? null;
+    let email: string | null = null;
 
-    if (existingUser) {
-      console.log(`Existing user found: ${normalizedAddress}`);
-      userId = existingUser.id;
-      
-      // Update profile with wallet address if needed
-      await supabase
-        .from("profiles")
-        .upsert({
-          id: userId,
-          wallet_address: normalizedAddress,
-        }, { onConflict: "id" });
-    } else {
-      // Create new user with admin API (no password needed)
+    if (userId) {
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+
+      if (!userError && userData?.user?.email) {
+        email = userData.user.email;
+        console.log(`Existing user matched by wallet profile: ${normalizedAddress}`);
+      } else {
+        console.error(
+          "Stale profile found (no matching auth user). Deleting profile row to allow new signup.",
+          userError
+        );
+        await supabaseAdmin.from("profiles").delete().eq("id", userId);
+        userId = null;
+      }
+    }
+
+    if (!userId) {
+      email = `${normalizedAddress}@wallet.vyve.app`;
+
       console.log(`Creating new user for wallet: ${normalizedAddress}`);
-      
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         email_confirm: true,
         user_metadata: {
@@ -149,16 +161,27 @@ serve(async (req) => {
       }
 
       userId = newUser.user.id;
-      console.log(`New user created: ${normalizedAddress}`);
+
+      // Ensure a profile row exists (in case auth trigger isn't configured)
+      await supabaseAdmin
+        .from("profiles")
+        .upsert({ id: userId, wallet_address: normalizedAddress }, { onConflict: "id" });
+    } else {
+      // Keep profile wallet_address normalized
+      await supabaseAdmin
+        .from("profiles")
+        .upsert({ id: userId, wallet_address: normalizedAddress }, { onConflict: "id" });
     }
 
-    // Generate a magic link to create a session (works without email provider)
-    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+    // Create a session without password using magic link token verification
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
-      email,
+      email: email!,
     });
 
-    if (linkError || !linkData) {
+    const emailOtp = linkData?.properties?.email_otp;
+
+    if (linkError || !emailOtp) {
       console.error("Generate link error:", linkError);
       return new Response(
         JSON.stringify({ error: "Failed to generate session" }),
@@ -166,20 +189,9 @@ serve(async (req) => {
       );
     }
 
-    // Extract the token from the link and verify it to get a session
-    const token = linkData.properties?.hashed_token;
-    if (!token) {
-      console.error("No token in link data");
-      return new Response(
-        JSON.stringify({ error: "Failed to generate session token" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Verify the OTP to get a session
-    const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
-      email,
-      token: linkData.properties.email_otp,
+    const { data: sessionData, error: sessionError } = await supabaseAuth.auth.verifyOtp({
+      email: email!,
+      token: emailOtp,
       type: "magiclink",
     });
 
