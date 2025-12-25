@@ -43,10 +43,8 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     
-    // Service role client for private schema access
-    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey, {
-      db: { schema: 'private' }
-    });
+    // Service role client for database function calls
+    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -143,12 +141,11 @@ serve(async (req) => {
       );
     }
 
-    // Store stream key in private schema using service role client configured for private schema
+    // Store stream key in private schema using database function
     const { error: secretError } = await serviceSupabase
-      .from("stream_secrets")
-      .insert({
-        stream_id: stream.id,
-        stream_key: livepeerStream.streamKey,
+      .rpc("store_stream_key", {
+        p_stream_id: stream.id,
+        p_stream_key: livepeerStream.streamKey,
       });
 
     if (secretError) {
