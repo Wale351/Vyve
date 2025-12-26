@@ -109,7 +109,10 @@ serve(async (req) => {
 
     console.log(`Authenticating wallet: ${normalizedAddress}`);
 
-    // Prevent duplicate wallet_address constraint issues by reusing existing profile/user when present
+    // Build the expected email for this wallet
+    const email = `${normalizedAddress}@wallet.vyve.app`;
+
+    // First, check if a profile already exists for this wallet
     const { data: existingProfile, error: profileLookupError } = await supabaseAdmin
       .from("profiles")
       .select("id")
@@ -121,27 +124,27 @@ serve(async (req) => {
     }
 
     let userId: string | null = existingProfile?.id ?? null;
-    let email: string | null = null;
 
-    if (userId) {
-      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
-
-      if (!userError && userData?.user?.email) {
-        email = userData.user.email;
-        console.log(`Existing user matched by wallet profile: ${normalizedAddress}`);
-      } else {
-        console.error(
-          "Stale profile found (no matching auth user). Deleting profile row to allow new signup.",
-          userError
-        );
-        await supabaseAdmin.from("profiles").delete().eq("id", userId);
-        userId = null;
+    // If no profile found, check if auth user exists by email
+    if (!userId) {
+      const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      
+      if (!listError && usersData?.users) {
+        const existingAuthUser = usersData.users.find(u => u.email === email);
+        if (existingAuthUser) {
+          userId = existingAuthUser.id;
+          console.log(`Found existing auth user by email: ${normalizedAddress}`);
+          
+          // Ensure profile exists for this user
+          await supabaseAdmin
+            .from("profiles")
+            .upsert({ id: userId, wallet_address: normalizedAddress }, { onConflict: "id" });
+        }
       }
     }
 
+    // If still no user, create a new one
     if (!userId) {
-      email = `${normalizedAddress}@wallet.vyve.app`;
-
       console.log(`Creating new user for wallet: ${normalizedAddress}`);
 
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -162,16 +165,13 @@ serve(async (req) => {
 
       userId = newUser.user.id;
 
-      // Ensure a profile row exists (in case auth trigger isn't configured)
-      await supabaseAdmin
-        .from("profiles")
-        .upsert({ id: userId, wallet_address: normalizedAddress }, { onConflict: "id" });
-    } else {
-      // Keep profile wallet_address normalized
+      // Create profile row
       await supabaseAdmin
         .from("profiles")
         .upsert({ id: userId, wallet_address: normalizedAddress }, { onConflict: "id" });
     }
+
+    console.log(`User ready for wallet: ${normalizedAddress}, userId: ${userId}`);
 
     // Create a session without password using magic link token verification
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
