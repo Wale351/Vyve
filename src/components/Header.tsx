@@ -13,6 +13,7 @@ import {
 import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown } from 'lucide-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
+import GlobalSearch from '@/components/GlobalSearch';
 
 const Header = () => {
   const location = useLocation();
@@ -141,8 +142,13 @@ const Header = () => {
                   {item.label}
                 </Button>
               </Link>
-            ))}
+          ))}
           </nav>
+
+          {/* Global Search - Desktop */}
+          <div className="hidden lg:block">
+            <GlobalSearch />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
