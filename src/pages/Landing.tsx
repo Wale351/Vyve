@@ -1,5 +1,6 @@
 import { Play, Zap, Shield, Users, TrendingUp, Sparkles } from 'lucide-react';
 import WalletConnectButton from '@/components/WalletConnectButton';
+import FeaturedGamesCarousel from '@/components/FeaturedGamesCarousel';
 
 const Landing = () => {
   return (
@@ -71,6 +72,9 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* Featured Games Section */}
+      <FeaturedGamesCarousel />
 
       {/* Features Section */}
       <section className="container px-4 py-16 md:py-24">

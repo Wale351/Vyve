@@ -51,6 +51,13 @@ const Games = () => {
     setSearchParams(searchParams);
   };
 
+  // Featured games for carousel
+  const featuredGameNames = [
+    'DeFi Kingdoms', 'Medieval Empires', 'Nyan Heroes', 'Off The Grid', 'Pixels',
+    'Super Champs', 'Wilder Worlds', 'Call Of The Voyd', 'Cornucopias', 'Decimated'
+  ];
+  const featuredGames = games.filter(g => featuredGameNames.includes(g.name));
+
   return (
     <div className="min-h-screen bg-background page-enter">
       <Header />
@@ -66,6 +73,20 @@ const Games = () => {
             Discover games and find live streams
           </p>
         </div>
+
+        {/* Featured Games Horizontal Scroll */}
+        {featuredGames.length > 0 && !search && !categoryFilter && (
+          <div className="mb-10">
+            <h2 className="font-varsity text-2xl md:text-3xl mb-4 tracking-wide">FEATURED</h2>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+              {featuredGames.map((game) => (
+                <div key={game.id} className="flex-shrink-0 w-[160px] md:w-[200px]">
+                  <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         
         {/* Search and filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
