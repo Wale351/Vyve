@@ -3,17 +3,21 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown } from 'lucide-react';
+import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown, Bell, Heart, Coins } from 'lucide-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
 import GlobalSearch from '@/components/GlobalSearch';
+import { useNotifications } from '@/hooks/useNotifications';
+import { formatDistanceToNow } from 'date-fns';
 
 const Header = () => {
   const location = useLocation();
@@ -21,8 +25,10 @@ const Header = () => {
   const { user, isAuthenticated, walletAddress, signOut } = useWalletAuth();
   const { data: profile } = useOwnProfile(user?.id);
   const { data: role } = useUserRole(user?.id);
+  const { data: notifications } = useNotifications();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const unreadCount = notifications?.length || 0;
   const isStreamer = role === 'streamer' || role === 'admin';
 
   const navItems = [
@@ -162,6 +168,72 @@ const Header = () => {
             </Link>
           )}
 
+          {/* Notifications Dropdown */}
+          {isAuthenticated && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 bg-popover">
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  <span>Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="text-xs text-muted-foreground">{unreadCount} new</span>
+                  )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <ScrollArea className="h-[300px]">
+                  {notifications && notifications.length > 0 ? (
+                    notifications.map((notification) => (
+                      <DropdownMenuItem
+                        key={notification.id}
+                        asChild
+                        className="flex items-start gap-3 p-3 cursor-pointer focus:bg-muted"
+                      >
+                        <Link to={notification.data?.user_id ? `/profile/${notification.data.user_id}` : '#'}>
+                          <div className="flex-shrink-0 mt-0.5">
+                            {notification.type === 'new_follower' ? (
+                              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                                <Heart className="h-4 w-4 text-primary" />
+                              </div>
+                            ) : notification.type === 'tip_received' ? (
+                              <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                                <Coins className="h-4 w-4 text-amber-500" />
+                              </div>
+                            ) : (
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={notification.data?.avatar_url || ''} />
+                                <AvatarFallback>
+                                  <User className="h-4 w-4" />
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{notification.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{notification.message}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      No notifications yet
+                    </div>
+                  )}
+                </ScrollArea>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           {/* Profile Avatar Dropdown */}
           {isAuthenticated && profile && (
             <DropdownMenu>
@@ -179,7 +251,7 @@ const Header = () => {
                   <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 bg-popover">
                 <div className="px-2 py-1.5">
                   <p className="font-medium">{profile.username}</p>
                   <p className="text-xs text-muted-foreground capitalize">{role || 'Viewer'}</p>
