@@ -79,3 +79,25 @@ export const useGameCategories = () => {
     },
   });
 };
+
+export const useLiveStreamCountByGame = () => {
+  return useQuery({
+    queryKey: ['live-stream-count-by-game'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('streams')
+        .select('game_id')
+        .eq('is_live', true);
+
+      if (error) throw error;
+      
+      const counts: Record<string, number> = {};
+      data.forEach(stream => {
+        if (stream.game_id) {
+          counts[stream.game_id] = (counts[stream.game_id] || 0) + 1;
+        }
+      });
+      return counts;
+    },
+  });
+};

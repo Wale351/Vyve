@@ -1,13 +1,29 @@
 import Header from '@/components/Header';
 import StreamCard from '@/components/StreamCard';
+import GameCard from '@/components/GameCard';
 import { useLiveStreams } from '@/hooks/useStreams';
-import { Play, TrendingUp, Users, Loader2, Radio } from 'lucide-react';
+import { useGames, useLiveStreamCountByGame } from '@/hooks/useGames';
+import { Play, TrendingUp, Users, Loader2, Radio, Gamepad2, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
 const Home = () => {
   const { data: liveStreams = [], isLoading } = useLiveStreams();
+  const { data: games = [] } = useGames();
+  const { data: liveCountByGame = {} } = useLiveStreamCountByGame();
+  
   const totalViewers = liveStreams.reduce((acc, s) => acc + (s.viewer_count || 0), 0);
+
+  // Get trending games (games with live streams, sorted by viewer count)
+  const trendingGames = games
+    .filter(g => liveCountByGame[g.id] > 0)
+    .sort((a, b) => (liveCountByGame[b.id] || 0) - (liveCountByGame[a.id] || 0))
+    .slice(0, 6);
+
+  // Get popular streamers from live streams (sorted by viewer count)
+  const popularStreams = [...liveStreams]
+    .sort((a, b) => (b.viewer_count || 0) - (a.viewer_count || 0))
+    .slice(0, 4);
 
   return (
     <div className="min-h-screen bg-background page-enter">
@@ -29,7 +45,52 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Live Streams */}
+      {/* Featured / Popular Streams */}
+      {popularStreams.length > 0 && (
+        <section className="container px-4 py-8">
+          <div className="flex items-center gap-2 mb-6">
+            <Flame className="h-5 w-5 text-orange-500" />
+            <h2 className="font-varsity text-xl md:text-2xl tracking-wide">POPULAR NOW</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {popularStreams.map((stream, index) => (
+              <div 
+                key={stream.id} 
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 80}ms` }}
+              >
+                <StreamCard stream={stream} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Trending Games */}
+      {trendingGames.length > 0 && (
+        <section className="container px-4 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <h2 className="font-varsity text-xl md:text-2xl tracking-wide">TRENDING GAMES</h2>
+            </div>
+            <Link to="/games">
+              <Button variant="ghost" size="sm">
+                View All
+              </Button>
+            </Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+            {trendingGames.map((game) => (
+              <div key={game.id} className="flex-shrink-0 w-[160px] md:w-[200px]">
+                <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* All Live Streams */}
       <section className="container px-4 py-8 md:py-12">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 md:mb-8">
           <div>
@@ -77,6 +138,30 @@ const Home = () => {
           </div>
         )}
       </section>
+
+      {/* Browse by Category */}
+      {games.length > 0 && !trendingGames.length && (
+        <section className="container px-4 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Gamepad2 className="h-5 w-5 text-primary" />
+              <h2 className="font-varsity text-xl md:text-2xl tracking-wide">BROWSE GAMES</h2>
+            </div>
+            <Link to="/games">
+              <Button variant="ghost" size="sm">
+                View All
+              </Button>
+            </Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+            {games.slice(0, 8).map((game) => (
+              <div key={game.id} className="flex-shrink-0 w-[160px] md:w-[200px]">
+                <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-border/30 bg-card/50 mt-auto">
