@@ -159,7 +159,7 @@ const GoLive = () => {
     setTags(tags.filter(t => t !== tagToRemove));
   };
 
-  // Not authenticated state - Privy handles both connection and auth
+  // Not authenticated state
   if (!authenticated || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-background page-enter">

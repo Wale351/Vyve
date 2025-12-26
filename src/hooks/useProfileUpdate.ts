@@ -88,7 +88,7 @@ export const useProfileImageUpload = () => {
   });
 };
 
-// Create initial profile
+// Create or complete profile (handles both new profiles and completing existing skeleton profiles)
 export const useCreateProfile = () => {
   const queryClient = useQueryClient();
 
@@ -106,28 +106,60 @@ export const useCreateProfile = () => {
       bio?: string;
       avatarUrl: string;
     }) => {
-      const { error } = await supabase
+      // First, check if profile already exists (skeleton from wallet-auth)
+      const { data: existing } = await supabase
         .from('profiles')
-        .insert({
-          id: userId,
-          wallet_address: walletAddress,
-          username,
-          bio: bio || null,
-          avatar_url: avatarUrl,
-          avatar_last_updated_at: new Date().toISOString(),
-        });
+        .select('id, username')
+        .eq('id', userId)
+        .maybeSingle();
 
-      if (error) {
-        // Handle specific error cases
-        if (error.code === '23505') {
-          if (error.message.includes('username')) {
+      if (existing && existing.username) {
+        // Profile already has a username - this shouldn't happen in normal flow
+        throw new Error('Profile already exists with a username.');
+      }
+
+      if (existing) {
+        // Profile exists but incomplete - update it
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            username,
+            bio: bio || null,
+            avatar_url: avatarUrl,
+            avatar_last_updated_at: new Date().toISOString(),
+          })
+          .eq('id', userId);
+
+        if (error) {
+          if (error.code === '23505' && error.message.includes('username')) {
             throw new Error('Username is already taken. Please choose a different one.');
           }
-          if (error.message.includes('wallet_address')) {
-            throw new Error('A profile already exists for this wallet.');
-          }
+          throw error;
         }
-        throw error;
+      } else {
+        // No profile exists - insert new one
+        const { error } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            wallet_address: walletAddress,
+            username,
+            bio: bio || null,
+            avatar_url: avatarUrl,
+            avatar_last_updated_at: new Date().toISOString(),
+          });
+
+        if (error) {
+          if (error.code === '23505') {
+            if (error.message.includes('username')) {
+              throw new Error('Username is already taken. Please choose a different one.');
+            }
+            if (error.message.includes('wallet_address')) {
+              throw new Error('A profile already exists for this wallet.');
+            }
+          }
+          throw error;
+        }
       }
     },
     onSuccess: () => {

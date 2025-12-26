@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { StreamWithProfile } from '@/hooks/useStreams';
-import { formatViewerCount, formatDuration } from '@/lib/mockData';
+import { formatViewerCount, formatDuration } from '@/lib/formatters';
 import { Users, Clock, Play } from 'lucide-react';
 import { useState } from 'react';
 

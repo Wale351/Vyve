@@ -254,10 +254,9 @@ export const useWalletAuth = () => {
   }, [isConnected, shared]);
 
   return {
-    // Wallet state (for compatibility with usePrivyAuth)
+    // Wallet state
     ready: true,
     authenticated: isConnected,
-    privyUser: null,
     walletAddress,
 
     // Supabase state
@@ -272,6 +271,3 @@ export const useWalletAuth = () => {
     signOut,
   };
 };
-
-// Re-export as usePrivyAuth for backward compatibility
-export const usePrivyAuth = useWalletAuth;

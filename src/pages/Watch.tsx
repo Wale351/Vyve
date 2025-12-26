@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import VideoPlayer from '@/components/VideoPlayer';
 import LiveChat from '@/components/LiveChat';
 import TipButton from '@/components/TipButton';
+import FollowButton from '@/components/FollowButton';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useStream } from '@/hooks/useStreams';
@@ -11,8 +12,8 @@ import { useEndStream } from '@/hooks/useStreamControls';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useViewerPresence, useStreamRealtime } from '@/hooks/useViewerPresence';
 import { useLivepeerStatus, StreamPhase } from '@/hooks/useLivepeerStatus';
-import { formatViewerCount, formatDuration } from '@/lib/mockData';
-import { Users, Clock, Share2, Heart, ExternalLink, Loader2, Play, StopCircle, MessageCircle, ChevronUp, Radio, AlertCircle, RefreshCw } from 'lucide-react';
+import { formatViewerCount, formatDuration } from '@/lib/formatters';
+import { Users, Clock, Share2, Heart, ExternalLink, Loader2, Play, StopCircle, MessageCircle, ChevronUp, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Watch = () => {
@@ -196,28 +197,35 @@ const Watch = () => {
                       </div>
                     </Link>
                     
-                    {/* Owner end stream button - inline on mobile */}
-                    {isStreamOwner && streamPhase === 'live' && (
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => {
-                          endStreamMutation.mutate(stream.id, {
-                            onSuccess: () => navigate('/'),
-                          });
-                        }}
-                        disabled={endStreamMutation.isPending}
-                        className="gap-1.5"
-                      >
-                        {endStreamMutation.isPending ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <StopCircle className="h-3.5 w-3.5" />
-                        )}
-                        <span className="hidden sm:inline">End Stream</span>
-                        <span className="sm:hidden">End</span>
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {/* Follow button for non-owners */}
+                      {!isStreamOwner && streamerId && (
+                        <FollowButton profileId={streamerId} />
+                      )}
+                      
+                      {/* Owner end stream button - inline on mobile */}
+                      {isStreamOwner && streamPhase === 'live' && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => {
+                            endStreamMutation.mutate(stream.id, {
+                              onSuccess: () => navigate('/'),
+                            });
+                          }}
+                          disabled={endStreamMutation.isPending}
+                          className="gap-1.5"
+                        >
+                          {endStreamMutation.isPending ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <StopCircle className="h-3.5 w-3.5" />
+                          )}
+                          <span className="hidden sm:inline">End Stream</span>
+                          <span className="sm:hidden">End</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Stats row */}
