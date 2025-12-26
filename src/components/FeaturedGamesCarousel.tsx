@@ -13,6 +13,14 @@ const featuredGames = [
   { name: 'Call Of The Voyd', image: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=400&h=400&fit=crop', slug: 'call-of-the-voyd' },
   { name: 'Cornucopias', image: 'https://images.unsplash.com/photo-1605979257913-1704eb7b6246?w=400&h=400&fit=crop', slug: 'cornucopias' },
   { name: 'Decimated', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b2b0e?w=400&h=400&fit=crop', slug: 'decimated' },
+  { name: 'Axie Infinity', image: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=400&h=400&fit=crop', slug: 'axie-infinity' },
+  { name: 'The Sandbox', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop', slug: 'the-sandbox' },
+  { name: 'Illuvium', image: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=400&h=400&fit=crop', slug: 'illuvium' },
+  { name: 'Gods Unchained', image: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?w=400&h=400&fit=crop', slug: 'gods-unchained' },
+  { name: 'Star Atlas', image: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=400&fit=crop', slug: 'star-atlas' },
+  { name: 'Parallel', image: 'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?w=400&h=400&fit=crop', slug: 'parallel' },
+  { name: 'Shrapnel', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b2b0e?w=400&h=400&fit=crop', slug: 'shrapnel' },
+  { name: 'Big Time', image: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=400&h=400&fit=crop', slug: 'big-time' },
 ];
 
 const FeaturedGamesCarousel = () => {
