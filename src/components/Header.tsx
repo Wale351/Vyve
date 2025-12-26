@@ -105,10 +105,26 @@ const Header = () => {
                 {/* Mobile User Section */}
                 {isAuthenticated && profile && (
                   <div className="p-4 border-t border-border/30 space-y-2">
+                    {/* Mobile Notifications */}
+                    <Link to="#" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between">
+                      <Button variant="ghost" className="w-full justify-start gap-2">
+                        <Bell className="h-4 w-4" />
+                        Notifications
+                        {unreadCount > 0 && (
+                          <span className="ml-auto h-2 w-2 rounded-full bg-destructive" />
+                        )}
+                      </Button>
+                    </Link>
                     <Link to={`/profile/${walletAddress}`} onClick={() => setMobileMenuOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start gap-2">
                         <User className="h-4 w-4" />
                         Profile
+                      </Button>
+                    </Link>
+                    <Link to="/settings" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start gap-2">
+                        <Settings className="h-4 w-4" />
+                        Settings
                       </Button>
                     </Link>
                     <Button 
@@ -271,9 +287,11 @@ const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem disabled className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
