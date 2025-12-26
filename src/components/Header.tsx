@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown, Bell, Heart, Coins } from 'lucide-react';
+import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown, Bell, Heart, Coins, BarChart3 } from 'lucide-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
 import GlobalSearch from '@/components/GlobalSearch';
@@ -34,6 +34,7 @@ const Header = () => {
   const navItems = [
     { path: '/', label: 'Browse', icon: Home, show: true },
     { path: '/games', label: 'Games', icon: Gamepad2, show: true },
+    { path: '/analytics', label: 'Analytics', icon: BarChart3, show: isStreamer },
   ];
 
   const NavItem = ({ path, label, icon: Icon, isActive }: { path: string; label: string; icon: any; isActive: boolean }) => (
@@ -93,12 +94,20 @@ const Header = () => {
                   ))}
                   
                   {isStreamer && (
-                    <NavItem
-                      path="/go-live"
-                      label="Go Live"
-                      icon={Radio}
-                      isActive={location.pathname === '/go-live'}
-                    />
+                    <>
+                      <NavItem
+                        path="/go-live"
+                        label="Go Live"
+                        icon={Radio}
+                        isActive={location.pathname === '/go-live'}
+                      />
+                      <NavItem
+                        path="/analytics"
+                        label="Analytics"
+                        icon={BarChart3}
+                        isActive={location.pathname.startsWith('/analytics')}
+                      />
+                    </>
                   )}
                 </nav>
 
@@ -280,12 +289,20 @@ const Header = () => {
                   </Link>
                 </DropdownMenuItem>
                 {isStreamer && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/go-live" className="cursor-pointer">
-                      <Radio className="mr-2 h-4 w-4" />
-                      Go Live
-                    </Link>
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link to="/go-live" className="cursor-pointer">
+                        <Radio className="mr-2 h-4 w-4" />
+                        Go Live
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/analytics" className="cursor-pointer">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Analytics
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
                 )}
                 <DropdownMenuItem asChild>
                   <Link to="/settings" className="cursor-pointer">

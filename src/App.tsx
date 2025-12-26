@@ -9,6 +9,7 @@ import { config } from './lib/wagmi';
 import Index from "./pages/Index";
 import Watch from "./pages/Watch";
 import GoLive from "./pages/GoLive";
+import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Games from "./pages/Games";
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/watch/:streamId" element={<Watch />} />
               <Route path="/go-live" element={<GoLive />} />
+              <Route path="/analytics" element={<Analytics />} />
               <Route path="/profile/:address" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/games" element={<Games />} />

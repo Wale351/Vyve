@@ -70,12 +70,22 @@ serve(async (req) => {
     console.log(`[check-stream-status] Playback info:`, JSON.stringify(playbackInfo));
 
     // Determine if stream is active
-    // Livepeer playback API returns meta.live for live streams
-    const isActive = playbackInfo?.meta?.live === true || 
-                     playbackInfo?.type === "live" ||
-                     (playbackInfo?.meta?.source?.some((s: any) => s.type === "live"));
-    
+    // Livepeer playback API uses meta.live (0/1) to indicate a currently broadcasting live stream.
+    // NOTE: The "type" field can still be "live" even when the stream is NOT actively broadcasting,
+    // so we must not rely on it alone.
+    const liveFlag = playbackInfo?.meta?.live;
+    const liveNumber = typeof liveFlag === "string" ? Number(liveFlag)
+      : typeof liveFlag === "number" ? liveFlag
+      : typeof liveFlag === "boolean" ? (liveFlag ? 1 : 0)
+      : null;
+
+    const isActive = liveNumber !== null ? liveNumber > 0 : false;
     const phase = isActive ? "live" : "waiting";
+
+    // Prefer the HLS URL provided by Livepeer (if available)
+    const hlsUrlFromMeta = Array.isArray(playbackInfo?.meta?.source)
+      ? playbackInfo.meta.source.find((s: any) => typeof s?.url === "string" && s.url.includes("/hls/"))?.url
+      : null;
 
     // If stream_id provided and status changed, update database
     if (stream_id && isActive) {
@@ -103,7 +113,9 @@ serve(async (req) => {
       JSON.stringify({
         isActive,
         phase,
-        playbackUrl: isActive ? `https://livepeercdn.studio/hls/${playback_id}/index.m3u8` : null,
+        playbackUrl: isActive
+          ? (hlsUrlFromMeta || `https://livepeercdn.studio/hls/${playback_id}/index.m3u8`)
+          : null,
         meta: playbackInfo?.meta || null,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
