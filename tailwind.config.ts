@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         display: ['Plus Jakarta Sans', 'sans-serif'],
+        varsity: ['Teko', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
