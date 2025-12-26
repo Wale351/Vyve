@@ -1,40 +1,68 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 const featuredGames = [
-  { name: 'DeFi Kingdoms', image: 'https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=400&h=400&fit=crop', slug: 'defi-kingdoms' },
-  { name: 'Medieval Empires', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', slug: 'medieval-empires' },
-  { name: 'Nyan Heroes', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=400&fit=crop', slug: 'nyan-heroes' },
-  { name: 'Off The Grid', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=400&fit=crop', slug: 'off-the-grid' },
-  { name: 'Pixels', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=400&fit=crop', slug: 'pixels' },
-  { name: 'Super Champs', image: 'https://images.unsplash.com/photo-1493711662062-fa541f7f3d24?w=400&h=400&fit=crop', slug: 'super-champs' },
-  { name: 'Wilder Worlds', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=400&fit=crop', slug: 'wilder-worlds' },
-  { name: 'Call Of The Voyd', image: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=400&h=400&fit=crop', slug: 'call-of-the-voyd' },
-  { name: 'Cornucopias', image: 'https://images.unsplash.com/photo-1605979257913-1704eb7b6246?w=400&h=400&fit=crop', slug: 'cornucopias' },
-  { name: 'Decimated', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b2b0e?w=400&h=400&fit=crop', slug: 'decimated' },
-  { name: 'Axie Infinity', image: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=400&h=400&fit=crop', slug: 'axie-infinity' },
-  { name: 'The Sandbox', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop', slug: 'the-sandbox' },
-  { name: 'Illuvium', image: 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=400&h=400&fit=crop', slug: 'illuvium' },
-  { name: 'Gods Unchained', image: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?w=400&h=400&fit=crop', slug: 'gods-unchained' },
-  { name: 'Star Atlas', image: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=400&fit=crop', slug: 'star-atlas' },
-  { name: 'Parallel', image: 'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?w=400&h=400&fit=crop', slug: 'parallel' },
-  { name: 'Shrapnel', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b2b0e?w=400&h=400&fit=crop', slug: 'shrapnel' },
-  { name: 'Big Time', image: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=400&h=400&fit=crop', slug: 'big-time' },
+  { name: 'Axie Infinity', image: 'https://cryptologos.cc/logos/axie-infinity-axs-logo.png?v=035', slug: 'axie-infinity' },
+  { name: 'The Sandbox', image: 'https://cryptologos.cc/logos/the-sandbox-sand-logo.png?v=035', slug: 'the-sandbox' },
+  { name: 'Illuvium', image: 'https://cryptologos.cc/logos/illuvium-ilv-logo.png?v=035', slug: 'illuvium' },
+  { name: 'Decentraland', image: 'https://cryptologos.cc/logos/decentraland-mana-logo.png?v=035', slug: 'decentraland' },
+  { name: 'Gods Unchained', image: 'https://assets.coingecko.com/coins/images/17139/large/10631.png?1696516702', slug: 'gods-unchained' },
+  { name: 'Star Atlas', image: 'https://cryptologos.cc/logos/star-atlas-atlas-logo.png?v=035', slug: 'star-atlas' },
+  { name: 'Gala Games', image: 'https://cryptologos.cc/logos/gala-gala-logo.png?v=035', slug: 'gala-games' },
+  { name: 'Enjin', image: 'https://cryptologos.cc/logos/enjin-coin-enj-logo.png?v=035', slug: 'enjin' },
+  { name: 'Immutable X', image: 'https://cryptologos.cc/logos/immutable-x-imx-logo.png?v=035', slug: 'immutable-x' },
+  { name: 'Ultra', image: 'https://cryptologos.cc/logos/ultra-uos-logo.png?v=035', slug: 'ultra' },
+  { name: 'Yield Guild Games', image: 'https://cryptologos.cc/logos/yield-guild-games-ygg-logo.png?v=035', slug: 'yield-guild-games' },
+  { name: 'Vulcan Forged', image: 'https://assets.coingecko.com/coins/images/14476/large/vulcan-forged-logo.png', slug: 'vulcan-forged' },
+  { name: 'Merit Circle', image: 'https://cryptologos.cc/logos/merit-circle-mc-logo.png?v=035', slug: 'merit-circle' },
+  { name: 'Parallel', image: 'https://assets.coingecko.com/coins/images/28527/large/PRIME.png', slug: 'parallel' },
+  { name: 'Big Time', image: 'https://assets.coingecko.com/coins/images/32400/large/bigtime.jpeg', slug: 'big-time' },
+  { name: 'Pixels', image: 'https://assets.coingecko.com/coins/images/35218/large/pixel-icon.png', slug: 'pixels' },
+  { name: 'Shrapnel', image: 'https://assets.coingecko.com/coins/images/35716/large/Shrapnel.png', slug: 'shrapnel' },
+  { name: 'Off The Grid', image: 'https://assets.coingecko.com/coins/images/36125/large/otg.png', slug: 'off-the-grid' },
 ];
 
 const FeaturedGamesCarousel = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 320;
+      const scrollAmount = 260;
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth',
       });
     }
   };
+
+  // Auto-scroll functionality
+  useEffect(() => {
+    const startAutoScroll = () => {
+      autoScrollRef.current = setInterval(() => {
+        if (scrollRef.current && !isPaused) {
+          const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+          
+          // Reset to start when reaching the end
+          if (scrollLeft + clientWidth >= scrollWidth - 10) {
+            scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+          } else {
+            scrollRef.current.scrollBy({ left: 260, behavior: 'smooth' });
+          }
+        }
+      }, 3000);
+    };
+
+    startAutoScroll();
+
+    return () => {
+      if (autoScrollRef.current) {
+        clearInterval(autoScrollRef.current);
+      }
+    };
+  }, [isPaused]);
 
   return (
     <section className="py-16 md:py-24 overflow-hidden">
@@ -67,6 +95,10 @@ const FeaturedGamesCarousel = () => {
           ref={scrollRef}
           className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setTimeout(() => setIsPaused(false), 2000)}
         >
           {featuredGames.map((game, index) => (
             <div
@@ -74,14 +106,29 @@ const FeaturedGamesCarousel = () => {
               className="game-card group flex-shrink-0 w-[200px] md:w-[240px] aspect-square rounded-2xl overflow-hidden relative cursor-pointer snap-start"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <img
-                src={game.image}
-                alt={game.name}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <h3 className="font-display font-bold text-sm md:text-base text-foreground drop-shadow-lg">
+              {/* Gradient background for Web3 gaming aesthetic */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20" />
+              
+              {/* Logo centered */}
+              <div className="absolute inset-0 flex items-center justify-center p-8">
+                <img
+                  src={game.image}
+                  alt={game.name}
+                  className="w-24 h-24 md:w-28 md:h-28 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110"
+                  onError={(e) => {
+                    // Fallback to first letter if image fails
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = `<div class="w-24 h-24 md:w-28 md:h-28 rounded-full bg-primary/30 flex items-center justify-center text-4xl font-bold text-foreground">${game.name.charAt(0)}</div>`;
+                  }}
+                />
+              </div>
+              
+              {/* Glow effect on hover */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-primary/30 via-transparent to-transparent" />
+              
+              {/* Name overlay */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/95 to-transparent">
+                <h3 className="font-display font-bold text-sm md:text-base text-foreground drop-shadow-lg text-center">
                   {game.name}
                 </h3>
               </div>

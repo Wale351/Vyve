@@ -103,22 +103,16 @@ export const useLivepeerStatus = ({
     const initialPhase = getInitialPhase();
     setStatus(prev => ({ ...prev, phase: initialPhase }));
 
-    // If already live or ended, no need to poll
-    if (isLive || endedAt || !playbackId) {
-      if (isLive && playbackId) {
-        setStatus({
-          isActive: true,
-          phase: 'live',
-          playbackUrl: `https://livepeercdn.studio/hls/${playbackId}/index.m3u8`,
-        });
-      }
+    // If ended or no playback ID, don't poll
+    if (endedAt || !playbackId) {
       return;
     }
 
-    // Initial check
+    // Always verify with Livepeer API, even if database says is_live
+    // This ensures we only show "live" when Livepeer actually has active stream
     checkStatus();
 
-    // Start polling
+    // Start polling until we confirm stream is live
     pollRef.current = setInterval(checkStatus, pollInterval);
 
     return () => {
@@ -128,7 +122,7 @@ export const useLivepeerStatus = ({
         pollRef.current = null;
       }
     };
-  }, [playbackId, isLive, endedAt, pollInterval, checkStatus, getInitialPhase]);
+  }, [playbackId, endedAt, pollInterval, checkStatus, getInitialPhase]);
 
   const retry = useCallback(() => {
     setError(null);
