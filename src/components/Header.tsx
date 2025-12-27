@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -16,7 +16,7 @@ import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown,
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
 import GlobalSearch from '@/components/GlobalSearch';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotifications, useMarkNotificationsRead } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
 
 const Header = () => {
@@ -26,9 +26,21 @@ const Header = () => {
   const { data: profile } = useOwnProfile(user?.id);
   const { data: role } = useUserRole(user?.id);
   const { data: notifications } = useNotifications();
+  const markRead = useMarkNotificationsRead();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const unreadCount = notifications?.length || 0;
+  const unreadCount = notifications?.filter(n => !n.read).length || 0;
+
+  // Mark notifications as read when dropdown is opened
+  useEffect(() => {
+    if (notificationsOpen && notifications) {
+      const unreadKeys = notifications.filter(n => !n.read).map(n => n.id);
+      if (unreadKeys.length > 0) {
+        markRead.mutate(unreadKeys);
+      }
+    }
+  }, [notificationsOpen, notifications]);
   const isStreamer = role === 'streamer' || role === 'admin';
 
   const navItems = [
@@ -195,7 +207,7 @@ const Header = () => {
 
           {/* Notifications Dropdown */}
           {isAuthenticated && (
-            <DropdownMenu>
+            <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative h-9 w-9">
                   <Bell className="h-5 w-5" />

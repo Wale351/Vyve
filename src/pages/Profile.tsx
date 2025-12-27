@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import StreamCard from '@/components/StreamCard';
 import ProfileBadges from '@/components/ProfileBadges';
 import FollowButton from '@/components/FollowButton';
+import NotificationToggle from '@/components/NotificationToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -435,7 +436,10 @@ const Profile = () => {
                         )}
                       </>
                     ) : (
-                      <FollowButton profileId={profileId!} />
+                      <>
+                        <FollowButton profileId={profileId!} />
+                        <NotificationToggle streamerId={profileId!} />
+                      </>
                     )}
                   </div>
                 </>

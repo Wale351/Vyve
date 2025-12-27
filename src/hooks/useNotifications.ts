@@ -18,12 +18,31 @@ export interface Notification {
   };
 }
 
-// Generate notifications from follows and tips (since we don't have a dedicated notifications table)
+// Fetch which notifications have been read
+const useNotificationReads = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ['notification-reads', userId],
+    queryFn: async () => {
+      if (!userId) return new Set<string>();
+
+      const { data } = await supabase
+        .from('notification_reads')
+        .select('notification_key')
+        .eq('user_id', userId);
+
+      return new Set(data?.map(r => r.notification_key) || []);
+    },
+    enabled: !!userId,
+  });
+};
+
+// Generate notifications from follows and tips
 export const useNotifications = () => {
   const { user } = useWalletAuth();
+  const { data: readKeys = new Set<string>() } = useNotificationReads(user?.id);
 
   return useQuery({
-    queryKey: ['notifications', user?.id],
+    queryKey: ['notifications', user?.id, Array.from(readKeys)],
     queryFn: async (): Promise<Notification[]> => {
       if (!user?.id) return [];
 
@@ -46,12 +65,13 @@ export const useNotifications = () => {
       if (followers) {
         followers.forEach((follow: any) => {
           const followerProfile = follow.follower;
+          const notificationKey = `follow_${follow.id}`;
           notifications.push({
-            id: `follow_${follow.id}`,
+            id: notificationKey,
             type: 'new_follower',
             title: 'New Follower',
             message: `${followerProfile?.username || 'Someone'} started following you`,
-            read: false,
+            read: readKeys.has(notificationKey),
             created_at: follow.created_at,
             data: {
               user_id: follow.follower_id,
@@ -80,12 +100,13 @@ export const useNotifications = () => {
       if (tips) {
         tips.forEach((tip: any) => {
           const senderProfile = tip.sender;
+          const notificationKey = `tip_${tip.id}`;
           notifications.push({
-            id: `tip_${tip.id}`,
+            id: notificationKey,
             type: 'tip_received',
             title: 'Tip Received',
             message: `${senderProfile?.username || 'Someone'} tipped you ${tip.amount_eth} ETH`,
-            read: false,
+            read: readKeys.has(notificationKey),
             created_at: tip.created_at,
             data: {
               user_id: tip.sender_id,
@@ -105,11 +126,38 @@ export const useNotifications = () => {
       return notifications.slice(0, 20);
     },
     enabled: !!user?.id,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
   });
 };
 
 export const useUnreadCount = () => {
   const { data: notifications } = useNotifications();
   return notifications?.filter(n => !n.read).length || 0;
+};
+
+export const useMarkNotificationsRead = () => {
+  const queryClient = useQueryClient();
+  const { user } = useWalletAuth();
+
+  return useMutation({
+    mutationFn: async (notificationKeys: string[]) => {
+      if (!user?.id || notificationKeys.length === 0) return;
+
+      // Insert read records for each notification
+      const records = notificationKeys.map(key => ({
+        user_id: user.id,
+        notification_key: key,
+      }));
+
+      const { error } = await supabase
+        .from('notification_reads')
+        .upsert(records, { onConflict: 'user_id,notification_key' });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-reads'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
 };
