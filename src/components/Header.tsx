@@ -12,10 +12,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown, Bell, Heart, Coins, BarChart3 } from 'lucide-react';
+import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown, Bell, Heart, Coins, BarChart3, Search, X } from 'lucide-react';
+import { useState as useSearchState } from 'react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
 import GlobalSearch from '@/components/GlobalSearch';
+import MobileSearch from '@/components/MobileSearch';
 import { useNotifications, useMarkNotificationsRead } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -29,6 +31,7 @@ const Header = () => {
   const markRead = useMarkNotificationsRead();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const unreadCount = notifications?.filter(n => !n.read).length || 0;
 
@@ -195,6 +198,17 @@ const Header = () => {
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
+          {/* Mobile Search Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 md:hidden"
+            onClick={() => setMobileSearchOpen(true)}
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+          <MobileSearch open={mobileSearchOpen} onOpenChange={setMobileSearchOpen} />
+
           {/* Go Live Button for streamers */}
           {isStreamer && (
             <Link to="/go-live" className="hidden md:block">
