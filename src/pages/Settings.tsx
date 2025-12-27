@@ -8,9 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useCanUpdateProfileImage, useUserRole } from '@/hooks/useProfile';
 import { useProfileUpdate, useProfileImageUpload, useRequestStreamerRole } from '@/hooks/useProfileUpdate';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { 
   Camera, 
   Loader2, 
@@ -20,6 +22,7 @@ import {
   Bell,
   Palette,
   Lock,
+  BellRing,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -270,19 +273,8 @@ const Settings = () => {
             </CardContent>
           </Card>
 
-          {/* Coming Soon Sections */}
-          <Card className="opacity-60">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Notifications
-                <span className="text-xs bg-muted px-2 py-0.5 rounded-full ml-2">Coming Soon</span>
-              </CardTitle>
-              <CardDescription>
-                Manage your notification preferences
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          {/* Notifications Section */}
+          <NotificationsCard />
 
           <Card className="opacity-60">
             <CardHeader>
@@ -332,6 +324,59 @@ const Settings = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Separate component for notifications to use the hook
+const NotificationsCard = () => {
+  const { 
+    isSupported, 
+    isSubscribed, 
+    isLoading, 
+    permission,
+    toggleSubscription 
+  } = usePushNotifications();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Bell className="h-5 w-5" />
+          Notifications
+        </CardTitle>
+        <CardDescription>
+          Manage your notification preferences
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <BellRing className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p className="font-medium">Push Notifications</p>
+              <p className="text-sm text-muted-foreground">
+                {!isSupported 
+                  ? "Not supported in this browser"
+                  : permission === 'denied'
+                  ? "Blocked in browser settings"
+                  : "Get notified when streamers you follow go live"}
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={isSubscribed}
+            onCheckedChange={toggleSubscription}
+            disabled={!isSupported || isLoading || permission === 'denied'}
+          />
+        </div>
+        
+        {permission === 'denied' && (
+          <p className="text-xs text-destructive">
+            Notifications are blocked. Please enable them in your browser settings.
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
