@@ -76,7 +76,17 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
       <div className="container flex h-14 md:h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-4 md:gap-8">
+        <div className="flex items-center gap-3 md:gap-8">
+          {/* Logo - Always visible on left */}
+          <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+              <Play className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary-foreground" fill="currentColor" />
+            </div>
+            <span className="font-display text-lg md:text-xl font-bold">
+              Vyve
+            </span>
+          </Link>
+
           {/* Mobile Menu Trigger */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
@@ -164,16 +174,6 @@ const Header = () => {
               </div>
             </SheetContent>
           </Sheet>
-
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
-              <Play className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary-foreground" fill="currentColor" />
-            </div>
-            <span className="font-display text-lg md:text-xl font-bold hidden sm:inline">
-              Vyve
-            </span>
-          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
