@@ -123,8 +123,8 @@ const FeaturedGamesCarousel = () => {
   }, [isPaused]);
   return <section className="py-16 md:py-24 overflow-hidden">
       <div className="container px-4">
-        <div className="items-center justify-between mb-8 flex flex-col">
-          <h2 className="font-varsity text-3xl md:text-4xl tracking-wide mx-[495px] lg:text-8xl text-center">
+        <div className="flex flex-col items-center mb-8">
+          <h2 className="font-varsity text-3xl md:text-4xl lg:text-6xl tracking-wide text-center mb-6">
             FEATURED GAMES
           </h2>
           <div className="hidden sm:flex items-center gap-2">
@@ -132,7 +132,7 @@ const FeaturedGamesCarousel = () => {
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <Button variant="outline" size="icon" onClick={() => scroll('right')} className="rounded-full h-10 w-10">
-              
+              <ChevronLeft className="h-5 w-5 rotate-180" />
             </Button>
           </div>
         </div>
