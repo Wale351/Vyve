@@ -5,6 +5,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 import LiveChat from '@/components/LiveChat';
 import TipButton from '@/components/TipButton';
 import FollowButton from '@/components/FollowButton';
+import ClipButton from '@/components/ClipButton';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useStream } from '@/hooks/useStreams';
@@ -24,6 +25,7 @@ const Watch = () => {
   const endStreamMutation = useEndStream();
   const [isLiked, setIsLiked] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
   
   // Real-time viewer presence tracking
   const { viewerCount: liveViewerCount, isConnected } = useViewerPresence(streamId);
@@ -265,6 +267,13 @@ const Watch = () => {
                       streamerId={streamerId}
                       streamerName={streamerName}
                       streamId={stream.id}
+                    />
+                    
+                    <ClipButton
+                      streamId={stream.id}
+                      playbackId={stream.playback_id || undefined}
+                      currentTime={currentPlaybackTime}
+                      isLive={streamPhase === 'live'}
                     />
                     
                     <Button 

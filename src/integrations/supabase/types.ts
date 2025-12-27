@@ -251,6 +251,70 @@ export type Database = {
         }
         Relationships: []
       }
+      stream_clips: {
+        Row: {
+          asset_id: string | null
+          created_at: string
+          duration: number
+          id: string
+          playback_id: string | null
+          start_time: number
+          status: string
+          stream_id: string
+          thumbnail_url: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          asset_id?: string | null
+          created_at?: string
+          duration?: number
+          id?: string
+          playback_id?: string | null
+          start_time: number
+          status?: string
+          stream_id: string
+          thumbnail_url?: string | null
+          title?: string
+          user_id: string
+        }
+        Update: {
+          asset_id?: string | null
+          created_at?: string
+          duration?: number
+          id?: string
+          playback_id?: string | null
+          start_time?: number
+          status?: string
+          stream_id?: string
+          thumbnail_url?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_clips_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_clips_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_clips_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_muted_users: {
         Row: {
           created_at: string
