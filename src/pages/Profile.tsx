@@ -426,7 +426,7 @@ const Profile = () => {
                           </Button>
                         )}
                         
-                        {(profile.role === 'streamer' || profile.role === 'admin') && (
+                        {profile.role === 'streamer' && (
                           <Link to="/go-live">
                             <Button variant="premium" size="sm" className="gap-2">
                               <Radio className="h-3.5 w-3.5 md:h-4 md:w-4" />
@@ -466,7 +466,7 @@ const Profile = () => {
           )}
 
           {/* Past Streams */}
-          {(profile.role === 'streamer' || profile.role === 'admin') && (
+          {profile.role === 'streamer' && (
             <section>
               <h2 className="text-lg md:text-xl font-display font-semibold mb-3 md:mb-4">Past Streams</h2>
               {streamsLoading ? (

@@ -43,19 +43,21 @@ const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
     hash,
   });
 
-  // Fetch streamer wallet address securely when dialog opens
+  // Fetch streamer wallet address when dialog opens
   useEffect(() => {
     const fetchWallet = async () => {
       if (!isOpen || !streamerId) return;
       
       setIsLoadingWallet(true);
       try {
-        // Use secure RPC function to get wallet for tipping
         const { data, error } = await supabase
-          .rpc('get_wallet_for_tipping', { p_user_id: streamerId });
+          .from('profiles')
+          .select('wallet_address')
+          .eq('id', streamerId)
+          .single();
         
         if (error) throw error;
-        setStreamerWallet(data || null);
+        setStreamerWallet(data?.wallet_address || null);
       } catch (error) {
         console.error('Error fetching streamer wallet:', error);
         toast.error('Unable to load streamer wallet');
