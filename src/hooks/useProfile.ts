@@ -139,37 +139,47 @@ export const useProfileById = (profileId: string | undefined) => {
   });
 };
 
-// Fetch profile by wallet address
+// Fetch profile by wallet address - uses secure RPC function to lookup ID, then public_profiles view
 export const useProfileByWallet = (walletAddress: string | undefined) => {
   return useQuery({
     queryKey: ['profile', 'wallet', walletAddress?.toLowerCase()],
     queryFn: async () => {
       if (!walletAddress) return null;
       
+      // Use secure RPC function to get profile ID from wallet address
+      const { data: profileId, error: lookupError } = await supabase
+        .rpc('get_profile_by_wallet', { p_wallet_address: walletAddress });
+      
+      if (lookupError || !profileId) return null;
+      
+      // Fetch public profile (excludes wallet_address)
       const { data, error } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('*')
-        .ilike('wallet_address', walletAddress)
+        .eq('id', profileId)
         .maybeSingle();
 
       if (error) throw error;
-      if (!data) return null;
-      
-      // Also fetch role from user_roles
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.id)
-        .order('role')
-        .limit(1)
-        .maybeSingle();
-      
-      return {
-        ...data,
-        role: (roleData?.role || 'viewer') as UserRole,
-      } as PublicProfile & { wallet_address: string };
+      return data as PublicProfile | null;
     },
     enabled: !!walletAddress,
+  });
+};
+
+// Get wallet address for tipping (secure function - only returns wallet for legitimate tipping use)
+export const useWalletForTipping = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ['wallet-for-tipping', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      
+      const { data, error } = await supabase
+        .rpc('get_wallet_for_tipping', { p_user_id: userId });
+
+      if (error) return null;
+      return data as string | null;
+    },
+    enabled: !!userId,
   });
 };
 
@@ -179,12 +189,14 @@ export const useProfileTipsReceived = (profileId: string | undefined) => {
     queryFn: async () => {
       if (!profileId) return 0;
       
+      // For own profile, we can query tips directly
+      // For others, we'll get 0 due to RLS (which is correct - tips are private)
       const { data, error } = await supabase
         .from('tips')
         .select('amount_eth')
         .eq('receiver_id', profileId);
 
-      if (error) throw error;
+      if (error) return 0; // RLS will block if not owner, return 0
       
       const total = data?.reduce((sum, tip) => sum + Number(tip.amount_eth), 0) || 0;
       return total;
