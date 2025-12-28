@@ -33,6 +33,8 @@ const Header = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
+  const profileHref = walletAddress ? `/profile/${walletAddress.toLowerCase()}` : '/';
+
   const unreadCount = notifications?.filter(n => !n.read).length || 0;
 
   // Mark notifications as read when dropdown is opened
@@ -149,7 +151,7 @@ const Header = () => {
                         )}
                       </Button>
                     </Link>
-                    <Link to={`/profile/${walletAddress}`} onClick={() => setMobileMenuOpen(false)}>
+                    <Link to={profileHref} onClick={() => setMobileMenuOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start gap-2">
                         <User className="h-4 w-4" />
                         Profile
@@ -309,7 +311,7 @@ const Header = () => {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to={`/profile/${walletAddress}`} className="cursor-pointer">
+                  <Link to={profileHref} className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </Link>
