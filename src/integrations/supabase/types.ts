@@ -636,24 +636,6 @@ export type Database = {
           username: string | null
           verified_creator: boolean | null
         }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          id?: string | null
-          role?: never
-          username?: string | null
-          verified_creator?: boolean | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          id?: string | null
-          role?: never
-          username?: string | null
-          verified_creator?: boolean | null
-        }
         Relationships: []
       }
     }
@@ -678,10 +660,15 @@ export type Database = {
         Args: { p_wallet_address: string }
         Returns: string
       }
+      get_public_profile_by_wallet: {
+        Args: { p_wallet_address: string }
+        Returns: string
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_wallet_for_tipping: { Args: { p_user_id: string }; Returns: string }
       grant_streamer_role: { Args: { p_user_id: string }; Returns: undefined }
       has_role: {
         Args: {
@@ -697,6 +684,7 @@ export type Database = {
         Args: { p_stream_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_wallet_lookup_context: { Args: never; Returns: boolean }
       store_stream_key: {
         Args: { p_stream_id: string; p_stream_key: string }
         Returns: undefined
