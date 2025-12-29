@@ -7,6 +7,17 @@ import TipButton from '@/components/TipButton';
 import FollowButton from '@/components/FollowButton';
 import ClipButton from '@/components/ClipButton';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useStream } from '@/hooks/useStreams';
 import { useEndStream } from '@/hooks/useStreamControls';
@@ -44,6 +55,9 @@ const Watch = () => {
   const displayViewerCount = liveViewerCount > 0 ? liveViewerCount : (realtimeStream?.viewer_count ?? stream?.viewer_count ?? 0);
   
   const isStreamOwner = user?.id && stream?.streamer_id === user.id;
+  const canEndStream = Boolean(
+    isStreamOwner && stream && !stream.ended_at && (stream.is_live || livepeerStatus.isActive)
+  );
 
   // Determine the effective stream phase
   const getStreamPhase = (): StreamPhase => {
@@ -61,6 +75,7 @@ const Watch = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
+        <div className="h-14 md:h-16" />
         <div className="container py-16 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -72,6 +87,7 @@ const Watch = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
+        <div className="h-14 md:h-16" />
         <div className="container px-4 py-12 md:py-16 text-center">
           <div className="glass-card p-8 md:p-12 max-w-md mx-auto">
             <Play className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-3 md:mb-4 text-muted-foreground" />
@@ -80,9 +96,7 @@ const Watch = () => {
               This stream may have ended or doesn't exist.
             </p>
             <Link to="/">
-              <Button variant="premium">
-                Browse Streams
-              </Button>
+              <Button variant="premium">Browse Streams</Button>
             </Link>
           </div>
         </div>
@@ -209,26 +223,47 @@ const Watch = () => {
                       )}
                       
                       {/* Owner end stream button - inline on mobile */}
-                      {isStreamOwner && streamPhase === 'live' && (
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => {
-                            endStreamMutation.mutate(stream.id, {
-                              onSuccess: () => navigate('/'),
-                            });
-                          }}
-                          disabled={endStreamMutation.isPending}
-                          className="gap-1.5"
-                        >
-                          {endStreamMutation.isPending ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <StopCircle className="h-3.5 w-3.5" />
-                          )}
-                          <span className="hidden sm:inline">End Stream</span>
-                          <span className="sm:hidden">End</span>
-                        </Button>
+                      {canEndStream && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled={endStreamMutation.isPending}
+                              className="gap-1.5"
+                            >
+                              {endStreamMutation.isPending ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <StopCircle className="h-3.5 w-3.5" />
+                              )}
+                              <span className="hidden sm:inline">End Stream</span>
+                              <span className="sm:hidden">End</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>End stream?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will stop your live stream and end it for all viewers.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                onClick={() => {
+                                  endStreamMutation.mutate(stream.id, {
+                                    onSuccess: () => navigate('/'),
+                                  });
+                                }}
+                                disabled={endStreamMutation.isPending}
+                              >
+                                {endStreamMutation.isPending ? 'Ending…' : 'End stream'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                     </div>
                   </div>

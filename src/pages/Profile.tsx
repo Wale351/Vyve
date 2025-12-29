@@ -163,6 +163,7 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
+        <div className="h-14 md:h-16" />
         <div className="container py-16 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -174,6 +175,7 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
+        <div className="h-14 md:h-16" />
         <div className="container px-4 py-12 md:py-16 text-center">
           <div className="glass-card p-8 md:p-12 max-w-md mx-auto">
             <Users className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-3 md:mb-4 text-muted-foreground" />

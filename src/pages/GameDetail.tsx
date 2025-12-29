@@ -18,6 +18,7 @@ const GameDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
+        <div className="h-14 md:h-16" />
         <div className="container py-16 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -29,17 +30,14 @@ const GameDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
+        <div className="h-14 md:h-16" />
         <div className="container py-16 text-center">
           <div className="glass-card p-12 max-w-md mx-auto">
             <Gamepad2 className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h1 className="text-2xl font-display font-bold mb-2">Game Not Found</h1>
-            <p className="text-muted-foreground mb-6">
-              This game doesn't exist in our directory.
-            </p>
+            <p className="text-muted-foreground mb-6">This game doesn't exist in our directory.</p>
             <Link to="/games">
-              <Button variant="premium">
-                Browse Games
-              </Button>
+              <Button variant="premium">Browse Games</Button>
             </Link>
           </div>
         </div>

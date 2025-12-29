@@ -77,7 +77,7 @@ const Header = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
-      <div className="container flex h-14 md:h-16 items-center justify-between px-4">
+      <div className="w-full flex h-14 md:h-16 items-center justify-between px-4">
         <div className="flex items-center gap-3 md:gap-8">
           {/* Logo - Always visible on left */}
           <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
