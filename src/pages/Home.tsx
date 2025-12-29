@@ -29,6 +29,9 @@ const Home = () => {
     <div className="min-h-screen bg-background page-enter">
       <Header />
       
+      {/* Spacer for fixed header */}
+      <div className="h-14 md:h-16" />
+      
       {/* Stats Banner */}
       <section className="border-b border-border/30 bg-card/30">
         <div className="container px-4 py-4">

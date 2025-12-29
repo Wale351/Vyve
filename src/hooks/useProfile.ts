@@ -205,39 +205,35 @@ export const useProfileTipsReceived = (profileId: string | undefined) => {
   });
 };
 
-// Get follower count
+// Get follower count using secure RPC function
 export const useFollowerCount = (profileId: string | undefined) => {
   return useQuery({
     queryKey: ['followers', 'count', profileId],
     queryFn: async () => {
       if (!profileId) return 0;
       
-      const { count, error } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('following_id', profileId);
+      const { data, error } = await supabase
+        .rpc('get_follower_count', { p_profile_id: profileId });
 
-      if (error) throw error;
-      return count || 0;
+      if (error) return 0;
+      return Number(data) || 0;
     },
     enabled: !!profileId,
   });
 };
 
-// Get following count
+// Get following count using secure RPC function
 export const useFollowingCount = (profileId: string | undefined) => {
   return useQuery({
     queryKey: ['following', 'count', profileId],
     queryFn: async () => {
       if (!profileId) return 0;
       
-      const { count, error } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('follower_id', profileId);
+      const { data, error } = await supabase
+        .rpc('get_following_count', { p_profile_id: profileId });
 
-      if (error) throw error;
-      return count || 0;
+      if (error) return 0;
+      return Number(data) || 0;
     },
     enabled: !!profileId,
   });

@@ -203,6 +203,9 @@ const Profile = () => {
     <div className="min-h-screen bg-background page-enter">
       <Header />
       
+      {/* Spacer for fixed header */}
+      <div className="h-14 md:h-16" />
+      
       <div className="container px-4 py-4 md:py-8">
         {/* Profile Header */}
         <div className="glass-card p-4 md:p-8 mb-6 md:mb-8">

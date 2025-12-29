@@ -76,7 +76,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
       <div className="container flex h-14 md:h-16 items-center justify-between px-4">
         <div className="flex items-center gap-3 md:gap-8">
           {/* Logo - Always visible on left */}
@@ -193,18 +193,19 @@ const Header = () => {
           ))}
           </nav>
 
-          {/* Global Search - Desktop */}
-          <div className="hidden lg:block">
-            <GlobalSearch />
-          </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
+          {/* Desktop Search */}
+          <div className="hidden lg:block">
+            <GlobalSearch />
+          </div>
+          
           {/* Mobile Search Button */}
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 md:hidden"
+            className="h-9 w-9 lg:hidden"
             onClick={() => setMobileSearchOpen(true)}
           >
             <Search className="h-5 w-5" />

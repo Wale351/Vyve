@@ -125,6 +125,9 @@ const Settings = () => {
     <div className="min-h-screen bg-background page-enter">
       <Header />
       
+      {/* Spacer for fixed header */}
+      <div className="h-14 md:h-16" />
+      
       <div className="container max-w-3xl px-4 py-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold">Settings</h1>

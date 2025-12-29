@@ -130,6 +130,9 @@ const Watch = () => {
     <div className="min-h-screen bg-background page-enter">
       <Header />
       
+      {/* Spacer for fixed header */}
+      <div className="h-14 md:h-16" />
+      
       {/* Mobile: Full-width video with collapsible chat */}
       {/* Desktop: Side-by-side layout */}
       <div className="md:container md:py-6">
