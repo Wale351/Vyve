@@ -62,6 +62,9 @@ const Games = () => {
     <div className="min-h-screen bg-background page-enter">
       <Header />
       
+      {/* Spacer for fixed header */}
+      <div className="h-14 md:h-16" />
+      
       <div className="container py-8">
         {/* Header */}
         <div className="mb-8">

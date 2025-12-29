@@ -164,6 +164,7 @@ const GoLive = () => {
     return (
       <div className="min-h-screen bg-background page-enter">
         <Header />
+        <div className="h-14 md:h-16" />
         <div className="container px-4 py-12 md:py-20 flex items-center justify-center">
           <div className="glass-card max-w-sm md:max-w-md p-6 md:p-10 text-center w-full">
             <LogIn className="h-10 w-10 md:h-14 md:w-14 text-muted-foreground mx-auto mb-4 md:mb-6" />
@@ -193,6 +194,9 @@ const GoLive = () => {
   return (
     <div className="min-h-screen bg-background page-enter">
       <Header />
+      
+      {/* Spacer for fixed header */}
+      <div className="h-14 md:h-16" />
       
       <ProfileGate fallbackMessage="You need to complete your profile before you can go live.">
       <div className="container px-4 py-6 md:py-12">

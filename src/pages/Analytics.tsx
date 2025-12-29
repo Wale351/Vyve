@@ -56,6 +56,9 @@ export default function Analytics() {
   return (
     <div className="min-h-screen bg-background page-enter">
       <Header />
+      
+      {/* Spacer for fixed header */}
+      <div className="h-14 md:h-16" />
 
       <main className="container px-4 py-6 md:py-10">
         <ProfileGate fallbackMessage="Connect your wallet and complete your profile to access analytics.">
