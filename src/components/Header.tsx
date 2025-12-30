@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Radio, User, Play, LogOut, Gamepad2, Menu, Home, Settings, ChevronDown, Bell, Heart, Coins, BarChart3, Search, X } from 'lucide-react';
+import { Radio, User, Play, LogOut, Gamepad2, Home, Settings, ChevronDown, Bell, Heart, Coins, BarChart3, Search } from 'lucide-react';
 import { useState as useSearchState } from 'react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
@@ -29,7 +29,7 @@ const Header = () => {
   const { data: role } = useUserRole(user?.id);
   const { data: notifications } = useNotifications();
   const markRead = useMarkNotificationsRead();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
@@ -54,21 +54,6 @@ const Header = () => {
     { path: '/analytics', label: 'Analytics', icon: BarChart3, show: isStreamer },
   ];
 
-  const NavItem = ({ path, label, icon: Icon, isActive }: { path: string; label: string; icon: any; isActive: boolean }) => (
-    <Link 
-      to={path} 
-      onClick={() => setMobileMenuOpen(false)}
-    >
-      <Button
-        variant={isActive ? 'soft' : 'ghost'}
-        size="sm"
-        className="w-full justify-start gap-2"
-      >
-        <Icon className="h-4 w-4" />
-        {label}
-      </Button>
-    </Link>
-  );
 
   const handleSignOut = async () => {
     await signOut();
@@ -88,94 +73,6 @@ const Header = () => {
               Vyve
             </span>
           </Link>
-
-          {/* Mobile Menu Trigger */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0">
-              <div className="flex flex-col h-full">
-                {/* Mobile Menu Header */}
-                <div className="p-4 border-b border-border/30">
-                  <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileMenuOpen(false)}>
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                      <Play className="h-4 w-4 text-primary-foreground" fill="currentColor" />
-                    </div>
-                    <span className="font-display text-xl font-bold">Vyve</span>
-                  </Link>
-                </div>
-
-                {/* Mobile Navigation */}
-                <nav className="flex-1 p-4 space-y-1">
-                  {navItems.filter(item => item.show).map(item => (
-                    <NavItem
-                      key={item.path}
-                      path={item.path}
-                      label={item.label}
-                      icon={item.icon}
-                      isActive={item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)}
-                    />
-                  ))}
-                  
-                  {isStreamer && (
-                    <>
-                      <NavItem
-                        path="/go-live"
-                        label="Go Live"
-                        icon={Radio}
-                        isActive={location.pathname === '/go-live'}
-                      />
-                      <NavItem
-                        path="/analytics"
-                        label="Analytics"
-                        icon={BarChart3}
-                        isActive={location.pathname.startsWith('/analytics')}
-                      />
-                    </>
-                  )}
-                </nav>
-
-                {/* Mobile User Section */}
-                {isAuthenticated && profile && (
-                  <div className="p-4 border-t border-border/30 space-y-2">
-                    {/* Mobile Notifications */}
-                    <Link to="#" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between">
-                      <Button variant="ghost" className="w-full justify-start gap-2">
-                        <Bell className="h-4 w-4" />
-                        Notifications
-                        {unreadCount > 0 && (
-                          <span className="ml-auto h-2 w-2 rounded-full bg-destructive" />
-                        )}
-                      </Button>
-                    </Link>
-                    <Link to={profileHref} onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start gap-2">
-                        <User className="h-4 w-4" />
-                        Profile
-                      </Button>
-                    </Link>
-                    <Link to="/settings" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start gap-2">
-                        <Settings className="h-4 w-4" />
-                        Settings
-                      </Button>
-                    </Link>
-                    <Button 
-                      onClick={() => { handleSignOut(); setMobileMenuOpen(false); }} 
-                      variant="ghost" 
-                      className="w-full justify-start gap-2 text-muted-foreground"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Disconnect
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
