@@ -83,7 +83,7 @@ const Landing = () => {
             Why Choose Vyve?
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Built on Base for fast, low-cost transactions. Powered by decentralized infrastructure.
+            Built on Base Sepolia Testnet for fast, low-cost transactions. Powered by decentralized infrastructure.
           </p>
         </div>
         
@@ -107,7 +107,7 @@ const Landing = () => {
             {
               icon: TrendingUp,
               title: 'Low Fees',
-              description: 'Base network ensures minimal transaction costs for you and your viewers.',
+              description: 'Base Sepolia testnet ensures minimal transaction costs for you and your viewers.',
             },
           ].map((feature, i) => (
             <div 
@@ -130,7 +130,7 @@ const Landing = () => {
       {/* Footer */}
       <footer className="border-t border-border/30 py-8">
         <div className="container px-4 text-center text-sm text-muted-foreground">
-          <p>© 2024 Vyve. Built on Base.</p>
+          <p>© 2024 Vyve. Built on Base Sepolia Testnet.</p>
         </div>
       </footer>
     </div>
