@@ -178,7 +178,7 @@ const Home = () => {
             </div>
             
             <p className="text-xs md:text-sm text-muted-foreground text-center">
-              Built on Base • Powered by Livepeer
+              Built on Base Sepolia Testnet • Powered by Livepeer
             </p>
             
             <div className="flex items-center gap-4 md:gap-6">

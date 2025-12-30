@@ -204,7 +204,7 @@ const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
             </p>
             <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
               <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-              <span>Transaction confirmed on Base</span>
+              <span>Transaction confirmed on Base Sepolia</span>
             </div>
           </div>
         ) : (
@@ -213,7 +213,7 @@ const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
             <DialogHeader>
               <DialogTitle className="font-display">Send a Tip</DialogTitle>
               <DialogDescription>
-                Support {streamerName} with ETH on Base
+                Support {streamerName} with ETH on Base Sepolia Testnet
               </DialogDescription>
             </DialogHeader>
             
@@ -275,7 +275,7 @@ const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
                         <Loader2 className="h-4 w-4 animate-spin" />
                         <span>
                           {isPending && 'Confirm in wallet...'}
-                          {isConfirming && 'Confirming on Base...'}
+                          {isConfirming && 'Confirming on Base Sepolia...'}
                           {isSavingTip && 'Saving...'}
                         </span>
                       </div>
@@ -288,7 +288,7 @@ const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    Tips are sent directly to the streamer's wallet on Base
+                    Tips are sent directly to the streamer's wallet on Base Sepolia Testnet
                   </p>
                 </>
               )}

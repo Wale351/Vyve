@@ -72,6 +72,10 @@ const Header = () => {
             <span className="font-display text-lg md:text-xl font-bold">
               Vyve
             </span>
+            {/* Testnet Badge */}
+            <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-500 border border-amber-500/30">
+              Sepolia
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
