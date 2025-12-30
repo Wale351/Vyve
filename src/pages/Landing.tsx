@@ -87,7 +87,7 @@ const Landing = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {[
             {
               icon: Zap,
@@ -112,14 +112,16 @@ const Landing = () => {
           ].map((feature, i) => (
             <div 
               key={feature.title}
-              className="glass-card p-6 text-center hover:border-primary/30 transition-colors animate-fade-in"
+              className="glass-card p-6 hover:border-primary/30 transition-colors animate-fade-in flex flex-col items-center text-center lg:flex-row lg:items-start lg:text-left lg:gap-4"
               style={{ animationDelay: `${400 + i * 100}ms` }}
             >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mb-4 lg:mb-0">
                 <feature.icon className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-display text-lg font-semibold mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">{feature.description}</p>
+              <div>
+                <h3 className="font-display text-lg font-semibold mb-2">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground">{feature.description}</p>
+              </div>
             </div>
           ))}
         </div>
