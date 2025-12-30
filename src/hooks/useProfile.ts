@@ -35,7 +35,7 @@ export const useProfile = (profileId: string | undefined) => {
       const { data, error } = await supabase
         .from('public_profiles')
         .select('*')
-        .eq('id', profileId)
+        .eq('id', profileId).limit(1)
         .maybeSingle();
 
       if (error) throw error;
@@ -129,7 +129,7 @@ export const useProfileById = (profileId: string | undefined) => {
       const { data, error } = await supabase
         .from('public_profiles')
         .select('*')
-        .eq('id', profileId)
+        .eq('id', profileId).limit(1)
         .maybeSingle();
 
       if (error) throw error;
@@ -156,7 +156,7 @@ export const useProfileByWallet = (walletAddress: string | undefined) => {
       const { data, error } = await supabase
         .from('public_profiles')
         .select('*')
-        .eq('id', profileId)
+        .eq('id', profileId).limit(1)
         .maybeSingle();
 
       if (error) throw error;

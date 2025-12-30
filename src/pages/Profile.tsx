@@ -51,11 +51,12 @@ const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Detect if the param is a wallet address (starts with 0x) or a UUID
-  const isWalletAddress = addressParam?.startsWith('0x');
+  const addressParamLower = addressParam?.toLowerCase();
+  const isWalletAddress = !!addressParamLower?.startsWith('0x');
   
   // Fetch profile by wallet address or by ID
   const { data: profileByWallet, isLoading: walletLoading } = useProfileByWallet(
-    isWalletAddress ? addressParam : undefined
+    isWalletAddress ? addressParamLower : undefined
   );
   const { data: profileById, isLoading: idLoading } = useProfile(
     !isWalletAddress ? addressParam : undefined
@@ -152,7 +153,7 @@ const Profile = () => {
 
   // Check if viewing own profile by wallet address
   const isViewingOwnWallet = isWalletAddress && 
-    user?.user_metadata?.wallet_address?.toLowerCase() === addressParam?.toLowerCase();
+    user?.user_metadata?.wallet_address?.toLowerCase() === addressParamLower;
   
   // Redirect if no profile exists for own wallet (should trigger onboarding instead)
   if (!profileLoading && !profile && isAuthenticated && isViewingOwnWallet) {
