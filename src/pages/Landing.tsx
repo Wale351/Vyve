@@ -1,10 +1,11 @@
+import { forwardRef } from 'react';
 import { Play, Zap, Shield, Users, TrendingUp, Sparkles } from 'lucide-react';
 import WalletConnectButton from '@/components/WalletConnectButton';
 import FeaturedGamesCarousel from '@/components/FeaturedGamesCarousel';
 
-const Landing = () => {
+const Landing = forwardRef<HTMLDivElement>(function Landing(_props, ref) {
   return (
-    <div className="min-h-screen bg-background">
+    <div ref={ref} className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
         <div className="container flex h-14 md:h-16 items-center justify-between px-4">
@@ -135,6 +136,6 @@ const Landing = () => {
       </footer>
     </div>
   );
-};
+});
 
 export default Landing;
