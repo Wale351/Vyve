@@ -130,7 +130,26 @@ const Landing = forwardRef<HTMLDivElement>(function Landing(_props, ref) {
 
       {/* Footer */}
       <footer className="border-t border-border/30 py-8">
-        <div className="container px-4 text-center text-sm text-muted-foreground">
+        <div className="container px-4 text-center text-sm text-muted-foreground space-y-3">
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <a 
+              href="https://discord.gg/lovable-dev" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors"
+            >
+              Discord
+            </a>
+            <span className="text-border">•</span>
+            <a 
+              href="https://www.alchemy.com/faucets/base-sepolia" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors"
+            >
+              Get Testnet ETH
+            </a>
+          </div>
           <p>© 2024 Vyve. Built on Base Sepolia Testnet.</p>
         </div>
       </footer>
