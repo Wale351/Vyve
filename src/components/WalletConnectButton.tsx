@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, forwardRef } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -17,14 +17,11 @@ type WalletConnectButtonProps = {
  * - If disconnected: opens connect modal
  * - If connected: opens account modal
  */
-export default function WalletConnectButton({
-  children,
-  className,
-  disabled,
-  variant = 'premium',
-  size = 'sm',
-  connectedTitle,
-}: WalletConnectButtonProps) {
+const WalletConnectButton = forwardRef<HTMLButtonElement, WalletConnectButtonProps>(
+  function WalletConnectButton(
+    { children, className, disabled, variant = 'premium', size = 'sm', connectedTitle },
+    ref
+  ) {
   return (
     <ConnectButton.Custom>
       {({ mounted, account, chain, openConnectModal, openAccountModal, openChainModal }) => {
@@ -83,6 +80,9 @@ export default function WalletConnectButton({
           </Button>
         );
       }}
-    </ConnectButton.Custom>
-  );
-}
+      </ConnectButton.Custom>
+    );
+  }
+);
+
+export default WalletConnectButton;

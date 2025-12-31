@@ -1,6 +1,6 @@
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, forwardRef } from 'react';
 const featuredGames = [{
   name: 'Axie Infinity',
   image: 'https://cryptologos.cc/logos/axie-infinity-axs-logo.png?v=035',
@@ -74,7 +74,7 @@ const featuredGames = [{
   image: 'https://assets.coingecko.com/coins/images/36125/large/otg.png',
   slug: 'off-the-grid'
 }];
-const FeaturedGamesCarousel = () => {
+const FeaturedGamesCarousel = forwardRef<HTMLElement, Record<string, never>>(function FeaturedGamesCarousel(_props, ref) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
@@ -121,7 +121,7 @@ const FeaturedGamesCarousel = () => {
       }
     };
   }, [isPaused]);
-  return <section className="py-16 md:py-24 overflow-hidden">
+  return <section ref={ref} className="py-16 md:py-24 overflow-hidden">
       <div className="container px-4">
         <div className="flex flex-col items-center mb-8">
           <h2 className="font-varsity text-3xl md:text-4xl lg:text-6xl tracking-wide text-center mb-6">
@@ -169,5 +169,6 @@ const FeaturedGamesCarousel = () => {
         </div>
       </div>
     </section>;
-};
+});
+
 export default FeaturedGamesCarousel;
