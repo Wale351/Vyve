@@ -143,8 +143,11 @@ export const useMarkNotificationsRead = () => {
     mutationFn: async (notificationKeys: string[]) => {
       if (!user?.id || notificationKeys.length === 0) return;
 
-      // Insert read records for each notification
-      const records = notificationKeys.map(key => ({
+      // Deduplicate keys to prevent "ON CONFLICT DO UPDATE cannot affect row a second time" error
+      const uniqueKeys = [...new Set(notificationKeys)];
+
+      // Insert read records for each unique notification
+      const records = uniqueKeys.map(key => ({
         user_id: user.id,
         notification_key: key,
       }));

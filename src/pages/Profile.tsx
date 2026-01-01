@@ -5,8 +5,8 @@ import StreamCard from '@/components/StreamCard';
 import ProfileBadges from '@/components/ProfileBadges';
 import FollowButton from '@/components/FollowButton';
 import NotificationToggle from '@/components/NotificationToggle';
+import FollowersModal from '@/components/FollowersModal';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -48,6 +48,8 @@ const Profile = () => {
   const [editBio, setEditBio] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [followersModalOpen, setFollowersModalOpen] = useState(false);
+  const [followersModalTab, setFollowersModalTab] = useState<'followers' | 'following'>('followers');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Detect if the param is a wallet address (starts with 0x) or a UUID
@@ -360,25 +362,31 @@ const Profile = () => {
 
                   {/* Stats */}
                   <div className="flex gap-4 md:gap-6 mt-4 md:mt-6 justify-center md:justify-start flex-wrap">
-                    <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => { setFollowersModalTab('followers'); setFollowersModalOpen(true); }}
+                      className="flex items-center gap-2 hover:bg-muted/50 p-1 -m-1 rounded-lg transition-colors"
+                    >
                       <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
                         <Users className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
                       </div>
-                      <div>
+                      <div className="text-left">
                         <p className="font-semibold text-sm md:text-base">{followerCount}</p>
                         <p className="text-[10px] md:text-xs text-muted-foreground">Followers</p>
                       </div>
-                    </div>
+                    </button>
                     
-                    <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => { setFollowersModalTab('following'); setFollowersModalOpen(true); }}
+                      className="flex items-center gap-2 hover:bg-muted/50 p-1 -m-1 rounded-lg transition-colors"
+                    >
                       <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
                         <UserPlus className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
                       </div>
-                      <div>
+                      <div className="text-left">
                         <p className="font-semibold text-sm md:text-base">{followingCount}</p>
                         <p className="text-[10px] md:text-xs text-muted-foreground">Following</p>
                       </div>
-                    </div>
+                    </button>
                     
                     <div className="flex items-center gap-2">
                       <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
@@ -506,6 +514,16 @@ const Profile = () => {
           )}
         </div>
       </div>
+
+      {/* Followers/Following Modal */}
+      {profileId && (
+        <FollowersModal
+          open={followersModalOpen}
+          onOpenChange={setFollowersModalOpen}
+          profileId={profileId}
+          initialTab={followersModalTab}
+        />
+      )}
     </div>
   );
 };
