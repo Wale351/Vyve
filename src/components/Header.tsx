@@ -35,13 +35,18 @@ const Header = () => {
 
   const profileHref = walletAddress ? `/profile/${walletAddress.toLowerCase()}` : '/';
 
-  const unreadCount = notifications?.filter(n => !n.read).length || 0;
+  const [localReadKeys, setLocalReadKeys] = useState<Set<string>>(new Set());
+  
+  // Calculate unread count considering both server state and local state
+  const unreadCount = notifications?.filter(n => !n.read && !localReadKeys.has(n.id)).length || 0;
 
   // Mark notifications as read when dropdown is opened
   useEffect(() => {
     if (notificationsOpen && notifications) {
-      const unreadKeys = notifications.filter(n => !n.read).map(n => n.id);
+      const unreadKeys = notifications.filter(n => !n.read && !localReadKeys.has(n.id)).map(n => n.id);
       if (unreadKeys.length > 0) {
+        // Immediately update local state to hide the badge
+        setLocalReadKeys(prev => new Set([...prev, ...unreadKeys]));
         markRead.mutate(unreadKeys);
       }
     }
