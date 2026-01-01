@@ -636,6 +636,24 @@ export type Database = {
           username: string | null
           verified_creator: boolean | null
         }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string | null
+          role?: never
+          username?: string | null
+          verified_creator?: boolean | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string | null
+          role?: never
+          username?: string | null
+          verified_creator?: boolean | null
+        }
         Relationships: []
       }
     }
