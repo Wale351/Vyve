@@ -12,6 +12,9 @@ export interface StreamWithProfile {
   viewer_count: number | null;
   playback_url: string | null;
   playback_id: string | null;
+  recording_url: string | null;
+  recording_asset_id: string | null;
+  livepeer_stream_id: string | null;
   started_at: string | null;
   ended_at: string | null;
   streamer_id: string;
@@ -46,6 +49,9 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
           viewer_count,
           playback_url,
           playback_id,
+          recording_url,
+          recording_asset_id,
+          livepeer_stream_id,
           started_at,
           ended_at,
           streamer_id,
@@ -102,6 +108,9 @@ export const useStream = (streamId: string | undefined) => {
           viewer_count,
           playback_url,
           playback_id,
+          recording_url,
+          recording_asset_id,
+          livepeer_stream_id,
           started_at,
           ended_at,
           streamer_id,
@@ -147,6 +156,9 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
           viewer_count,
           playback_url,
           playback_id,
+          recording_url,
+          recording_asset_id,
+          livepeer_stream_id,
           started_at,
           ended_at,
           streamer_id,
@@ -163,6 +175,56 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
           )
         `)
         .eq('streamer_id', streamerId)
+        .order('started_at', { ascending: false });
+
+      if (error) throw error;
+      return data as unknown as StreamWithProfile[];
+    },
+    enabled: !!streamerId,
+  });
+};
+
+// Fetch only streams with recordings for profile VOD section
+export const useStreamerRecordings = (streamerId: string | undefined) => {
+  return useQuery({
+    queryKey: ['streams', 'recordings', streamerId],
+    queryFn: async () => {
+      if (!streamerId) return [];
+      
+      const { data, error } = await supabase
+        .from('streams')
+        .select(`
+          id,
+          title,
+          description,
+          game_category,
+          game_id,
+          tags,
+          is_live,
+          viewer_count,
+          playback_url,
+          playback_id,
+          recording_url,
+          recording_asset_id,
+          livepeer_stream_id,
+          started_at,
+          ended_at,
+          streamer_id,
+          profiles!streams_streamer_id_fkey (
+            id,
+            username,
+            avatar_url
+          ),
+          games (
+            id,
+            name,
+            slug,
+            category
+          )
+        `)
+        .eq('streamer_id', streamerId)
+        .eq('is_live', false)
+        .not('recording_url', 'is', null)
         .order('started_at', { ascending: false });
 
       if (error) throw error;
@@ -191,6 +253,9 @@ export const useStreamsByGame = (gameId: string | undefined) => {
           viewer_count,
           playback_url,
           playback_id,
+          recording_url,
+          recording_asset_id,
+          livepeer_stream_id,
           started_at,
           ended_at,
           streamer_id,

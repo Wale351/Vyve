@@ -83,8 +83,8 @@ serve(async (req) => {
       );
     }
 
-    // Create stream on Livepeer
-    console.log("Creating Livepeer stream...");
+    // Create stream on Livepeer with recording enabled
+    console.log("Creating Livepeer stream with recording enabled...");
     const livepeerResponse = await fetch("https://livepeer.studio/api/stream", {
       method: "POST",
       headers: {
@@ -98,6 +98,7 @@ serve(async (req) => {
           { name: "480p", bitrate: 1000000, fps: 30, width: 854, height: 480 },
           { name: "360p", bitrate: 500000, fps: 30, width: 640, height: 360 },
         ],
+        record: true, // Enable recording for VOD
       }),
     });
 
@@ -111,7 +112,7 @@ serve(async (req) => {
     }
 
     const livepeerStream = await livepeerResponse.json();
-    console.log("Livepeer stream created:", livepeerStream.id);
+    console.log("Livepeer stream created with recording:", livepeerStream.id, "record:", livepeerStream.record);
 
     // Construct the playback URL
     const playbackUrl = `https://livepeercdn.studio/hls/${livepeerStream.playbackId}/index.m3u8`;
@@ -128,6 +129,7 @@ serve(async (req) => {
         tags: Array.isArray(tags) ? tags.filter((t: string) => typeof t === 'string' && t.trim()) : [],
         playback_url: playbackUrl,
         playback_id: livepeerStream.playbackId,
+        livepeer_stream_id: livepeerStream.id, // Store Livepeer stream ID for fetching recordings
         is_live: false,
         viewer_count: 0,
       })
@@ -174,6 +176,7 @@ serve(async (req) => {
         rtmp_url: "rtmp://rtmp.livepeer.studio/live",
         playback_url: playbackUrl,
         playback_id: livepeerStream.playbackId,
+        livepeer_stream_id: livepeerStream.id,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
