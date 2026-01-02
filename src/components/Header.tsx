@@ -54,8 +54,7 @@ const Header = () => {
   const isStreamer = role === 'streamer' || role === 'admin';
 
   const navItems = [
-    { path: '/', label: 'Browse', icon: Home, show: true },
-    { path: '/games', label: 'Games', icon: Gamepad2, show: true },
+    { path: '/games', label: 'Activities', icon: Gamepad2, show: true },
     { path: '/analytics', label: 'Analytics', icon: BarChart3, show: isStreamer },
   ];
 

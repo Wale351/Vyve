@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { formatAddress } from '@/lib/formatters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -148,15 +149,17 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
                 >
                   <div className="flex items-start gap-2 md:gap-2.5">
                     {/* Avatar */}
-                    <Avatar className="flex-shrink-0 w-6 h-6 md:w-7 md:h-7">
-                      {msg.profiles?.avatar_url ? (
-                        <AvatarImage src={msg.profiles.avatar_url} alt={senderName} />
-                      ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-primary/60 to-secondary/60 text-[9px] md:text-[10px] font-bold text-foreground">
-                          {senderName.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
+                    <Link to={`/profile/${msg.sender_id}`} className="flex-shrink-0">
+                      <Avatar className="w-6 h-6 md:w-7 md:h-7 hover:ring-2 hover:ring-primary/50 transition-all cursor-pointer">
+                        {msg.profiles?.avatar_url ? (
+                          <AvatarImage src={msg.profiles.avatar_url} alt={senderName} />
+                        ) : (
+                          <AvatarFallback className="bg-gradient-to-br from-primary/60 to-secondary/60 text-[9px] md:text-[10px] font-bold text-foreground">
+                            {senderName.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                    </Link>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
@@ -167,9 +170,12 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
                             <span className="hidden sm:inline">Streamer</span>
                           </span>
                         )}
-                        <span className="text-xs md:text-sm font-medium text-foreground truncate max-w-[100px] md:max-w-none">
+                        <Link 
+                          to={`/profile/${msg.sender_id}`}
+                          className="text-xs md:text-sm font-medium text-foreground truncate max-w-[100px] md:max-w-none hover:text-primary hover:underline transition-colors"
+                        >
                           {senderName}
-                        </span>
+                        </Link>
                         <span className="text-[10px] md:text-[11px] text-muted-foreground">
                           {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>

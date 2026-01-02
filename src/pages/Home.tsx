@@ -3,7 +3,7 @@ import StreamCard from '@/components/StreamCard';
 import GameCard from '@/components/GameCard';
 import { useLiveStreams } from '@/hooks/useStreams';
 import { useGames, useLiveStreamCountByGame } from '@/hooks/useGames';
-import { Play, TrendingUp, Users, Loader2, Radio, Gamepad2, Flame } from 'lucide-react';
+import { Play, TrendingUp, Users, Loader2, Radio, Sparkles, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -73,9 +73,9 @@ const Home = () => {
       {trendingGames.length > 0 && (
         <section className="container px-4 py-6">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              <h2 className="font-varsity text-xl md:text-2xl tracking-wide">TRENDING GAMES</h2>
+              <h2 className="font-varsity text-xl md:text-2xl tracking-wide">TRENDING ACTIVITIES</h2>
             </div>
             <Link to="/games">
               <Button variant="ghost" size="sm">
@@ -147,8 +147,8 @@ const Home = () => {
         <section className="container px-4 py-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <Gamepad2 className="h-5 w-5 text-primary" />
-              <h2 className="font-varsity text-xl md:text-2xl tracking-wide">BROWSE GAMES</h2>
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="font-varsity text-xl md:text-2xl tracking-wide">BROWSE ACTIVITIES</h2>
             </div>
             <Link to="/games">
               <Button variant="ghost" size="sm">
