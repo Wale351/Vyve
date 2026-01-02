@@ -442,6 +442,8 @@ export type Database = {
           livepeer_stream_id: string | null
           playback_id: string | null
           playback_url: string | null
+          recording_asset_id: string | null
+          recording_url: string | null
           started_at: string | null
           streamer_id: string
           tags: string[] | null
@@ -458,6 +460,8 @@ export type Database = {
           livepeer_stream_id?: string | null
           playback_id?: string | null
           playback_url?: string | null
+          recording_asset_id?: string | null
+          recording_url?: string | null
           started_at?: string | null
           streamer_id: string
           tags?: string[] | null
@@ -474,6 +478,8 @@ export type Database = {
           livepeer_stream_id?: string | null
           playback_id?: string | null
           playback_url?: string | null
+          recording_asset_id?: string | null
+          recording_url?: string | null
           started_at?: string | null
           streamer_id?: string
           tags?: string[] | null

@@ -28,3 +28,9 @@ verify_jwt = false
 
 [functions.check-stream-status]
 verify_jwt = false
+
+[functions.fetch-recording]
+verify_jwt = false
+
+[functions.send-live-notifications]
+verify_jwt = false

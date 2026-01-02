@@ -19,8 +19,9 @@ import {
   useFollowingCount,
   useCanUpdateProfileImage,
 } from '@/hooks/useProfile';
-import { useStreamerStreams } from '@/hooks/useStreams';
+import { useStreamerStreams, useStreamerRecordings } from '@/hooks/useStreams';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
+import VODCard from '@/components/VODCard';
 import { useProfileUpdate, useProfileImageUpload, useRequestStreamerRole } from '@/hooks/useProfileUpdate';
 import { 
   Users, 
@@ -72,6 +73,7 @@ const Profile = () => {
   const { data: ownProfile } = useOwnProfile(isOwnProfile ? profileId : undefined);
   const { data: totalTips = 0 } = useProfileTipsReceived(profileId);
   const { data: streams = [], isLoading: streamsLoading } = useStreamerStreams(profileId);
+  const { data: recordings = [], isLoading: recordingsLoading } = useStreamerRecordings(profileId);
   const { data: followerCount = 0 } = useFollowerCount(profileId);
   const { data: followingCount = 0 } = useFollowingCount(profileId);
   const { data: imageUpdateInfo } = useCanUpdateProfileImage(isOwnProfile ? profileId : undefined);
@@ -198,7 +200,6 @@ const Profile = () => {
   const displayName = profile.username;
   const displayAvatar = avatarPreview || profile.avatar_url;
   const liveStreams = streams.filter(s => s.is_live);
-  const pastStreams = streams.filter(s => !s.is_live);
   const joinDate = new Date(profile.created_at).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short'
@@ -479,18 +480,18 @@ const Profile = () => {
             </section>
           )}
 
-          {/* Past Streams */}
+          {/* Recorded Streams (VODs) */}
           {(profile.role === 'streamer' || profile.role === 'admin') && (
             <section>
-              <h2 className="text-lg md:text-xl font-display font-semibold mb-3 md:mb-4">Past Streams</h2>
-              {streamsLoading ? (
+              <h2 className="text-lg md:text-xl font-display font-semibold mb-3 md:mb-4">Recordings</h2>
+              {recordingsLoading ? (
                 <div className="flex items-center justify-center py-8 md:py-12">
                   <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-primary" />
                 </div>
-              ) : pastStreams.length > 0 ? (
+              ) : recordings.length > 0 ? (
                 <div className="flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
-                  {pastStreams.map(stream => (
-                    <StreamCard key={stream.id} stream={stream} />
+                  {recordings.map(stream => (
+                    <VODCard key={stream.id} stream={stream} />
                   ))}
                 </div>
               ) : (
@@ -498,8 +499,8 @@ const Profile = () => {
                   <Radio className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-muted-foreground/50" />
                   <p className="text-sm md:text-base text-muted-foreground">
                     {isOwnProfile 
-                      ? "No streams yet. Start your first!"
-                      : "No past streams."}
+                      ? "No recordings yet. Stream with recording enabled to create VODs!"
+                      : "No recordings available."}
                   </p>
                   {isOwnProfile && (
                     <Link to="/go-live" className="mt-4 inline-block">
