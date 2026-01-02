@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import ProfileGate from '@/components/ProfileGate';
 import WalletConnectButton from '@/components/WalletConnectButton';
@@ -30,6 +31,7 @@ interface StreamData {
 }
 
 const GoLive = () => {
+  const navigate = useNavigate();
   const { authenticated, isAuthenticated, isAuthenticating } = useWalletAuth();
   const { data: games = [] } = useGames();
   const [title, setTitle] = useState('');
@@ -118,6 +120,7 @@ const GoLive = () => {
       }
 
       toast.success('You are now live!');
+      navigate(`/watch/${streamData.id}`);
     } catch (error) {
       toast.error('Failed to go live.');
     } finally {
@@ -266,11 +269,11 @@ const GoLive = () => {
                   <div className="space-y-2">
                     <Label htmlFor="game" className="flex items-center gap-2 text-sm">
                       <Gamepad2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                      Game
+                      Activity
                     </Label>
                     <Select value={gameId} onValueChange={setGameId}>
                       <SelectTrigger className="bg-muted/30 border-border/50 h-10 md:h-12 text-sm md:text-base">
-                        <SelectValue placeholder="Select a game..." />
+                        <SelectValue placeholder="Select an activity..." />
                       </SelectTrigger>
                       <SelectContent>
                         {games.map(game => (

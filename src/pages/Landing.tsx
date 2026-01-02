@@ -8,7 +8,7 @@ const Landing = forwardRef<HTMLDivElement>(function Landing(_props, ref) {
     <div ref={ref} className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
-        <div className="container flex h-14 md:h-16 items-center justify-between px-4">
+        <div className="w-full flex h-14 md:h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <Play className="h-4 w-4 text-primary-foreground" fill="currentColor" />

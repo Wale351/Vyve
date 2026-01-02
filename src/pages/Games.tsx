@@ -6,7 +6,7 @@ import { useGames, useGameCategories } from '@/hooks/useGames';
 import { useLiveStreams } from '@/hooks/useStreams';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Gamepad2, Search, Loader2, Filter } from 'lucide-react';
+import { Sparkles, Search, Loader2, Filter } from 'lucide-react';
 
 const Games = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,12 +51,6 @@ const Games = () => {
     setSearchParams(searchParams);
   };
 
-  // Featured games for carousel
-  const featuredGameNames = [
-    'DeFi Kingdoms', 'Medieval Empires', 'Nyan Heroes', 'Off The Grid', 'Pixels',
-    'Super Champs', 'Wilder Worlds', 'Call Of The Voyd', 'Cornucopias', 'Decimated'
-  ];
-  const featuredGames = games.filter(g => featuredGameNames.includes(g.name));
 
   return (
     <div className="min-h-screen bg-background page-enter">
@@ -69,27 +63,13 @@ const Games = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Gamepad2 className="h-8 w-8 text-primary" />
-            <h1 className="font-display text-3xl font-bold">Browse Games</h1>
+            <Sparkles className="h-8 w-8 text-primary" />
+            <h1 className="font-display text-3xl font-bold">Browse Activities</h1>
           </div>
           <p className="text-muted-foreground">
-            Discover games and find live streams
+            Discover activities and find live streams
           </p>
         </div>
-
-        {/* Featured Games Horizontal Scroll */}
-        {featuredGames.length > 0 && !search && !categoryFilter && (
-          <div className="mb-10">
-            <h2 className="font-varsity text-2xl md:text-3xl mb-4 tracking-wide">FEATURED</h2>
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
-              {featuredGames.map((game) => (
-                <div key={game.id} className="flex-shrink-0 w-[160px] md:w-[200px]">
-                  <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
         
         {/* Search and filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -98,7 +78,7 @@ const Games = () => {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search games..."
+              placeholder="Search activities..."
               className="pl-10 bg-muted/30 border-border/50"
             />
           </div>
@@ -148,10 +128,10 @@ const Games = () => {
           </div>
         ) : (
           <div className="text-center py-20 glass-card">
-            <Gamepad2 className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
-            <h3 className="font-display text-2xl font-bold mb-3">No Games Found</h3>
+            <Sparkles className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
+            <h3 className="font-display text-2xl font-bold mb-3">No Activities Found</h3>
             <p className="text-muted-foreground max-w-md mx-auto">
-              {search ? `No games match "${search}"` : 'No games available yet'}
+              {search ? `No activities match "${search}"` : 'No activities available yet'}
             </p>
           </div>
         )}
