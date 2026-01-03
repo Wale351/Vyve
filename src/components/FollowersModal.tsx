@@ -100,9 +100,10 @@ const FollowersModal = ({ open, onOpenChange, profileId, initialTab = 'followers
   const { data: followers = [], isLoading: followersLoading } = useFollowersList(open ? profileId : undefined);
   const { data: following = [], isLoading: followingLoading } = useFollowingList(open ? profileId : undefined);
 
-  const handleUserClick = (userId: string) => {
+  const handleUserClick = (username: string | null) => {
+    if (!username) return;
     onOpenChange(false);
-    navigate(`/profile/${userId}`);
+    navigate(`/profile/${username}`);
   };
 
   return (
@@ -130,7 +131,7 @@ const FollowersModal = ({ open, onOpenChange, profileId, initialTab = 'followers
                     <UserListItem 
                       key={user.id} 
                       user={user} 
-                      onClick={() => handleUserClick(user.id)} 
+                      onClick={() => handleUserClick(user.username)} 
                     />
                   ))}
                 </div>
@@ -154,7 +155,7 @@ const FollowersModal = ({ open, onOpenChange, profileId, initialTab = 'followers
                     <UserListItem 
                       key={user.id} 
                       user={user} 
-                      onClick={() => handleUserClick(user.id)} 
+                      onClick={() => handleUserClick(user.username)} 
                     />
                   ))}
                 </div>

@@ -55,7 +55,7 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
           started_at,
           ended_at,
           streamer_id,
-          profiles!streams_streamer_id_fkey (
+          profiles:public_profiles!streams_streamer_id_fkey (
             id,
             username,
             avatar_url
@@ -114,7 +114,7 @@ export const useStream = (streamId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles!streams_streamer_id_fkey (
+          profiles:public_profiles!streams_streamer_id_fkey (
             id,
             username,
             avatar_url,
@@ -162,7 +162,7 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles!streams_streamer_id_fkey (
+          profiles:public_profiles!streams_streamer_id_fkey (
             id,
             username,
             avatar_url
@@ -210,7 +210,7 @@ export const useStreamerRecordings = (streamerId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles!streams_streamer_id_fkey (
+          profiles:public_profiles!streams_streamer_id_fkey (
             id,
             username,
             avatar_url
@@ -259,7 +259,7 @@ export const useStreamsByGame = (gameId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles!streams_streamer_id_fkey (
+          profiles:public_profiles!streams_streamer_id_fkey (
             id,
             username,
             avatar_url

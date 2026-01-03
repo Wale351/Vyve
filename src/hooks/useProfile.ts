@@ -139,6 +139,27 @@ export const useProfileById = (profileId: string | undefined) => {
   });
 };
 
+// Fetch profile by username
+export const useProfileByUsername = (username: string | undefined) => {
+  return useQuery({
+    queryKey: ['profile', 'username', username?.toLowerCase()],
+    queryFn: async () => {
+      if (!username) return null;
+      
+      const { data, error } = await supabase
+        .from('public_profiles')
+        .select('*')
+        .ilike('username', username)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as PublicProfile | null;
+    },
+    enabled: !!username,
+  });
+};
+
 // Fetch profile by wallet address - uses secure RPC function to lookup ID, then public_profiles view
 export const useProfileByWallet = (walletAddress: string | undefined) => {
   return useQuery({

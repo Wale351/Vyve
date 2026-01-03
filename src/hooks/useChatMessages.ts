@@ -28,7 +28,7 @@ export const useChatMessages = (streamId: string | undefined) => {
         .from('chat_messages')
         .select(`
           *,
-          profiles!chat_messages_sender_id_fkey (
+          profiles:public_profiles!chat_messages_sender_id_fkey (
             username,
             avatar_url
           )
@@ -81,7 +81,7 @@ export const useChatMessages = (streamId: string | undefined) => {
             .from('chat_messages')
             .select(`
               *,
-              profiles!chat_messages_sender_id_fkey (
+              profiles:public_profiles!chat_messages_sender_id_fkey (
                 username,
                 avatar_url
               )
