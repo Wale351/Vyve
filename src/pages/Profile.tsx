@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
   useProfile, 
-  useProfileByWallet,
+  useProfileByUsername,
   useProfileTipsReceived, 
   useOwnProfile,
   useFollowerCount,
@@ -53,20 +53,19 @@ const Profile = () => {
   const [followersModalTab, setFollowersModalTab] = useState<'followers' | 'following'>('followers');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Detect if the param is a wallet address (starts with 0x) or a UUID
-  const addressParamLower = addressParam?.toLowerCase();
-  const isWalletAddress = !!addressParamLower?.startsWith('0x');
+  // Detect if the param is a UUID (profile ID) or a username
+  const isUUID = addressParam?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   
-  // Fetch profile by wallet address or by ID
-  const { data: profileByWallet, isLoading: walletLoading } = useProfileByWallet(
-    isWalletAddress ? addressParamLower : undefined
-  );
+  // Fetch profile by ID or by username
   const { data: profileById, isLoading: idLoading } = useProfile(
-    !isWalletAddress ? addressParam : undefined
+    isUUID ? addressParam : undefined
+  );
+  const { data: profileByUsername, isLoading: usernameLoading } = useProfileByUsername(
+    !isUUID ? addressParam : undefined
   );
   
-  const profile = isWalletAddress ? profileByWallet : profileById;
-  const profileLoading = isWalletAddress ? walletLoading : idLoading;
+  const profile = isUUID ? profileById : profileByUsername;
+  const profileLoading = isUUID ? idLoading : usernameLoading;
   const profileId = profile?.id;
 
   const isOwnProfile = user?.id === profileId;
@@ -155,12 +154,8 @@ const Profile = () => {
     await requestStreamer.mutateAsync(user.id);
   };
 
-  // Check if viewing own profile by wallet address
-  const isViewingOwnWallet = isWalletAddress && 
-    user?.user_metadata?.wallet_address?.toLowerCase() === addressParamLower;
-  
-  // Redirect if no profile exists for own wallet (should trigger onboarding instead)
-  if (!profileLoading && !profile && isAuthenticated && isViewingOwnWallet) {
+  // Redirect if no profile exists for current user (should trigger onboarding)
+  if (!profileLoading && !profile && isAuthenticated && user?.id === addressParam) {
     return <Navigate to="/" replace />;
   }
 
@@ -184,9 +179,9 @@ const Profile = () => {
         <div className="container px-4 py-12 md:py-16 text-center">
           <div className="glass-card p-8 md:p-12 max-w-md mx-auto">
             <Users className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-3 md:mb-4 text-muted-foreground" />
-            <h1 className="text-xl md:text-2xl font-display font-bold mb-2">Profile Not Found</h1>
+            <h1 className="text-xl md:text-2xl font-display font-bold mb-2">User Not Found</h1>
             <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
-              This profile doesn't exist.
+              This user doesn't exist or hasn't set up their profile yet.
             </p>
             <Link to="/">
               <Button variant="premium">Back to Home</Button>

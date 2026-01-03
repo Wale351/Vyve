@@ -25,6 +25,7 @@ import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useViewerPresence, useStreamRealtime } from '@/hooks/useViewerPresence';
 import { useLivepeerStatus, StreamPhase } from '@/hooks/useLivepeerStatus';
 import { formatViewerCount, formatDuration } from '@/lib/formatters';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Users, Clock, Share2, Heart, ExternalLink, Loader2, Play, StopCircle, MessageCircle, ChevronUp, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -111,6 +112,8 @@ const Watch = () => {
 
   const streamerName = stream.profiles?.username || 'Anonymous';
   const streamerId = stream.profiles?.id || '';
+  const streamerUsername = stream.profiles?.username || '';
+  const streamerAvatar = stream.profiles?.avatar_url;
 
   // Stream phase indicator component
   const StreamPhaseIndicator = () => {
@@ -202,12 +205,18 @@ const Watch = () => {
                   {/* Streamer info */}
                   <div className="flex items-center justify-between gap-3">
                     <Link 
-                      to={`/profile/${streamerId}`}
+                      to={`/profile/${streamerUsername || streamerId}`}
                       className="flex items-center gap-2.5 group"
                     >
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-foreground font-bold text-sm md:text-lg shadow-md">
-                        {streamerName.charAt(0).toUpperCase()}
-                      </div>
+                      <Avatar className="w-10 h-10 md:w-12 md:h-12 shadow-md">
+                        {streamerAvatar ? (
+                          <AvatarImage src={streamerAvatar} alt={streamerName} />
+                        ) : (
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold text-sm md:text-lg">
+                            {streamerName.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
                       <div>
                         <p className="font-display font-semibold text-sm md:text-base group-hover:text-primary transition-colors">
                           {streamerName}
@@ -330,7 +339,7 @@ const Watch = () => {
                       <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
                     </Button>
                     
-                    <Link to={`/profile/${streamerId}`}>
+                    <Link to={`/profile/${streamerUsername || streamerId}`}>
                       <Button variant="subtle" size="icon">
                         <ExternalLink className="h-4 w-4" />
                       </Button>
