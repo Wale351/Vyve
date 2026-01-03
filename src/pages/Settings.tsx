@@ -13,6 +13,7 @@ import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useCanUpdateProfileImage, useUserRole } from '@/hooks/useProfile';
 import { useProfileUpdate, useProfileImageUpload, useRequestStreamerRole } from '@/hooks/useProfileUpdate';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import StreamerApplicationForm from '@/components/StreamerApplicationForm';
 import { 
   Camera, 
   Loader2, 
@@ -242,7 +243,7 @@ const Settings = () => {
                 Creator Status
               </CardTitle>
               <CardDescription>
-                Upgrade to streamer to go live
+                Apply to become a verified streamer
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -255,22 +256,14 @@ const Settings = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between gap-4">
+                <div className="space-y-4">
                   <div>
                     <p className="font-medium">Become a Streamer</p>
-                    <p className="text-sm text-muted-foreground">Unlock the ability to go live and stream</p>
+                    <p className="text-sm text-muted-foreground">
+                      Apply to unlock streaming and get verified. Applications are reviewed by our team.
+                    </p>
                   </div>
-                  <Button
-                    variant="premium"
-                    onClick={handleRequestStreamer}
-                    disabled={requestStreamer.isPending}
-                  >
-                    {requestStreamer.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      'Upgrade'
-                    )}
-                  </Button>
+                  <StreamerApplicationForm />
                 </div>
               )}
             </CardContent>
