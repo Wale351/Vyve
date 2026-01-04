@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { User, Loader2 } from 'lucide-react';
+import { User, Loader2, BadgeCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FollowersModalProps {
@@ -19,6 +19,7 @@ interface FollowUser {
   id: string;
   username: string | null;
   avatar_url: string | null;
+  verified_creator: boolean | null;
 }
 
 const useFollowersList = (profileId: string | undefined) => {
@@ -31,7 +32,7 @@ const useFollowersList = (profileId: string | undefined) => {
         .from('follows')
         .select(`
           follower_id,
-          follower:public_profiles!follows_follower_id_fkey(id, username, avatar_url)
+          follower:public_profiles!follows_follower_id_fkey(id, username, avatar_url, verified_creator)
         `)
         .eq('following_id', profileId)
         .order('created_at', { ascending: false });
@@ -57,7 +58,7 @@ const useFollowingList = (profileId: string | undefined) => {
         .from('follows')
         .select(`
           following_id,
-          following:public_profiles!follows_following_id_fkey(id, username, avatar_url)
+          following:public_profiles!follows_following_id_fkey(id, username, avatar_url, verified_creator)
         `)
         .eq('follower_id', profileId)
         .order('created_at', { ascending: false });
@@ -78,17 +79,26 @@ const UserListItem = ({ user, onClick }: { user: FollowUser; onClick: () => void
     onClick={onClick}
     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left rounded-lg"
   >
-    <Avatar className="h-10 w-10">
-      {user.avatar_url ? (
-        <AvatarImage src={user.avatar_url} alt={user.username || ''} />
-      ) : (
-        <AvatarFallback className="bg-primary/20">
-          <User className="h-4 w-4" />
-        </AvatarFallback>
+    <div className="relative">
+      <Avatar className="h-10 w-10">
+        {user.avatar_url ? (
+          <AvatarImage src={user.avatar_url} alt={user.username || ''} />
+        ) : (
+          <AvatarFallback className="bg-primary/20">
+            <User className="h-4 w-4" />
+          </AvatarFallback>
+        )}
+      </Avatar>
+      {user.verified_creator && (
+        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center border border-background">
+          <BadgeCheck className="h-3 w-3 text-primary-foreground" />
+        </div>
       )}
-    </Avatar>
+    </div>
     <div className="flex-1 min-w-0">
-      <p className="font-medium truncate">{user.username || 'Unknown'}</p>
+      <div className="flex items-center gap-1.5">
+        <p className="font-medium truncate">{user.username || 'Unknown'}</p>
+      </div>
     </div>
   </button>
 );

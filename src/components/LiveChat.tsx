@@ -17,7 +17,8 @@ import {
   MoreVertical,
   VolumeX,
   Ban,
-  Crown
+  Crown,
+  BadgeCheck
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useChatMessages, useSendMessage } from '@/hooks/useChatMessages';
@@ -137,6 +138,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
             {messages.map((msg) => {
               const senderName = msg.profiles?.username || 'Anonymous';
               const senderUsername = msg.profiles?.username;
+              const senderVerified = msg.profiles?.verified_creator;
               const timestamp = new Date(msg.created_at);
               const isStreamer = msg.sender_id === streamerId;
               const isMuted = mutedUsers.includes(msg.sender_id);
@@ -169,6 +171,10 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
                             <Crown className="h-2 w-2 md:h-2.5 md:w-2.5" />
                             <span className="hidden sm:inline">Streamer</span>
                           </span>
+                        )}
+                        {/* Verified badge for non-streamers */}
+                        {senderVerified && !isStreamer && (
+                          <BadgeCheck className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary" />
                         )}
                         <Link 
                           to={senderUsername ? `/profile/${senderUsername}` : '#'}

@@ -891,6 +891,34 @@ export type Database = {
           verified_creator: boolean | null
           wallet_address: string | null
         }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string | null
+          role?: never
+          suspended?: boolean | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
+          updated_at?: string | null
+          username?: string | null
+          verified_creator?: boolean | null
+          wallet_address?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string | null
+          role?: never
+          suspended?: boolean | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
+          updated_at?: string | null
+          username?: string | null
+          verified_creator?: boolean | null
+          wallet_address?: string | null
+        }
         Relationships: []
       }
       public_profiles: {
@@ -902,6 +930,24 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"] | null
           username: string | null
           verified_creator: boolean | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string | null
+          role?: never
+          username?: string | null
+          verified_creator?: boolean | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string | null
+          role?: never
+          username?: string | null
+          verified_creator?: boolean | null
         }
         Relationships: []
       }
