@@ -27,21 +27,27 @@ const useFollowersList = (profileId: string | undefined) => {
     queryFn: async (): Promise<FollowUser[]> => {
       if (!profileId) return [];
 
-      const { data, error } = await supabase
+      // First get all follower IDs
+      const { data: followsData, error: followsError } = await supabase
         .from('follows')
-        .select(`
-          follower_id,
-          follower:public_profiles!follows_follower_id_fkey(id, username, avatar_url)
-        `)
+        .select('follower_id')
         .eq('following_id', profileId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (followsError) throw followsError;
+      if (!followsData || followsData.length === 0) return [];
 
-      // Filter out null followers and extract profile data
-      return (data || [])
-        .map((f: any) => f.follower)
-        .filter((f): f is FollowUser => f !== null && f.id !== null);
+      const followerIds = followsData.map(f => f.follower_id);
+
+      // Then fetch profiles for those IDs
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('public_profiles')
+        .select('id, username, avatar_url')
+        .in('id', followerIds);
+
+      if (profilesError) throw profilesError;
+
+      return (profilesData || []).filter((p): p is FollowUser => p.id !== null);
     },
     enabled: !!profileId,
   });
@@ -53,21 +59,27 @@ const useFollowingList = (profileId: string | undefined) => {
     queryFn: async (): Promise<FollowUser[]> => {
       if (!profileId) return [];
 
-      const { data, error } = await supabase
+      // First get all following IDs
+      const { data: followsData, error: followsError } = await supabase
         .from('follows')
-        .select(`
-          following_id,
-          following:public_profiles!follows_following_id_fkey(id, username, avatar_url)
-        `)
+        .select('following_id')
         .eq('follower_id', profileId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (followsError) throw followsError;
+      if (!followsData || followsData.length === 0) return [];
 
-      // Filter out null following and extract profile data
-      return (data || [])
-        .map((f: any) => f.following)
-        .filter((f): f is FollowUser => f !== null && f.id !== null);
+      const followingIds = followsData.map(f => f.following_id);
+
+      // Then fetch profiles for those IDs
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('public_profiles')
+        .select('id, username, avatar_url')
+        .in('id', followingIds);
+
+      if (profilesError) throw profilesError;
+
+      return (profilesData || []).filter((p): p is FollowUser => p.id !== null);
     },
     enabled: !!profileId,
   });
