@@ -60,7 +60,7 @@ const GlobalSearch = () => {
   }, [query]);
 
   const handleSelect = (result: SearchResult) => {
-    navigate(`/profile/${result.username}`);
+    navigate(`/profile/${result.id}`);
     setQuery('');
     setIsOpen(false);
   };

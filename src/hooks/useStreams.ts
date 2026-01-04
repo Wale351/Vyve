@@ -23,7 +23,6 @@ export interface StreamWithProfile {
     username: string;
     avatar_url: string | null;
     bio?: string | null;
-    verified_creator?: boolean | null;
   } | null;
   games?: {
     id: string;
@@ -56,11 +55,10 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
           started_at,
           ended_at,
           streamer_id,
-          profiles:public_profiles!streams_streamer_id_fkey (
+          profiles!streams_streamer_id_fkey (
             id,
             username,
-            avatar_url,
-            verified_creator
+            avatar_url
           ),
           games (
             id,
@@ -116,12 +114,11 @@ export const useStream = (streamId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles:public_profiles!streams_streamer_id_fkey (
+          profiles!streams_streamer_id_fkey (
             id,
             username,
             avatar_url,
-            bio,
-            verified_creator
+            bio
           ),
           games (
             id,
@@ -165,11 +162,10 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles:public_profiles!streams_streamer_id_fkey (
+          profiles!streams_streamer_id_fkey (
             id,
             username,
-            avatar_url,
-            verified_creator
+            avatar_url
           ),
           games (
             id,
@@ -214,11 +210,10 @@ export const useStreamerRecordings = (streamerId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles:public_profiles!streams_streamer_id_fkey (
+          profiles!streams_streamer_id_fkey (
             id,
             username,
-            avatar_url,
-            verified_creator
+            avatar_url
           ),
           games (
             id,
@@ -264,11 +259,10 @@ export const useStreamsByGame = (gameId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles:public_profiles!streams_streamer_id_fkey (
+          profiles!streams_streamer_id_fkey (
             id,
             username,
-            avatar_url,
-            verified_creator
+            avatar_url
           ),
           games (
             id,

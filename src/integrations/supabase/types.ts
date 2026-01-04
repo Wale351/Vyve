@@ -14,36 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_audit_logs: {
-        Row: {
-          action_type: string
-          admin_id: string
-          created_at: string
-          id: string
-          metadata: Json | null
-          target_id: string | null
-          target_type: string
-        }
-        Insert: {
-          action_type: string
-          admin_id: string
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          target_id?: string | null
-          target_type: string
-        }
-        Update: {
-          action_type?: string
-          admin_id?: string
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          target_id?: string | null
-          target_type?: string
-        }
-        Relationships: []
-      }
       chat_messages: {
         Row: {
           created_at: string
@@ -67,13 +37,6 @@ export type Database = {
           stream_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "chat_messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "admin_profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "chat_messages_sender_id_fkey"
             columns: ["sender_id"]
@@ -121,13 +84,6 @@ export type Database = {
             foreignKeyName: "follows_follower_id_fkey"
             columns: ["follower_id"]
             isOneToOne: false
-            referencedRelation: "admin_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "follows_follower_id_fkey"
-            columns: ["follower_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -136,13 +92,6 @@ export type Database = {
             columns: ["follower_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "follows_following_id_fkey"
-            columns: ["following_id"]
-            isOneToOne: false
-            referencedRelation: "admin_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -188,33 +137,6 @@ export type Database = {
           name?: string
           slug?: string
           thumbnail_url?: string | null
-        }
-        Relationships: []
-      }
-      global_mutes: {
-        Row: {
-          created_at: string
-          expires_at: string | null
-          id: string
-          muted_by: string
-          reason: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          muted_by: string
-          reason?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          muted_by?: string
-          reason?: string | null
-          user_id?: string
         }
         Relationships: []
       }
@@ -273,9 +195,6 @@ export type Database = {
           bio: string | null
           created_at: string
           id: string
-          suspended: boolean | null
-          suspended_at: string | null
-          suspended_reason: string | null
           updated_at: string
           username: string
           verified_creator: boolean | null
@@ -287,9 +206,6 @@ export type Database = {
           bio?: string | null
           created_at?: string
           id: string
-          suspended?: boolean | null
-          suspended_at?: string | null
-          suspended_reason?: string | null
           updated_at?: string
           username: string
           verified_creator?: boolean | null
@@ -301,9 +217,6 @@ export type Database = {
           bio?: string | null
           created_at?: string
           id?: string
-          suspended?: boolean | null
-          suspended_at?: string | null
-          suspended_reason?: string | null
           updated_at?: string
           username?: string
           verified_creator?: boolean | null
@@ -335,48 +248,6 @@ export type Database = {
           id?: string
           p256dh?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      reports: {
-        Row: {
-          admin_notes: string | null
-          created_at: string
-          description: string | null
-          id: string
-          reason: string
-          reporter_id: string
-          resolved_at: string | null
-          resolved_by: string | null
-          status: string
-          target_id: string
-          target_type: string
-        }
-        Insert: {
-          admin_notes?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          reason: string
-          reporter_id: string
-          resolved_at?: string | null
-          resolved_by?: string | null
-          status?: string
-          target_id: string
-          target_type: string
-        }
-        Update: {
-          admin_notes?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          reason?: string
-          reporter_id?: string
-          resolved_at?: string | null
-          resolved_by?: string | null
-          status?: string
-          target_id?: string
-          target_type?: string
         }
         Relationships: []
       }
@@ -432,13 +303,6 @@ export type Database = {
             foreignKeyName: "stream_clips_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "admin_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stream_clips_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -481,13 +345,6 @@ export type Database = {
             foreignKeyName: "stream_muted_users_muted_by_fkey"
             columns: ["muted_by"]
             isOneToOne: false
-            referencedRelation: "admin_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stream_muted_users_muted_by_fkey"
-            columns: ["muted_by"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -496,13 +353,6 @@ export type Database = {
             columns: ["muted_by"]
             isOneToOne: false
             referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stream_muted_users_muted_user_id_fkey"
-            columns: ["muted_user_id"]
-            isOneToOne: false
-            referencedRelation: "admin_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -524,56 +374,6 @@ export type Database = {
             columns: ["stream_id"]
             isOneToOne: false
             referencedRelation: "streams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      streamer_applications: {
-        Row: {
-          admin_notes: string | null
-          bio: string
-          created_at: string
-          id: string
-          primary_game_id: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          socials: Json | null
-          status: string
-          user_id: string
-          username: string
-        }
-        Insert: {
-          admin_notes?: string | null
-          bio: string
-          created_at?: string
-          id?: string
-          primary_game_id?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          socials?: Json | null
-          status?: string
-          user_id: string
-          username: string
-        }
-        Update: {
-          admin_notes?: string | null
-          bio?: string
-          created_at?: string
-          id?: string
-          primary_game_id?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          socials?: Json | null
-          status?: string
-          user_id?: string
-          username?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "streamer_applications_primary_game_id_fkey"
-            columns: ["primary_game_id"]
-            isOneToOne: false
-            referencedRelation: "games"
             referencedColumns: ["id"]
           },
         ]
@@ -605,13 +405,6 @@ export type Database = {
             foreignKeyName: "streamer_blocked_users_blocked_user_id_fkey"
             columns: ["blocked_user_id"]
             isOneToOne: false
-            referencedRelation: "admin_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "streamer_blocked_users_blocked_user_id_fkey"
-            columns: ["blocked_user_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -620,13 +413,6 @@ export type Database = {
             columns: ["blocked_user_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "streamer_blocked_users_streamer_id_fkey"
-            columns: ["streamer_id"]
-            isOneToOne: false
-            referencedRelation: "admin_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -649,11 +435,8 @@ export type Database = {
         Row: {
           description: string | null
           ended_at: string | null
-          flag_reason: string | null
-          flagged: boolean | null
           game_category: string | null
           game_id: string | null
-          hidden: boolean | null
           id: string
           is_live: boolean | null
           livepeer_stream_id: string | null
@@ -670,11 +453,8 @@ export type Database = {
         Insert: {
           description?: string | null
           ended_at?: string | null
-          flag_reason?: string | null
-          flagged?: boolean | null
           game_category?: string | null
           game_id?: string | null
-          hidden?: boolean | null
           id?: string
           is_live?: boolean | null
           livepeer_stream_id?: string | null
@@ -691,11 +471,8 @@ export type Database = {
         Update: {
           description?: string | null
           ended_at?: string | null
-          flag_reason?: string | null
-          flagged?: boolean | null
           game_category?: string | null
           game_id?: string | null
-          hidden?: boolean | null
           id?: string
           is_live?: boolean | null
           livepeer_stream_id?: string | null
@@ -715,13 +492,6 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "streams_streamer_id_fkey"
-            columns: ["streamer_id"]
-            isOneToOne: false
-            referencedRelation: "admin_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -779,13 +549,6 @@ export type Database = {
             foreignKeyName: "tips_receiver_id_fkey"
             columns: ["receiver_id"]
             isOneToOne: false
-            referencedRelation: "admin_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tips_receiver_id_fkey"
-            columns: ["receiver_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -794,13 +557,6 @@ export type Database = {
             columns: ["receiver_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tips_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "admin_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -876,51 +632,6 @@ export type Database = {
       }
     }
     Views: {
-      admin_profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string | null
-          id: string | null
-          role: Database["public"]["Enums"]["app_role"] | null
-          suspended: boolean | null
-          suspended_at: string | null
-          suspended_reason: string | null
-          updated_at: string | null
-          username: string | null
-          verified_creator: boolean | null
-          wallet_address: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          id?: string | null
-          role?: never
-          suspended?: boolean | null
-          suspended_at?: string | null
-          suspended_reason?: string | null
-          updated_at?: string | null
-          username?: string | null
-          verified_creator?: boolean | null
-          wallet_address?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          id?: string | null
-          role?: never
-          suspended?: boolean | null
-          suspended_at?: string | null
-          suspended_reason?: string | null
-          updated_at?: string | null
-          username?: string | null
-          verified_creator?: boolean | null
-          wallet_address?: string | null
-        }
-        Relationships: []
-      }
       public_profiles: {
         Row: {
           avatar_url: string | null
@@ -953,39 +664,6 @@ export type Database = {
       }
     }
     Functions: {
-      admin_delete_message: {
-        Args: { p_message_id: string }
-        Returns: undefined
-      }
-      admin_end_stream: { Args: { p_stream_id: string }; Returns: undefined }
-      admin_flag_stream: {
-        Args: { p_reason: string; p_stream_id: string }
-        Returns: undefined
-      }
-      admin_global_mute: {
-        Args: {
-          p_duration_hours?: number
-          p_reason?: string
-          p_user_id: string
-        }
-        Returns: undefined
-      }
-      admin_global_unmute: { Args: { p_user_id: string }; Returns: undefined }
-      admin_set_stream_hidden: {
-        Args: { p_hidden: boolean; p_stream_id: string }
-        Returns: undefined
-      }
-      admin_set_user_role: {
-        Args: {
-          p_role: Database["public"]["Enums"]["app_role"]
-          p_user_id: string
-        }
-        Returns: undefined
-      }
-      approve_streamer_application: {
-        Args: { p_application_id: string; p_notes?: string }
-        Returns: undefined
-      }
       check_duplicate_message: {
         Args: { p_message: string; p_user_id: string }
         Returns: boolean
@@ -999,7 +677,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      get_admin_stats: { Args: never; Returns: Json }
       get_follower_count: { Args: { p_profile_id: string }; Returns: number }
       get_following_count: { Args: { p_profile_id: string }; Returns: number }
       get_my_stream_key: { Args: { p_stream_id: string }; Returns: string }
@@ -1032,32 +709,10 @@ export type Database = {
         Returns: boolean
       }
       is_wallet_lookup_context: { Args: never; Returns: boolean }
-      log_admin_action: {
-        Args: {
-          p_action_type: string
-          p_metadata?: Json
-          p_target_id: string
-          p_target_type: string
-        }
-        Returns: undefined
-      }
-      reject_streamer_application: {
-        Args: { p_application_id: string; p_notes?: string }
-        Returns: undefined
-      }
-      set_user_verified: {
-        Args: { p_user_id: string; p_verified: boolean }
-        Returns: undefined
-      }
       store_stream_key: {
         Args: { p_stream_id: string; p_stream_key: string }
         Returns: undefined
       }
-      suspend_user: {
-        Args: { p_reason?: string; p_user_id: string }
-        Returns: undefined
-      }
-      unsuspend_user: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "viewer" | "streamer" | "admin"

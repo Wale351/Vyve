@@ -12,7 +12,6 @@ export interface ChatMessageWithSender {
   profiles: {
     username: string;
     avatar_url: string | null;
-    verified_creator?: boolean | null;
   } | null;
 }
 
@@ -29,10 +28,9 @@ export const useChatMessages = (streamId: string | undefined) => {
         .from('chat_messages')
         .select(`
           *,
-          profiles:public_profiles!chat_messages_sender_id_fkey (
+          profiles!chat_messages_sender_id_fkey (
             username,
-            avatar_url,
-            verified_creator
+            avatar_url
           )
         `)
         .eq('stream_id', streamId)
@@ -83,10 +81,9 @@ export const useChatMessages = (streamId: string | undefined) => {
             .from('chat_messages')
             .select(`
               *,
-              profiles:public_profiles!chat_messages_sender_id_fkey (
+              profiles!chat_messages_sender_id_fkey (
                 username,
-                avatar_url,
-                verified_creator
+                avatar_url
               )
             `)
             .eq('id', newMsg.id)
