@@ -33,7 +33,7 @@ const Header = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
-  const profileHref = walletAddress ? `/profile/${walletAddress.toLowerCase()}` : '/';
+  const profileHref = user?.id ? `/profile/${user.id}` : '/';
 
   const [localReadKeys, setLocalReadKeys] = useState<Set<string>>(new Set());
   

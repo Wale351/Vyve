@@ -15,6 +15,25 @@ export interface ChatMessageWithSender {
   } | null;
 }
 
+// Helper to enrich messages with public profile data
+async function enrichMessagesWithProfiles(messages: any[]): Promise<ChatMessageWithSender[]> {
+  if (!messages.length) return [];
+  
+  const senderIds = [...new Set(messages.map(m => m.sender_id))];
+  
+  const { data: profiles } = await supabase
+    .from('public_profiles')
+    .select('id, username, avatar_url')
+    .in('id', senderIds);
+  
+  const profileMap = new Map(profiles?.map(p => [p.id, { username: p.username, avatar_url: p.avatar_url }]) || []);
+  
+  return messages.map(msg => ({
+    ...msg,
+    profiles: profileMap.get(msg.sender_id) || null,
+  }));
+}
+
 export const useChatMessages = (streamId: string | undefined) => {
   const queryClient = useQueryClient();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -26,19 +45,13 @@ export const useChatMessages = (streamId: string | undefined) => {
       
       const { data, error } = await supabase
         .from('chat_messages')
-        .select(`
-          *,
-          profiles!chat_messages_sender_id_fkey (
-            username,
-            avatar_url
-          )
-        `)
+        .select('id, stream_id, sender_id, message, created_at')
         .eq('stream_id', streamId)
         .order('created_at', { ascending: true })
         .limit(100);
 
       if (error) throw error;
-      return data as unknown as ChatMessageWithSender[];
+      return enrichMessagesWithProfiles(data || []);
     },
     enabled: !!streamId,
     staleTime: Infinity, // Don't refetch - rely on realtime
@@ -76,25 +89,26 @@ export const useChatMessages = (streamId: string | undefined) => {
             return;
           }
 
-          // Fetch the message with profile data for non-optimistic messages
-          const { data } = await supabase
-            .from('chat_messages')
-            .select(`
-              *,
-              profiles!chat_messages_sender_id_fkey (
-                username,
-                avatar_url
-              )
-            `)
-            .eq('id', newMsg.id)
-            .single();
+          // Fetch public profile for the sender
+          const { data: profile } = await supabase
+            .from('public_profiles')
+            .select('id, username, avatar_url')
+            .eq('id', newMsg.sender_id)
+            .maybeSingle();
 
-          if (data) {
-            queryClient.setQueryData<ChatMessageWithSender[]>(
-              ['chat', streamId],
-              (old) => [...(old || []), data as unknown as ChatMessageWithSender]
-            );
-          }
+          const enrichedMsg: ChatMessageWithSender = {
+            id: newMsg.id,
+            stream_id: newMsg.stream_id,
+            sender_id: newMsg.sender_id,
+            message: newMsg.message,
+            created_at: newMsg.created_at,
+            profiles: profile ? { username: profile.username, avatar_url: profile.avatar_url } : null,
+          };
+
+          queryClient.setQueryData<ChatMessageWithSender[]>(
+            ['chat', streamId],
+            (old) => [...(old || []), enrichedMsg]
+          );
         }
       )
       .subscribe((status) => {

@@ -23,6 +23,7 @@ export interface StreamWithProfile {
     username: string;
     avatar_url: string | null;
     bio?: string | null;
+    verified_creator?: boolean;
   } | null;
   games?: {
     id: string;
@@ -30,6 +31,25 @@ export interface StreamWithProfile {
     slug: string;
     category: string;
   } | null;
+}
+
+// Helper to enrich streams with public profile data
+async function enrichStreamsWithProfiles(streams: any[]): Promise<StreamWithProfile[]> {
+  if (!streams.length) return [];
+  
+  const streamerIds = [...new Set(streams.map(s => s.streamer_id))];
+  
+  const { data: profiles } = await supabase
+    .from('public_profiles')
+    .select('id, username, avatar_url, bio, verified_creator')
+    .in('id', streamerIds);
+  
+  const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+  
+  return streams.map(stream => ({
+    ...stream,
+    profiles: profileMap.get(stream.streamer_id) || null,
+  }));
 }
 
 export const useLiveStreams = (filters?: { gameId?: string; category?: string }) => {
@@ -55,11 +75,6 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
           started_at,
           ended_at,
           streamer_id,
-          profiles!streams_streamer_id_fkey (
-            id,
-            username,
-            avatar_url
-          ),
           games (
             id,
             name,
@@ -77,7 +92,7 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
 
       if (error) throw error;
       
-      let results = data as unknown as StreamWithProfile[];
+      let results = await enrichStreamsWithProfiles(data || []);
       
       // Filter by category client-side (games.category)
       if (filters?.category) {
@@ -114,12 +129,6 @@ export const useStream = (streamId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles!streams_streamer_id_fkey (
-            id,
-            username,
-            avatar_url,
-            bio
-          ),
           games (
             id,
             name,
@@ -131,7 +140,19 @@ export const useStream = (streamId: string | undefined) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as unknown as StreamWithProfile | null;
+      if (!data) return null;
+      
+      // Fetch public profile for the streamer
+      const { data: profile } = await supabase
+        .from('public_profiles')
+        .select('id, username, avatar_url, bio, verified_creator')
+        .eq('id', data.streamer_id)
+        .maybeSingle();
+      
+      return {
+        ...data,
+        profiles: profile || null,
+      } as StreamWithProfile;
     },
     enabled: !!streamId,
   });
@@ -162,11 +183,6 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles!streams_streamer_id_fkey (
-            id,
-            username,
-            avatar_url
-          ),
           games (
             id,
             name,
@@ -178,7 +194,7 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
         .order('started_at', { ascending: false });
 
       if (error) throw error;
-      return data as unknown as StreamWithProfile[];
+      return enrichStreamsWithProfiles(data || []);
     },
     enabled: !!streamerId,
   });
@@ -210,11 +226,6 @@ export const useStreamerRecordings = (streamerId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles!streams_streamer_id_fkey (
-            id,
-            username,
-            avatar_url
-          ),
           games (
             id,
             name,
@@ -228,7 +239,7 @@ export const useStreamerRecordings = (streamerId: string | undefined) => {
         .order('started_at', { ascending: false });
 
       if (error) throw error;
-      return data as unknown as StreamWithProfile[];
+      return enrichStreamsWithProfiles(data || []);
     },
     enabled: !!streamerId,
   });
@@ -259,11 +270,6 @@ export const useStreamsByGame = (gameId: string | undefined) => {
           started_at,
           ended_at,
           streamer_id,
-          profiles!streams_streamer_id_fkey (
-            id,
-            username,
-            avatar_url
-          ),
           games (
             id,
             name,
@@ -276,7 +282,7 @@ export const useStreamsByGame = (gameId: string | undefined) => {
         .order('viewer_count', { ascending: false });
 
       if (error) throw error;
-      return data as unknown as StreamWithProfile[];
+      return enrichStreamsWithProfiles(data || []);
     },
     enabled: !!gameId,
   });
