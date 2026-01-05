@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { StreamWithProfile } from '@/hooks/useStreams';
 import { formatViewerCount, formatDuration } from '@/lib/formatters';
-import { Users, Clock, Play } from 'lucide-react';
+import { Users, Clock, Play, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface StreamCardProps {
   stream: StreamWithProfile;
@@ -11,6 +12,8 @@ interface StreamCardProps {
 const StreamCard = ({ stream }: StreamCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const streamerName = stream.profiles?.username || 'Anonymous';
+  const streamerAvatar = stream.profiles?.avatar_url;
+  const isVerified = stream.profiles?.verified_creator;
   const thumbnailUrl = `https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80`;
   
   return (
@@ -80,18 +83,29 @@ const StreamCard = ({ stream }: StreamCardProps) => {
         <div className="flex items-start gap-2.5 md:gap-3">
           {/* Streamer avatar */}
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-primary/80 to-secondary/80 flex items-center justify-center text-primary-foreground font-semibold text-xs md:text-sm shadow-md">
-              {streamerName.charAt(0).toUpperCase()}
-            </div>
+            <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-primary/20">
+              {streamerAvatar ? (
+                <AvatarImage src={streamerAvatar} alt={streamerName} />
+              ) : (
+                <AvatarFallback className="bg-gradient-to-br from-primary/80 to-secondary/80 text-primary-foreground font-semibold text-xs md:text-sm">
+                  {streamerName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              )}
+            </Avatar>
           </div>
           
           <div className="flex-1 min-w-0">
             <h3 className="font-display font-semibold text-sm md:text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-200">
               {stream.title}
             </h3>
-            <p className="mt-0.5 text-xs md:text-sm text-muted-foreground line-clamp-1">
-              {streamerName}
-            </p>
+            <div className="mt-0.5 flex items-center gap-1">
+              <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
+                {streamerName}
+              </p>
+              {isVerified && (
+                <CheckCircle className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary flex-shrink-0" />
+              )}
+            </div>
           </div>
         </div>
       </div>
