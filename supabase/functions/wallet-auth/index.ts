@@ -173,30 +173,49 @@ serve(async (req) => {
 
     console.log(`User ready for wallet: ${normalizedAddress}, userId: ${userId}`);
 
-    // Create a session without password using magic link token verification
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
-      email: email!,
-    });
+    // Create a session using recovery link - more reliable than magiclink for programmatic auth
+    // Retry logic to handle race conditions with concurrent requests
+    let sessionData = null;
+    let lastError = null;
+    
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email: email!,
+      });
 
-    const emailOtp = linkData?.properties?.email_otp;
+      const emailOtp = linkData?.properties?.email_otp;
 
-    if (linkError || !emailOtp) {
-      console.error("Generate link error:", linkError);
-      return new Response(
-        JSON.stringify({ error: "Failed to generate session" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      if (linkError || !emailOtp) {
+        console.error(`Generate link error (attempt ${attempt + 1}):`, linkError);
+        lastError = linkError;
+        continue;
+      }
+
+      const { data, error: sessionError } = await supabaseAuth.auth.verifyOtp({
+        email: email!,
+        token: emailOtp,
+        type: "recovery",
+      });
+
+      if (sessionError) {
+        console.error(`Verify OTP error (attempt ${attempt + 1}):`, sessionError);
+        lastError = sessionError;
+        // Small delay before retry to avoid race condition
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        continue;
+      }
+
+      if (data?.session) {
+        sessionData = data;
+        break;
+      }
     }
 
-    const { data: sessionData, error: sessionError } = await supabaseAuth.auth.verifyOtp({
-      email: email!,
-      token: emailOtp,
-      type: "magiclink",
-    });
-
-    if (sessionError || !sessionData?.session) {
-      console.error("Verify OTP error:", sessionError);
+    if (!sessionData?.session) {
+      console.error("Failed to create session after retries:", lastError);
       return new Response(
         JSON.stringify({ error: "Failed to create session" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
