@@ -41,7 +41,7 @@ const App = () => (
               <Route path="/watch/:streamId" element={<Watch />} />
               <Route path="/go-live" element={<GoLive />} />
               <Route path="/analytics" element={<Analytics />} />
-              <Route path="/profile/:address" element={<Profile />} />
+              <Route path="/profile/:identifier" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/games" element={<Games />} />
               <Route path="/games/:slug" element={<GameDetail />} />

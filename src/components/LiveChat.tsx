@@ -137,7 +137,8 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
         ) : (
           <div className="space-y-0.5 md:space-y-1">
             {messages.map((msg) => {
-              const senderName = msg.profiles?.username || 'Unknown';
+              const senderName = msg.profiles?.username || 'User';
+              const senderUsername = msg.profiles?.username;
               const timestamp = new Date(msg.created_at);
               const isStreamer = msg.sender_id === streamerId;
               const isMuted = mutedUsers.includes(msg.sender_id);
@@ -151,7 +152,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
                   <div className="flex items-start gap-2 md:gap-2.5">
                     {/* Avatar with hover card */}
                     <UserHoverCard userId={msg.sender_id}>
-                      <Link to={`/profile/${msg.sender_id}`} className="flex-shrink-0">
+                      <Link to={senderUsername ? `/profile/${senderUsername}` : '#'} className="flex-shrink-0">
                         <Avatar className="w-6 h-6 md:w-7 md:h-7 hover:ring-2 hover:ring-primary/50 transition-all cursor-pointer">
                           {msg.profiles?.avatar_url ? (
                             <AvatarImage src={msg.profiles.avatar_url} alt={senderName} />
@@ -175,7 +176,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
                         )}
                         <UserHoverCard userId={msg.sender_id}>
                           <Link 
-                            to={`/profile/${msg.sender_id}`}
+                            to={senderUsername ? `/profile/${senderUsername}` : '#'}
                             className="text-xs md:text-sm font-medium text-foreground truncate max-w-[100px] md:max-w-none hover:text-primary hover:underline transition-colors"
                           >
                             {senderName}

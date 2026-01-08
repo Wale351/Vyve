@@ -109,7 +109,8 @@ const Watch = () => {
     toast.success('Link copied!');
   };
 
-  const streamerName = stream.profiles?.username || 'Unknown';
+  const streamerName = stream.profiles?.username || 'Streamer';
+  const streamerUsername = stream.profiles?.username;
   const streamerId = stream.profiles?.id || '';
 
   // Stream phase indicator component
@@ -202,7 +203,7 @@ const Watch = () => {
                   {/* Streamer info */}
                   <div className="flex items-center justify-between gap-3">
                     <Link 
-                      to={`/profile/${streamerId}`}
+                      to={streamerUsername ? `/profile/${streamerUsername}` : '#'}
                       className="flex items-center gap-2.5 group"
                     >
                       <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-foreground font-bold text-sm md:text-lg shadow-md">
@@ -330,7 +331,7 @@ const Watch = () => {
                       <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
                     </Button>
                     
-                    <Link to={`/profile/${streamerId}`}>
+                    <Link to={streamerUsername ? `/profile/${streamerUsername}` : '#'}>
                       <Button variant="subtle" size="icon">
                         <ExternalLink className="h-4 w-4" />
                       </Button>

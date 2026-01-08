@@ -80,12 +80,20 @@ export const useChatMessages = (streamId: string | undefined) => {
           const newMsg = payload.new as any;
           console.log('[Chat] Realtime message received:', newMsg.id);
           
-          // Check if this message is already in the cache (from optimistic update)
+          // Check if this message is already in the cache (from optimistic update or duplicate)
           const currentMessages = queryClient.getQueryData<ChatMessageWithSender[]>(['chat', streamId]) || [];
-          const exists = currentMessages.some(m => m.id === newMsg.id);
+          const exists = currentMessages.some(m => m.id === newMsg.id || (m.id.startsWith('optimistic-') && m.message === newMsg.message && m.sender_id === newMsg.sender_id));
           
           if (exists) {
-            console.log('[Chat] Message already exists (optimistic), skipping');
+            // Replace optimistic message with real one if found
+            const optimisticMatch = currentMessages.find(m => m.id.startsWith('optimistic-') && m.message === newMsg.message && m.sender_id === newMsg.sender_id);
+            if (optimisticMatch) {
+              queryClient.setQueryData<ChatMessageWithSender[]>(
+                ['chat', streamId],
+                (old) => old?.map(m => m.id === optimisticMatch.id ? { ...m, id: newMsg.id } : m) || []
+              );
+            }
+            console.log('[Chat] Message already exists, skipping duplicate');
             return;
           }
 

@@ -33,7 +33,7 @@ const Header = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
-  const profileHref = user?.id ? `/profile/${user.id}` : '/';
+  const profileHref = profile?.username ? `/profile/${profile.username}` : '/';
 
   const [localReadKeys, setLocalReadKeys] = useState<Set<string>>(new Set());
   
@@ -154,7 +154,7 @@ const Header = () => {
                         asChild
                         className="flex items-start gap-3 p-3 cursor-pointer focus:bg-muted"
                       >
-                        <Link to={notification.data?.user_id ? `/profile/${notification.data.user_id}` : '#'}>
+                        <Link to={notification.data?.username ? `/profile/${notification.data.username}` : '#'}>
                           <div className="flex-shrink-0 mt-0.5">
                             {notification.type === 'new_follower' ? (
                               <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">

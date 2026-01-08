@@ -118,8 +118,8 @@ const OnboardingModal = () => {
       completeOnboarding();
       toast.success('Profile created successfully!');
       
-      // Navigate to profile page
-      navigate(`/profile/${walletAddress}`);
+      // Navigate to profile page using username
+      navigate(`/profile/${username.trim()}`);
     } catch (error) {
       // Error handling done in mutation hooks
     }
