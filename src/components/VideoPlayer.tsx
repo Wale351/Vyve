@@ -346,11 +346,16 @@ const VideoPlayer = ({
         </div>
       )}
 
-      {/* Live indicator */}
+      {/* Live indicator with delay hint */}
       {isLive && !hasError && !isLoading && (
-        <div className="absolute top-4 left-4 live-badge flex items-center gap-1.5">
-          <span className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
-          LIVE
+        <div className="absolute top-4 left-4 flex items-center gap-2">
+          <div className="live-badge flex items-center gap-1.5">
+            <span className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
+            LIVE
+          </div>
+          <div className="px-2 py-1 rounded-md bg-background/70 backdrop-blur-sm text-[10px] text-muted-foreground">
+            ≈15s delay
+          </div>
         </div>
       )}
 

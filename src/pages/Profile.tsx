@@ -13,6 +13,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
   useProfile, 
   useProfileByWallet,
+  useProfileByUsername,
   useProfileTipsReceived, 
   useOwnProfile,
   useFollowerCount,
@@ -42,7 +43,7 @@ import {
 import { toast } from 'sonner';
 
 const Profile = () => {
-  const { address: addressParam } = useParams();
+  const { identifier } = useParams();
   const { user, isAuthenticated } = useWalletAuth();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -53,20 +54,24 @@ const Profile = () => {
   const [followersModalTab, setFollowersModalTab] = useState<'followers' | 'following'>('followers');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Detect if the param is a wallet address (starts with 0x) or a UUID
-  const addressParamLower = addressParam?.toLowerCase();
-  const isWalletAddress = !!addressParamLower?.startsWith('0x');
+  // Detect if the param is a wallet address (starts with 0x), UUID, or username
+  const identifierLower = identifier?.toLowerCase();
+  const isWalletAddress = !!identifierLower?.startsWith('0x');
+  const isUUID = !!identifier?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   
-  // Fetch profile by wallet address or by ID
+  // Fetch profile by wallet address, ID, or username
   const { data: profileByWallet, isLoading: walletLoading } = useProfileByWallet(
-    isWalletAddress ? addressParamLower : undefined
+    isWalletAddress ? identifierLower : undefined
   );
   const { data: profileById, isLoading: idLoading } = useProfile(
-    !isWalletAddress ? addressParam : undefined
+    isUUID ? identifier : undefined
+  );
+  const { data: profileByUsername, isLoading: usernameLoading } = useProfileByUsername(
+    !isWalletAddress && !isUUID ? identifier : undefined
   );
   
-  const profile = isWalletAddress ? profileByWallet : profileById;
-  const profileLoading = isWalletAddress ? walletLoading : idLoading;
+  const profile = isWalletAddress ? profileByWallet : (isUUID ? profileById : profileByUsername);
+  const profileLoading = isWalletAddress ? walletLoading : (isUUID ? idLoading : usernameLoading);
   const profileId = profile?.id;
 
   const isOwnProfile = user?.id === profileId;
@@ -157,7 +162,7 @@ const Profile = () => {
 
   // Check if viewing own profile by wallet address
   const isViewingOwnWallet = isWalletAddress && 
-    user?.user_metadata?.wallet_address?.toLowerCase() === addressParamLower;
+    user?.user_metadata?.wallet_address?.toLowerCase() === identifierLower;
   
   // Redirect if no profile exists for own wallet (should trigger onboarding instead)
   if (!profileLoading && !profile && isAuthenticated && isViewingOwnWallet) {

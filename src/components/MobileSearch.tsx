@@ -68,8 +68,8 @@ export default function MobileSearch({ open, onOpenChange }: MobileSearchProps) 
   }, [query]);
 
   const handleSelect = (result: SearchResult) => {
-    if (result.id) {
-      navigate(`/profile/${result.id}`);
+    if (result.username) {
+      navigate(`/profile/${result.username}`);
       onOpenChange(false);
     }
   };
