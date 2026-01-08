@@ -109,7 +109,7 @@ const Watch = () => {
     toast.success('Link copied!');
   };
 
-  const streamerName = stream.profiles?.username || 'Anonymous';
+  const streamerName = stream.profiles?.username || 'Unknown';
   const streamerId = stream.profiles?.id || '';
 
   // Stream phase indicator component

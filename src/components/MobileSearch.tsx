@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Search, User, X, Loader2 } from 'lucide-react';
+import { Search, User, X, Loader2, BadgeCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SearchResult {
@@ -12,6 +12,8 @@ interface SearchResult {
   username: string | null;
   avatar_url: string | null;
   bio: string | null;
+  verified_creator: boolean | null;
+  role: string | null;
 }
 
 interface MobileSearchProps {
@@ -47,7 +49,7 @@ export default function MobileSearch({ open, onOpenChange }: MobileSearchProps) 
       try {
         const { data, error } = await supabase
           .from('public_profiles')
-          .select('id, username, avatar_url, bio')
+          .select('id, username, avatar_url, bio, verified_creator, role')
           .ilike('username', `%${query}%`)
           .limit(10);
 
@@ -130,9 +132,16 @@ export default function MobileSearch({ open, onOpenChange }: MobileSearchProps) 
                     )}
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{result.username}</p>
-                    {result.bio && (
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium truncate">{result.username}</p>
+                      {result.verified_creator && (
+                        <BadgeCheck className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                      )}
+                    </div>
+                    {result.bio ? (
                       <p className="text-xs text-muted-foreground truncate">{result.bio}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground capitalize">{result.role || 'Viewer'}</p>
                     )}
                   </div>
                 </button>

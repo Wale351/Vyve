@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { formatAddress } from '@/lib/formatters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,7 +17,8 @@ import {
   MoreVertical,
   VolumeX,
   Ban,
-  Crown
+  Crown,
+  BadgeCheck
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useChatMessages, useSendMessage } from '@/hooks/useChatMessages';
@@ -28,6 +28,7 @@ import { useIsStreamOwner, useMuteUser, useBlockUser, useMutedUsers } from '@/ho
 import { useStream } from '@/hooks/useStreams';
 import { toast } from 'sonner';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import UserHoverCard from '@/components/UserHoverCard';
 
 interface LiveChatProps {
   streamId: string;
@@ -136,7 +137,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
         ) : (
           <div className="space-y-0.5 md:space-y-1">
             {messages.map((msg) => {
-              const senderName = msg.profiles?.username || formatAddress(msg.sender_id || '');
+              const senderName = msg.profiles?.username || 'Unknown';
               const timestamp = new Date(msg.created_at);
               const isStreamer = msg.sender_id === streamerId;
               const isMuted = mutedUsers.includes(msg.sender_id);
@@ -148,18 +149,20 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
                   className={`group py-1.5 md:py-2 px-1.5 md:px-2 -mx-1.5 md:-mx-2 rounded-lg hover:bg-muted/30 transition-colors ${isMuted ? 'opacity-50' : ''}`}
                 >
                   <div className="flex items-start gap-2 md:gap-2.5">
-                    {/* Avatar */}
-                    <Link to={`/profile/${msg.sender_id}`} className="flex-shrink-0">
-                      <Avatar className="w-6 h-6 md:w-7 md:h-7 hover:ring-2 hover:ring-primary/50 transition-all cursor-pointer">
-                        {msg.profiles?.avatar_url ? (
-                          <AvatarImage src={msg.profiles.avatar_url} alt={senderName} />
-                        ) : (
-                          <AvatarFallback className="bg-gradient-to-br from-primary/60 to-secondary/60 text-[9px] md:text-[10px] font-bold text-foreground">
-                            {senderName.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                    </Link>
+                    {/* Avatar with hover card */}
+                    <UserHoverCard userId={msg.sender_id}>
+                      <Link to={`/profile/${msg.sender_id}`} className="flex-shrink-0">
+                        <Avatar className="w-6 h-6 md:w-7 md:h-7 hover:ring-2 hover:ring-primary/50 transition-all cursor-pointer">
+                          {msg.profiles?.avatar_url ? (
+                            <AvatarImage src={msg.profiles.avatar_url} alt={senderName} />
+                          ) : (
+                            <AvatarFallback className="bg-gradient-to-br from-primary/60 to-secondary/60 text-[9px] md:text-[10px] font-bold text-foreground">
+                              {senderName.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                      </Link>
+                    </UserHoverCard>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
@@ -170,12 +173,14 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
                             <span className="hidden sm:inline">Streamer</span>
                           </span>
                         )}
-                        <Link 
-                          to={`/profile/${msg.sender_id}`}
-                          className="text-xs md:text-sm font-medium text-foreground truncate max-w-[100px] md:max-w-none hover:text-primary hover:underline transition-colors"
-                        >
-                          {senderName}
-                        </Link>
+                        <UserHoverCard userId={msg.sender_id}>
+                          <Link 
+                            to={`/profile/${msg.sender_id}`}
+                            className="text-xs md:text-sm font-medium text-foreground truncate max-w-[100px] md:max-w-none hover:text-primary hover:underline transition-colors"
+                          >
+                            {senderName}
+                          </Link>
+                        </UserHoverCard>
                         <span className="text-[10px] md:text-[11px] text-muted-foreground">
                           {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>

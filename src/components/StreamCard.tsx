@@ -11,7 +11,7 @@ interface StreamCardProps {
 
 const StreamCard = ({ stream }: StreamCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const streamerName = stream.profiles?.username || 'Anonymous';
+  const streamerName = stream.profiles?.username || 'Unknown';
   const streamerAvatar = stream.profiles?.avatar_url;
   const isVerified = stream.profiles?.verified_creator;
   const thumbnailUrl = `https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80`;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, User, X } from 'lucide-react';
+import { Search, User, X, BadgeCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,8 @@ interface SearchResult {
   username: string;
   avatar_url: string | null;
   bio: string | null;
+  verified_creator: boolean | null;
+  role: string | null;
 }
 
 const GlobalSearch = () => {
@@ -41,12 +43,12 @@ const GlobalSearch = () => {
       try {
         const { data, error } = await supabase
           .from('public_profiles')
-          .select('id, username, avatar_url, bio')
+          .select('id, username, avatar_url, bio, verified_creator, role')
           .ilike('username', `%${query}%`)
-          .limit(5);
+          .limit(8);
 
         if (error) throw error;
-        setResults(data || []);
+        setResults((data || []) as SearchResult[]);
       } catch (error) {
         console.error('Search error:', error);
         setResults([]);
@@ -116,9 +118,16 @@ const GlobalSearch = () => {
                       )}
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{result.username}</p>
-                      {result.bio && (
+                      <div className="flex items-center gap-1">
+                        <p className="font-medium text-sm truncate">{result.username}</p>
+                        {result.verified_creator && (
+                          <BadgeCheck className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                        )}
+                      </div>
+                      {result.bio ? (
                         <p className="text-xs text-muted-foreground truncate">{result.bio}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground capitalize">{result.role || 'Viewer'}</p>
                       )}
                     </div>
                   </button>
