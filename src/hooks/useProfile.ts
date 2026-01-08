@@ -45,6 +45,27 @@ export const useProfile = (profileId: string | undefined) => {
   });
 };
 
+// Fetch public profile by username (case-insensitive)
+export const useProfileByUsername = (username: string | undefined) => {
+  return useQuery({
+    queryKey: ['profile', 'username', username?.toLowerCase()],
+    queryFn: async () => {
+      if (!username) return null;
+      
+      const { data, error } = await supabase
+        .from('public_profiles')
+        .select('*')
+        .ilike('username', username)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as PublicProfile | null;
+    },
+    enabled: !!username,
+  });
+};
+
 // Fetch own profile with full details (including wallet_address)
 export const useOwnProfile = (userId: string | undefined) => {
   return useQuery({
