@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchPublicProfile, fetchPublicProfileByUsername, fetchUserRole, PUBLIC_PROFILE_FIELDS } from '@/lib/profileHelpers';
 
 export type UserRole = 'viewer' | 'streamer' | 'admin';
 
@@ -25,21 +26,13 @@ export interface PublicProfile {
   created_at: string;
 }
 
-// Fetch public profile by ID
+// Fetch public profile by ID - uses profiles table directly
 export const useProfile = (profileId: string | undefined) => {
   return useQuery({
     queryKey: ['profile', profileId],
     queryFn: async () => {
       if (!profileId) return null;
-      
-      const { data, error } = await supabase
-        .from('public_profiles')
-        .select('*')
-        .eq('id', profileId).limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data as PublicProfile | null;
+      return fetchPublicProfile(profileId);
     },
     enabled: !!profileId,
   });
@@ -51,16 +44,7 @@ export const useProfileByUsername = (username: string | undefined) => {
     queryKey: ['profile', 'username', username?.toLowerCase()],
     queryFn: async () => {
       if (!username) return null;
-      
-      const { data, error } = await supabase
-        .from('public_profiles')
-        .select('*')
-        .ilike('username', username)
-        .limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data as PublicProfile | null;
+      return fetchPublicProfileByUsername(username);
     },
     enabled: !!username,
   });
@@ -141,26 +125,12 @@ export const useCanUpdateProfileImage = (userId: string | undefined) => {
   });
 };
 
+// Alias for useProfile
 export const useProfileById = (profileId: string | undefined) => {
-  return useQuery({
-    queryKey: ['profile', 'id', profileId],
-    queryFn: async () => {
-      if (!profileId) return null;
-      
-      const { data, error } = await supabase
-        .from('public_profiles')
-        .select('*')
-        .eq('id', profileId).limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data as PublicProfile | null;
-    },
-    enabled: !!profileId,
-  });
+  return useProfile(profileId);
 };
 
-// Fetch profile by wallet address - uses secure RPC function to lookup ID, then public_profiles view
+// Fetch profile by wallet address - uses secure RPC function
 export const useProfileByWallet = (walletAddress: string | undefined) => {
   return useQuery({
     queryKey: ['profile', 'wallet', walletAddress?.toLowerCase()],
@@ -173,15 +143,7 @@ export const useProfileByWallet = (walletAddress: string | undefined) => {
       
       if (lookupError || !profileId) return null;
       
-      // Fetch public profile (excludes wallet_address)
-      const { data, error } = await supabase
-        .from('public_profiles')
-        .select('*')
-        .eq('id', profileId).limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data as PublicProfile | null;
+      return fetchPublicProfile(profileId);
     },
     enabled: !!walletAddress,
   });
@@ -210,14 +172,12 @@ export const useProfileTipsReceived = (profileId: string | undefined) => {
     queryFn: async () => {
       if (!profileId) return 0;
       
-      // For own profile, we can query tips directly
-      // For others, we'll get 0 due to RLS (which is correct - tips are private)
       const { data, error } = await supabase
         .from('tips')
         .select('amount_eth')
         .eq('receiver_id', profileId);
 
-      if (error) return 0; // RLS will block if not owner, return 0
+      if (error) return 0;
       
       const total = data?.reduce((sum, tip) => sum + Number(tip.amount_eth), 0) || 0;
       return total;
@@ -287,17 +247,7 @@ export const useUserRole = (userId: string | undefined) => {
     queryKey: ['user-role', userId],
     queryFn: async () => {
       if (!userId) return 'viewer' as UserRole;
-      
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .order('role')
-        .limit(1)
-        .maybeSingle();
-
-      if (error || !data) return 'viewer' as UserRole;
-      return data.role as UserRole;
+      return fetchUserRole(userId);
     },
     enabled: !!userId,
   });

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchStreamProfiles } from '@/lib/profileHelpers';
 
 export interface StreamWithProfile {
   id: string;
@@ -33,18 +34,12 @@ export interface StreamWithProfile {
   } | null;
 }
 
-// Helper to enrich streams with public profile data
+// Helper to enrich streams with profile data from profiles table
 async function enrichStreamsWithProfiles(streams: any[]): Promise<StreamWithProfile[]> {
   if (!streams.length) return [];
   
   const streamerIds = [...new Set(streams.map(s => s.streamer_id))];
-  
-  const { data: profiles } = await supabase
-    .from('public_profiles')
-    .select('id, username, avatar_url, bio, verified_creator')
-    .in('id', streamerIds);
-  
-  const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+  const profileMap = await fetchStreamProfiles(streamerIds);
   
   return streams.map(stream => ({
     ...stream,
@@ -142,9 +137,9 @@ export const useStream = (streamId: string | undefined) => {
       if (error) throw error;
       if (!data) return null;
       
-      // Fetch public profile for the streamer
+      // Fetch profile for the streamer from profiles table
       const { data: profile } = await supabase
-        .from('public_profiles')
+        .from('profiles')
         .select('id, username, avatar_url, bio, verified_creator')
         .eq('id', data.streamer_id)
         .maybeSingle();

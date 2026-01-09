@@ -3,7 +3,7 @@ import { Search, User, X, BadgeCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { searchProfiles } from '@/lib/profileHelpers';
 
 interface SearchResult {
   id: string;
@@ -41,14 +41,8 @@ const GlobalSearch = () => {
 
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('public_profiles')
-          .select('id, username, avatar_url, bio, verified_creator, role')
-          .ilike('username', `%${query}%`)
-          .limit(8);
-
-        if (error) throw error;
-        setResults((data || []) as SearchResult[]);
+        const data = await searchProfiles(query, 8);
+        setResults(data as SearchResult[]);
       } catch (error) {
         console.error('Search error:', error);
         setResults([]);
@@ -62,7 +56,7 @@ const GlobalSearch = () => {
   }, [query]);
 
   const handleSelect = (result: SearchResult) => {
-    navigate(`/profile/${result.username}`);
+    navigate(`/profile/${result.id}`);
     setQuery('');
     setIsOpen(false);
   };

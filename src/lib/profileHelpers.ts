@@ -1,0 +1,106 @@
+import { supabase } from '@/integrations/supabase/client';
+
+// Safe public profile fields - NEVER include wallet_address
+export const PUBLIC_PROFILE_FIELDS = 'id, username, avatar_url, bio, verified_creator, created_at';
+
+// Fetch role for a user (separate query since it's in user_roles table)
+export async function fetchUserRole(userId: string): Promise<'viewer' | 'streamer' | 'admin'> {
+  const { data } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .order('role')
+    .limit(1)
+    .maybeSingle();
+  
+  return (data?.role as 'viewer' | 'streamer' | 'admin') || 'viewer';
+}
+
+// Fetch public profile by ID
+export async function fetchPublicProfile(profileId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(PUBLIC_PROFILE_FIELDS)
+    .eq('id', profileId)
+    .maybeSingle();
+  
+  if (error) throw error;
+  if (!data) return null;
+  
+  const role = await fetchUserRole(profileId);
+  return { ...data, role };
+}
+
+// Fetch public profile by username (case-insensitive)
+export async function fetchPublicProfileByUsername(username: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(PUBLIC_PROFILE_FIELDS)
+    .ilike('username', username)
+    .limit(1)
+    .maybeSingle();
+  
+  if (error) throw error;
+  if (!data) return null;
+  
+  const role = await fetchUserRole(data.id);
+  return { ...data, role };
+}
+
+// Fetch multiple public profiles by IDs (for batch operations)
+export async function fetchPublicProfiles(profileIds: string[]) {
+  if (profileIds.length === 0) return [];
+  
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(PUBLIC_PROFILE_FIELDS)
+    .in('id', profileIds);
+  
+  if (error) throw error;
+  return data || [];
+}
+
+// Fetch profiles for chat messages (minimal fields)
+export async function fetchChatProfiles(senderIds: string[]) {
+  if (senderIds.length === 0) return new Map();
+  
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url')
+    .in('id', senderIds);
+  
+  return new Map(data?.map(p => [p.id, { username: p.username, avatar_url: p.avatar_url }]) || []);
+}
+
+// Fetch profiles for streams (includes verified_creator)
+export async function fetchStreamProfiles(streamerIds: string[]) {
+  if (streamerIds.length === 0) return new Map();
+  
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url, bio, verified_creator')
+    .in('id', streamerIds);
+  
+  return new Map(data?.map(p => [p.id, p]) || []);
+}
+
+// Search profiles by username (case-insensitive partial match)
+export async function searchProfiles(query: string, limit = 10) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url, bio, verified_creator')
+    .ilike('username', `%${query}%`)
+    .limit(limit);
+  
+  if (error) throw error;
+  
+  // Fetch roles for all results
+  const profilesWithRoles = await Promise.all(
+    (data || []).map(async (profile) => {
+      const role = await fetchUserRole(profile.id);
+      return { ...profile, role };
+    })
+  );
+  
+  return profilesWithRoles;
+}

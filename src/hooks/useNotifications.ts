@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useWalletAuth } from './useWalletAuth';
+import { fetchPublicProfiles } from '@/lib/profileHelpers';
 
 export interface Notification {
   id: string;
@@ -51,20 +52,20 @@ export const useNotifications = () => {
       // Fetch recent followers (last 7 days)
       const { data: followers } = await supabase
         .from('follows')
-        .select(`
-          id,
-          created_at,
-          follower_id,
-          follower:public_profiles!follows_follower_id_fkey(id, username, avatar_url)
-        `)
+        .select('id, created_at, follower_id')
         .eq('following_id', user.id)
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
         .limit(10);
 
+      // Fetch profiles for followers
+      const followerIds = followers?.map(f => f.follower_id) || [];
+      const followerProfiles = await fetchPublicProfiles(followerIds);
+      const followerProfileMap = new Map(followerProfiles.map(p => [p.id, p]));
+
       if (followers) {
         followers.forEach((follow: any) => {
-          const followerProfile = follow.follower;
+          const followerProfile = followerProfileMap.get(follow.follower_id);
           const notificationKey = `follow_${follow.id}`;
           notifications.push({
             id: notificationKey,
@@ -85,21 +86,20 @@ export const useNotifications = () => {
       // Fetch recent tips received (last 7 days)
       const { data: tips } = await supabase
         .from('tips')
-        .select(`
-          id,
-          created_at,
-          amount_eth,
-          sender_id,
-          sender:public_profiles!tips_sender_id_fkey(id, username, avatar_url)
-        `)
+        .select('id, created_at, amount_eth, sender_id')
         .eq('receiver_id', user.id)
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
         .limit(10);
 
+      // Fetch profiles for tip senders
+      const senderIds = tips?.map(t => t.sender_id) || [];
+      const senderProfiles = await fetchPublicProfiles(senderIds);
+      const senderProfileMap = new Map(senderProfiles.map(p => [p.id, p]));
+
       if (tips) {
         tips.forEach((tip: any) => {
-          const senderProfile = tip.sender;
+          const senderProfile = senderProfileMap.get(tip.sender_id);
           const notificationKey = `tip_${tip.id}`;
           notifications.push({
             id: notificationKey,
