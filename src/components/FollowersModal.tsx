@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { User, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchPublicProfiles } from '@/lib/profileHelpers';
 
 interface FollowersModalProps {
   open: boolean;
@@ -39,15 +40,14 @@ const useFollowersList = (profileId: string | undefined) => {
 
       const followerIds = followsData.map(f => f.follower_id);
 
-      // Then fetch profiles for those IDs
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('public_profiles')
-        .select('id, username, avatar_url')
-        .in('id', followerIds);
+      // Then fetch profiles for those IDs from profiles table
+      const profiles = await fetchPublicProfiles(followerIds);
 
-      if (profilesError) throw profilesError;
-
-      return (profilesData || []).filter((p): p is FollowUser => p.id !== null);
+      return profiles.map(p => ({
+        id: p.id,
+        username: p.username,
+        avatar_url: p.avatar_url,
+      }));
     },
     enabled: !!profileId,
   });
@@ -71,15 +71,14 @@ const useFollowingList = (profileId: string | undefined) => {
 
       const followingIds = followsData.map(f => f.following_id);
 
-      // Then fetch profiles for those IDs
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('public_profiles')
-        .select('id, username, avatar_url')
-        .in('id', followingIds);
+      // Then fetch profiles for those IDs from profiles table
+      const profiles = await fetchPublicProfiles(followingIds);
 
-      if (profilesError) throw profilesError;
-
-      return (profilesData || []).filter((p): p is FollowUser => p.id !== null);
+      return profiles.map(p => ({
+        id: p.id,
+        username: p.username,
+        avatar_url: p.avatar_url,
+      }));
     },
     enabled: !!profileId,
   });
@@ -112,10 +111,9 @@ const FollowersModal = ({ open, onOpenChange, profileId, initialTab = 'followers
   const { data: followers = [], isLoading: followersLoading } = useFollowersList(open ? profileId : undefined);
   const { data: following = [], isLoading: followingLoading } = useFollowingList(open ? profileId : undefined);
 
-  const handleUserClick = (username: string | null) => {
-    if (!username) return;
+  const handleUserClick = (userId: string) => {
     onOpenChange(false);
-    navigate(`/profile/${username}`);
+    navigate(`/profile/${userId}`);
   };
 
   return (
@@ -143,7 +141,7 @@ const FollowersModal = ({ open, onOpenChange, profileId, initialTab = 'followers
                     <UserListItem 
                       key={user.id} 
                       user={user} 
-                      onClick={() => handleUserClick(user.username)} 
+                      onClick={() => handleUserClick(user.id)} 
                     />
                   ))}
                 </div>
@@ -167,7 +165,7 @@ const FollowersModal = ({ open, onOpenChange, profileId, initialTab = 'followers
                     <UserListItem 
                       key={user.id} 
                       user={user} 
-                      onClick={() => handleUserClick(user.username)} 
+                      onClick={() => handleUserClick(user.id)} 
                     />
                   ))}
                 </div>

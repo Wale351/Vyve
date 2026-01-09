@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { mapDatabaseError } from '@/lib/errorHandler';
+import { fetchChatProfiles } from '@/lib/profileHelpers';
 
 export interface ChatMessageWithSender {
   id: string;
@@ -15,18 +16,12 @@ export interface ChatMessageWithSender {
   } | null;
 }
 
-// Helper to enrich messages with public profile data
+// Helper to enrich messages with profile data from profiles table
 async function enrichMessagesWithProfiles(messages: any[]): Promise<ChatMessageWithSender[]> {
   if (!messages.length) return [];
   
   const senderIds = [...new Set(messages.map(m => m.sender_id))];
-  
-  const { data: profiles } = await supabase
-    .from('public_profiles')
-    .select('id, username, avatar_url')
-    .in('id', senderIds);
-  
-  const profileMap = new Map(profiles?.map(p => [p.id, { username: p.username, avatar_url: p.avatar_url }]) || []);
+  const profileMap = await fetchChatProfiles(senderIds);
   
   return messages.map(msg => ({
     ...msg,
@@ -97,9 +92,9 @@ export const useChatMessages = (streamId: string | undefined) => {
             return;
           }
 
-          // Fetch public profile for the sender
+          // Fetch profile for the sender from profiles table
           const { data: profile } = await supabase
-            .from('public_profiles')
+            .from('profiles')
             .select('id, username, avatar_url')
             .eq('id', newMsg.sender_id)
             .maybeSingle();

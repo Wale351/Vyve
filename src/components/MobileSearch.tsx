@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Search, User, X, Loader2, BadgeCheck } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { searchProfiles } from '@/lib/profileHelpers';
 
 interface SearchResult {
   id: string;
@@ -47,14 +47,8 @@ export default function MobileSearch({ open, onOpenChange }: MobileSearchProps) 
 
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('public_profiles')
-          .select('id, username, avatar_url, bio, verified_creator, role')
-          .ilike('username', `%${query}%`)
-          .limit(10);
-
-        if (error) throw error;
-        setResults((data || []) as SearchResult[]);
+        const data = await searchProfiles(query, 10);
+        setResults(data as SearchResult[]);
       } catch (err) {
         console.error('Search error:', err);
         setResults([]);
@@ -68,10 +62,8 @@ export default function MobileSearch({ open, onOpenChange }: MobileSearchProps) 
   }, [query]);
 
   const handleSelect = (result: SearchResult) => {
-    if (result.username) {
-      navigate(`/profile/${result.username}`);
-      onOpenChange(false);
-    }
+    navigate(`/profile/${result.id}`);
+    onOpenChange(false);
   };
 
   return (
