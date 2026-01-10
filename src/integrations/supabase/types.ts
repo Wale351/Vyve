@@ -20,27 +20,33 @@ export type Database = {
           admin_id: string
           created_at: string
           id: string
+          ip_address: string | null
           metadata: Json | null
           target_id: string | null
           target_type: string
+          user_agent: string | null
         }
         Insert: {
           action_type: string
           admin_id: string
           created_at?: string
           id?: string
+          ip_address?: string | null
           metadata?: Json | null
           target_id?: string | null
           target_type: string
+          user_agent?: string | null
         }
         Update: {
           action_type?: string
           admin_id?: string
           created_at?: string
           id?: string
+          ip_address?: string | null
           metadata?: Json | null
           target_id?: string | null
           target_type?: string
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -532,41 +538,53 @@ export type Database = {
         Row: {
           admin_notes: string | null
           bio: string
+          content_type: string | null
           created_at: string
           id: string
           primary_game_id: string | null
+          prior_experience: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           socials: Json | null
           status: string
+          streaming_frequency: string | null
           user_id: string
           username: string
+          why_stream: string | null
         }
         Insert: {
           admin_notes?: string | null
           bio: string
+          content_type?: string | null
           created_at?: string
           id?: string
           primary_game_id?: string | null
+          prior_experience?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           socials?: Json | null
           status?: string
+          streaming_frequency?: string | null
           user_id: string
           username: string
+          why_stream?: string | null
         }
         Update: {
           admin_notes?: string | null
           bio?: string
+          content_type?: string | null
           created_at?: string
           id?: string
           primary_game_id?: string | null
+          prior_experience?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           socials?: Json | null
           status?: string
+          streaming_frequency?: string | null
           user_id?: string
           username?: string
+          why_stream?: string | null
         }
         Relationships: [
           {
@@ -986,6 +1004,19 @@ export type Database = {
         Returns: undefined
       }
       admin_global_unmute: { Args: { p_user_id: string }; Returns: undefined }
+      admin_search_users: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          suspended: boolean
+          username: string
+          verified_creator: boolean
+        }[]
+      }
       admin_set_stream_hidden: {
         Args: { p_hidden: boolean; p_stream_id: string }
         Returns: undefined
@@ -1025,6 +1056,10 @@ export type Database = {
       get_public_profile_by_wallet: {
         Args: { p_wallet_address: string }
         Returns: string
+      }
+      get_user_application_status: {
+        Args: { p_user_id: string }
+        Returns: Json
       }
       get_user_role: {
         Args: { _user_id: string }
