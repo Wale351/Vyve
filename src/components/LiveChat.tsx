@@ -20,11 +20,11 @@ import {
   Crown,
   BadgeCheck
 } from 'lucide-react';
-import { useAccount } from 'wagmi';
 import { useChatMessages, useSendMessage } from '@/hooks/useChatMessages';
 import { useOwnProfile, useProfileComplete } from '@/hooks/useProfile';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useIsStreamOwner, useMuteUser, useBlockUser, useMutedUsers } from '@/hooks/useModeration';
+import { useStream } from '@/hooks/useStreams';
 import { useStream } from '@/hooks/useStreams';
 import { toast } from 'sonner';
 import { useOnboarding } from '@/hooks/useOnboarding';
@@ -35,8 +35,8 @@ interface LiveChatProps {
 }
 
 const LiveChat = ({ streamId }: LiveChatProps) => {
-  const { address, isConnected } = useAccount();
-  const { user, isAuthenticated } = useWalletAuth();
+  const { walletAddress, isAuthenticated, user } = useWalletAuth();
+  const isConnected = !!walletAddress;
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 

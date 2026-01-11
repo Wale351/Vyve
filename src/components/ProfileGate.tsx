@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { Loader2, UserX, LogIn } from 'lucide-react';
-import WalletConnectButton from '@/components/WalletConnectButton';
+import AuthButton from '@/components/AuthButton';
 
 interface ProfileGateProps {
   children: ReactNode;
@@ -38,11 +38,11 @@ const ProfileGate = ({ children, fallbackMessage }: ProfileGateProps) => {
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
           <LogIn className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
+        <h3 className="text-lg font-semibold mb-2">Sign In Required</h3>
         <p className="text-muted-foreground mb-4 max-w-sm">
-          Connect your wallet to access this feature.
+          Sign in to access this feature.
         </p>
-        <WalletConnectButton variant="premium" size="sm">Connect Wallet</WalletConnectButton>
+        <AuthButton variant="premium" size="sm">Sign In</AuthButton>
       </div>
     );
   }
