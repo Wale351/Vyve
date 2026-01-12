@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 type AuthButtonProps = {
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
   disabled?: boolean;
   variant?: React.ComponentProps<typeof Button>['variant'];
@@ -53,7 +53,7 @@ const AuthButton = forwardRef<HTMLButtonElement, AuthButtonProps>(
         disabled={disabled || authenticated}
         type="button"
       >
-        {children}
+        {children || 'Sign In'}
       </Button>
     );
   }
