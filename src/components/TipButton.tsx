@@ -78,18 +78,19 @@ const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
 
     setIsSending(true);
     try {
-      // Use Privy wallet to send transaction
-      const provider = await activeWallet.getEthersProvider();
-      const signer = provider.getSigner();
+      // Use Privy wallet to send transaction via EIP-1193 provider
+      const provider = await activeWallet.getEthereumProvider();
       
-      const tx = await signer.sendTransaction({
-        to: streamerWallet,
-        value: BigInt(Math.floor(parseFloat(amount) * 1e18)).toString(),
+      const txHash = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: walletAddress,
+          to: streamerWallet,
+          value: '0x' + BigInt(Math.floor(parseFloat(amount) * 1e18)).toString(16),
+        }],
       });
 
-      toast.info('Transaction submitted, waiting for confirmation...');
-      
-      const receipt = await tx.wait();
+      toast.info('Transaction submitted!');
       
       // Save tip to database
       const { error } = await supabase
@@ -99,7 +100,7 @@ const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
           receiver_id: streamerId,
           stream_id: streamId,
           amount_eth: parseFloat(amount),
-          tx_hash: receipt.transactionHash,
+          tx_hash: txHash as string,
           from_wallet: walletAddress,
           to_wallet: streamerWallet,
         });

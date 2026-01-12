@@ -25,7 +25,6 @@ import { useOwnProfile, useProfileComplete } from '@/hooks/useProfile';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useIsStreamOwner, useMuteUser, useBlockUser, useMutedUsers } from '@/hooks/useModeration';
 import { useStream } from '@/hooks/useStreams';
-import { useStream } from '@/hooks/useStreams';
 import { toast } from 'sonner';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import UserHoverCard from '@/components/UserHoverCard';
