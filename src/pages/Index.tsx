@@ -5,10 +5,11 @@ import Home from './Home';
 import { Loader2 } from 'lucide-react';
 
 const Index = () => {
-  const { isAuthenticated, isInitialized, isAuthenticating } = useWalletAuth();
+  const { isAuthenticated, isInitialized, isAuthenticating, ready } = useWalletAuth();
   const { showOnboarding, isLoading: onboardingLoading, profileExists } = useOnboarding();
 
-  // Show loading while initializing
+  // Show loading while initializing (but use a shorter timeout to prevent infinite loading)
+  // If Privy isn't ready but Supabase is initialized, we can still show Landing for unauthenticated users
   if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">

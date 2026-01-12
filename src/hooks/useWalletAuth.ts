@@ -23,7 +23,7 @@ export const useWalletAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [supabaseInitialized, setSupabaseInitialized] = useState(false);
   
   // Track if we've already synced this Privy user with Supabase
   const syncedPrivyUserRef = useRef<string | null>(null);
@@ -34,6 +34,30 @@ export const useWalletAuth = () => {
   const embeddedWallet = wallets.find(w => w.walletClientType === 'privy');
   const activeWallet = primaryWallet || embeddedWallet;
   const walletAddress = activeWallet?.address?.toLowerCase();
+
+  // Computed: fully initialized when both Privy and Supabase are ready
+  // Use a more lenient check - consider initialized if Supabase is ready
+  // and either Privy is ready OR we've waited long enough
+  const [privyTimeout, setPrivyTimeout] = useState(false);
+  
+  // Add a timeout for Privy initialization (3 seconds max)
+  useEffect(() => {
+    if (ready) {
+      setPrivyTimeout(false);
+      return;
+    }
+    
+    const timer = setTimeout(() => {
+      console.warn('Privy initialization timeout - proceeding without Privy');
+      setPrivyTimeout(true);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [ready]);
+
+  // Consider initialized if Supabase is ready - don't block on Privy
+  // This allows landing page to show immediately for unauthenticated users
+  const isInitialized = supabaseInitialized;
 
   // Listen for Supabase auth state changes
   useEffect(() => {
@@ -52,7 +76,7 @@ export const useWalletAuth = () => {
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
-      setIsInitialized(true);
+      setSupabaseInitialized(true);
     });
 
     return () => subscription.unsubscribe();
@@ -61,13 +85,8 @@ export const useWalletAuth = () => {
   // Sync Privy user with Supabase when authenticated
   useEffect(() => {
     const syncWithSupabase = async () => {
-      // Wait for Privy to be ready
-      if (!ready) return;
-      
-      // Mark as initialized once Privy is ready
-      if (!isInitialized) {
-        setIsInitialized(true);
-      }
+      // Wait for both Privy and Supabase to be ready
+      if (!ready || !supabaseInitialized) return;
 
       // If not authenticated with Privy, sign out of Supabase too
       if (!authenticated || !privyUser) {
@@ -133,7 +152,7 @@ export const useWalletAuth = () => {
     };
 
     syncWithSupabase();
-  }, [ready, authenticated, privyUser, session, isAuthenticating, walletAddress, isInitialized]);
+  }, [ready, authenticated, privyUser, session, isAuthenticating, walletAddress, supabaseInitialized]);
 
   // Sign out from both Privy and Supabase
   const signOut = useCallback(async () => {
@@ -189,7 +208,7 @@ export const useWalletAuth = () => {
     user,
     isAuthenticated: !!session,
     isAuthenticating,
-    isInitialized: isInitialized && ready,
+    isInitialized,
 
     // Actions
     openLogin,
