@@ -68,27 +68,44 @@ serve(async (req) => {
     }
 
     // If no profile found by wallet, check by Privy user metadata or email patterns
+    // IMPORTANT: listUsers is paginated; we need to scan pages to reliably find existing accounts.
     if (!userId) {
-      const { data: usersData } = await supabaseAdmin.auth.admin.listUsers();
-      
       // Build possible email patterns (both old format with colons and new sanitized format)
       const oldFormatEmail = `${privy_user_id}@privy.vyve.app`;
-      
-      if (usersData?.users) {
+
+      for (let page = 1; page <= 10 && !userId; page++) {
+        const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage: 1000,
+        });
+
+        if (listError) {
+          console.error("List users error:", listError);
+          break;
+        }
+
+        const users = usersData?.users ?? [];
+        if (users.length === 0) break;
+
         // Look for user with matching Privy ID in metadata or any known email pattern
-        const existingUser = usersData.users.find(u => 
-          u.user_metadata?.privy_user_id === privy_user_id ||
-          u.email === userEmail ||
-          u.email === generatedEmail ||
-          u.email === oldFormatEmail ||
-          (u.email && u.email.includes(sanitizedPrivyId))
+        const existingUser = users.find(
+          (u) =>
+            u.user_metadata?.privy_user_id === privy_user_id ||
+            u.email === userEmail ||
+            u.email === generatedEmail ||
+            u.email === oldFormatEmail ||
+            (u.email && u.email.includes(sanitizedPrivyId))
         );
-        
+
         if (existingUser) {
           userId = existingUser.id;
           existingUserEmail = existingUser.email || null;
           console.log(`Found existing user by Privy ID or email: ${existingUserEmail}`);
+          break;
         }
+
+        // If this page is not full, there's nothing more to scan.
+        if (users.length < 1000) break;
       }
     }
 
@@ -101,24 +118,81 @@ serve(async (req) => {
     if (!userId) {
       console.log(`Creating new user for Privy ID: ${privy_user_id}`);
 
-      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email: userEmail,
-        email_confirm: true,
-        user_metadata: {
-          privy_user_id,
-          wallet_address: normalizedWallet,
-        },
-      });
+      let createdUserId: string | null = null;
+      let lastCreateError: any = null;
 
-      if (createError || !newUser?.user) {
-        console.error("Create user error:", createError);
-        return new Response(
-          JSON.stringify({ error: "Failed to create account" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: userEmail,
+          email_confirm: true,
+          user_metadata: {
+            privy_user_id,
+            wallet_address: normalizedWallet,
+          },
+        });
+
+        if (createError || !newUser?.user) {
+          lastCreateError = createError;
+          console.error(`Create user error (attempt ${attempt + 1}):`, createError);
+
+          if (attempt < 1) {
+            await new Promise((resolve) => setTimeout(resolve, 200));
+          }
+          continue;
+        }
+
+        createdUserId = newUser.user.id;
+        break;
       }
 
-      userId = newUser.user.id;
+      // If creation failed, attempt recovery: the user may already exist but we didn't find them yet.
+      if (!createdUserId) {
+        console.warn("Create user failed; attempting to recover existing user by email patterns");
+        const oldFormatEmail = `${privy_user_id}@privy.vyve.app`;
+
+        for (let page = 1; page <= 10 && !createdUserId; page++) {
+          const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+            page,
+            perPage: 1000,
+          });
+
+          if (listError) {
+            console.error("List users error during recovery:", listError);
+            break;
+          }
+
+          const users = usersData?.users ?? [];
+          if (users.length === 0) break;
+
+          const existingUser = users.find(
+            (u) =>
+              u.user_metadata?.privy_user_id === privy_user_id ||
+              u.email === userEmail ||
+              u.email === generatedEmail ||
+              u.email === oldFormatEmail ||
+              (u.email && u.email.includes(sanitizedPrivyId))
+          );
+
+          if (existingUser) {
+            createdUserId = existingUser.id;
+            existingUserEmail = existingUser.email || null;
+            console.log(`Recovered existing user: ${existingUserEmail}`);
+            break;
+          }
+
+          if (users.length < 1000) break;
+        }
+
+        if (!createdUserId) {
+          // Keep the user-facing error generic; the logs have the real failure reason.
+          return new Response(
+            JSON.stringify({ error: "Failed to create account" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      userId = createdUserId;
 
       // Create profile row if wallet is available
       if (normalizedWallet) {
