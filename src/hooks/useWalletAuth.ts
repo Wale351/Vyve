@@ -83,7 +83,11 @@ export const useWalletAuth = () => {
   }, []);
 
   // Sync Privy user with Supabase when authenticated
+  // Uses a debounce to prevent multiple rapid calls
   useEffect(() => {
+    let cancelled = false;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
     const syncWithSupabase = async () => {
       // Wait for both Privy and Supabase to be ready
       if (!ready || !supabaseInitialized) return;
@@ -126,6 +130,8 @@ export const useWalletAuth = () => {
           },
         });
 
+        if (cancelled) return;
+
         if (error) {
           console.error('Privy auth sync error:', error);
           toast.error('Authentication failed. Please try again.');
@@ -143,16 +149,29 @@ export const useWalletAuth = () => {
           toast.success('Signed in successfully!');
         }
       } catch (error) {
-        console.error('Privy auth error:', error);
-        toast.error('Authentication failed.');
+        if (!cancelled) {
+          console.error('Privy auth error:', error);
+          toast.error('Authentication failed.');
+        }
       } finally {
-        setIsAuthenticating(false);
-        authInProgressRef.current = false;
+        if (!cancelled) {
+          setIsAuthenticating(false);
+          authInProgressRef.current = false;
+        }
       }
     };
 
-    syncWithSupabase();
-  }, [ready, authenticated, privyUser, session, isAuthenticating, walletAddress, supabaseInitialized]);
+    // Debounce the sync call by 300ms to prevent multiple rapid calls
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      syncWithSupabase();
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
+  }, [ready, authenticated, privyUser?.id, session?.user?.id, isAuthenticating, walletAddress, supabaseInitialized]);
 
   // Sign out from both Privy and Supabase
   const signOut = useCallback(async () => {
