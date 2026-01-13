@@ -2,7 +2,7 @@ import { baseSepolia } from 'viem/chains';
 import type { PrivyClientConfig } from '@privy-io/react-auth';
 
 // Privy configuration
-export const privyAppId = 'cm9tklmq900iyl70feyb0e99j';
+export const privyAppId = 'cmk905mdl02krl10d4zdowbko';
 
 export const privyConfig: PrivyClientConfig = {
   // Appearance
