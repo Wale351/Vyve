@@ -36,7 +36,9 @@ serve(async (req) => {
     
     // Build a unique email for this Privy user
     // Use their actual email if provided, otherwise generate one from Privy ID
-    const userEmail = email || `${privy_user_id}@privy.vyve.app`;
+    // Sanitize the Privy ID to create a valid email (remove colons, replace with dashes)
+    const sanitizedPrivyId = privy_user_id.replace(/:/g, '-').replace(/[^a-zA-Z0-9-_.]/g, '');
+    const userEmail = email || `${sanitizedPrivyId}@privy.vyve.app`;
 
     console.log(`Authenticating Privy user: ${privy_user_id}, wallet: ${normalizedWallet || 'none'}`);
 
