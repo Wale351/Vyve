@@ -1,11 +1,23 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as encodeHex } from "https://deno.land/std@0.168.0/encoding/hex.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+// Generate a deterministic password from Privy user ID and a secret
+async function generateDeterministicPassword(privyUserId: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(privyUserId + secret);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = new Uint8Array(hashBuffer);
+  // encode returns Uint8Array, convert to string
+  const hexBytes = encodeHex(hashArray);
+  return new TextDecoder().decode(hexBytes);
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -181,54 +193,39 @@ serve(async (req) => {
 
     console.log(`Using email for session: ${userEmail}`);
 
-    // Create session using magic link (token is returned, no email is sent)
-    let sessionData = null;
-    let lastError = null;
+    // Generate a deterministic password based on Privy user ID + a secret
+    // This allows reliable signInWithPassword without sending emails
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const deterministicPassword = await generateDeterministicPassword(privy_user_id, serviceKey);
 
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email: userEmail,
-      });
+    // Ensure the user has this password set
+    const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(userId as string, {
+      password: deterministicPassword,
+    });
 
-      const hashedToken = linkData?.properties?.hashed_token;
-      const emailOtp = linkData?.properties?.email_otp;
-
-      if (linkError || (!hashedToken && !emailOtp)) {
-        console.error(`Generate link error (attempt ${attempt + 1}):`, linkError);
-        lastError = linkError;
-        continue;
-      }
-
-      // Prefer hashed_token flow; fall back to email_otp if necessary.
-      const verifyParams: any = hashedToken
-        ? { token_hash: hashedToken, type: "email" }
-        : { email: userEmail, token: emailOtp, type: "magiclink" };
-
-      const { data, error: sessionError } = await supabaseAuth.auth.verifyOtp(verifyParams);
-
-      if (sessionError) {
-        console.error(`Verify OTP error (attempt ${attempt + 1}):`, sessionError);
-        lastError = sessionError;
-        if (attempt < 2) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-        continue;
-      }
-
-      if (data?.session) {
-        sessionData = data;
-        break;
-      }
+    if (passwordError) {
+      console.error("Update password error:", passwordError);
+      return new Response(
+        JSON.stringify({ error: "Failed to prepare authentication" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    if (!sessionData?.session) {
-      console.error("Failed to create session after retries:", lastError);
+    // Sign in with the deterministic password
+    const { data: sessionData, error: signInError } = await supabaseAuth.auth.signInWithPassword({
+      email: userEmail,
+      password: deterministicPassword,
+    });
+
+    if (signInError || !sessionData?.session) {
+      console.error("Sign in error:", signInError);
       return new Response(
         JSON.stringify({ error: "Failed to create session" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log(`Session created for Privy user: ${privy_user_id}`);
 
     console.log(`Session created for Privy user: ${privy_user_id}`);
 
