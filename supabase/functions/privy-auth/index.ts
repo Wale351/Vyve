@@ -67,22 +67,27 @@ serve(async (req) => {
       }
     }
 
-    // If no profile found by wallet, check by Privy user metadata
+    // If no profile found by wallet, check by Privy user metadata or email patterns
     if (!userId) {
       const { data: usersData } = await supabaseAdmin.auth.admin.listUsers();
       
+      // Build possible email patterns (both old format with colons and new sanitized format)
+      const oldFormatEmail = `${privy_user_id}@privy.vyve.app`;
+      
       if (usersData?.users) {
-        // Look for user with matching Privy ID in metadata or email
+        // Look for user with matching Privy ID in metadata or any known email pattern
         const existingUser = usersData.users.find(u => 
           u.user_metadata?.privy_user_id === privy_user_id ||
           u.email === userEmail ||
-          u.email === generatedEmail
+          u.email === generatedEmail ||
+          u.email === oldFormatEmail ||
+          (u.email && u.email.includes(sanitizedPrivyId))
         );
         
         if (existingUser) {
           userId = existingUser.id;
           existingUserEmail = existingUser.email || null;
-          console.log(`Found existing user by Privy ID or email`);
+          console.log(`Found existing user by Privy ID or email: ${existingUserEmail}`);
         }
       }
     }
