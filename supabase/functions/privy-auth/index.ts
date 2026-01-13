@@ -1,23 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { encode as encodeHex } from "https://deno.land/std@0.168.0/encoding/hex.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-// Generate a deterministic password from Privy user ID and a secret
-async function generateDeterministicPassword(privyUserId: string, secret: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(privyUserId + secret);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = new Uint8Array(hashBuffer);
-  // encode returns Uint8Array, convert to string
-  const hexBytes = encodeHex(hashArray);
-  return new TextDecoder().decode(hexBytes);
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -193,39 +181,66 @@ serve(async (req) => {
 
     console.log(`Using email for session: ${userEmail}`);
 
-    // Generate a deterministic password based on Privy user ID + a secret
-    // This allows reliable signInWithPassword without sending emails
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const deterministicPassword = await generateDeterministicPassword(privy_user_id, serviceKey);
+    // Create a session using an admin-generated magic link (no email is sent)
+    // This relies on the Supabase Auth "Email" provider being enabled.
+    let sessionData: any = null;
+    let lastError: any = null;
 
-    // Ensure the user has this password set
-    const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(userId as string, {
-      password: deterministicPassword,
-    });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: userEmail,
+      });
 
-    if (passwordError) {
-      console.error("Update password error:", passwordError);
-      return new Response(
-        JSON.stringify({ error: "Failed to prepare authentication" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      if (linkError) {
+        lastError = linkError;
+        console.error(`Generate link error (attempt ${attempt + 1}):`, linkError);
+        continue;
+      }
+
+      const hashedToken = linkData?.properties?.hashed_token;
+      const emailOtp = linkData?.properties?.email_otp;
+
+      const verifyArgs: any = hashedToken
+        ? { type: "magiclink", token_hash: hashedToken }
+        : { type: "magiclink", email: userEmail, token: emailOtp };
+
+      const { data, error: verifyError } = await supabaseAuth.auth.verifyOtp(verifyArgs);
+
+      if (verifyError) {
+        lastError = verifyError;
+        console.error(`Verify OTP error (attempt ${attempt + 1}):`, verifyError);
+
+        // This is a project configuration issue: Auth -> Providers -> Email is disabled.
+        if ((verifyError as any)?.code === "email_provider_disabled") {
+          return new Response(
+            JSON.stringify({
+              error:
+                "Supabase Email provider is disabled. Enable Authentication → Providers → Email in your Supabase dashboard.",
+            }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 150));
+        }
+        continue;
+      }
+
+      if (data?.session) {
+        sessionData = data;
+        break;
+      }
     }
 
-    // Sign in with the deterministic password
-    const { data: sessionData, error: signInError } = await supabaseAuth.auth.signInWithPassword({
-      email: userEmail,
-      password: deterministicPassword,
-    });
-
-    if (signInError || !sessionData?.session) {
-      console.error("Sign in error:", signInError);
+    if (!sessionData?.session) {
+      console.error("Failed to create session after retries:", lastError);
       return new Response(
         JSON.stringify({ error: "Failed to create session" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    console.log(`Session created for Privy user: ${privy_user_id}`);
 
     console.log(`Session created for Privy user: ${privy_user_id}`);
 
