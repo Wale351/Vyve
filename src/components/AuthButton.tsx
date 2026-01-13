@@ -1,4 +1,4 @@
-import { ReactNode, forwardRef } from 'react';
+import { ReactNode, forwardRef, useState, useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,13 +22,36 @@ const AuthButton = forwardRef<HTMLButtonElement, AuthButtonProps>(
     ref
   ) {
     const { ready, authenticated, login } = usePrivy();
+    const [privyTimeout, setPrivyTimeout] = useState(false);
+
+    // Add a timeout so button doesn't stay loading forever if Privy fails
+    useEffect(() => {
+      if (ready) {
+        setPrivyTimeout(false);
+        return;
+      }
+      
+      const timer = setTimeout(() => {
+        console.warn('Privy initialization timeout - proceeding without Privy');
+        setPrivyTimeout(true);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }, [ready]);
 
     const handleClick = () => {
-      if (!ready) return;
+      if (!ready) {
+        // If Privy isn't ready but timeout occurred, try anyway
+        if (privyTimeout) {
+          login();
+        }
+        return;
+      }
       login();
     };
 
-    if (!ready) {
+    // Show loading only briefly, then show button (clickable after timeout)
+    if (!ready && !privyTimeout) {
       return (
         <Button 
           ref={ref}
