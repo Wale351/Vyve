@@ -38,11 +38,13 @@ serve(async (req) => {
     // Use their actual email if provided, otherwise generate one from Privy ID
     // Sanitize the Privy ID to create a valid email (remove colons, replace with dashes)
     const sanitizedPrivyId = privy_user_id.replace(/:/g, '-').replace(/[^a-zA-Z0-9-_.]/g, '');
-    const userEmail = email || `${sanitizedPrivyId}@privy.vyve.app`;
+    const generatedEmail = `${sanitizedPrivyId}@privy.vyve.app`;
+    let userEmail = email || generatedEmail;
 
     console.log(`Authenticating Privy user: ${privy_user_id}, wallet: ${normalizedWallet || 'none'}`);
 
     let userId: string | null = null;
+    let existingUserEmail: string | null = null;
 
     // First, check if a profile already exists for this wallet
     if (normalizedWallet) {
@@ -55,6 +57,13 @@ serve(async (req) => {
       if (existingProfile) {
         userId = existingProfile.id;
         console.log(`Found existing profile by wallet: ${normalizedWallet}`);
+        
+        // Get the user's actual email from auth.users
+        const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId as string);
+        if (userData?.user?.email) {
+          existingUserEmail = userData.user.email;
+          console.log(`Found existing user email: ${existingUserEmail}`);
+        }
       }
     }
 
@@ -63,17 +72,24 @@ serve(async (req) => {
       const { data: usersData } = await supabaseAdmin.auth.admin.listUsers();
       
       if (usersData?.users) {
-        // Look for user with matching Privy ID in metadata
+        // Look for user with matching Privy ID in metadata or email
         const existingUser = usersData.users.find(u => 
           u.user_metadata?.privy_user_id === privy_user_id ||
-          u.email === userEmail
+          u.email === userEmail ||
+          u.email === generatedEmail
         );
         
         if (existingUser) {
           userId = existingUser.id;
+          existingUserEmail = existingUser.email || null;
           console.log(`Found existing user by Privy ID or email`);
         }
       }
+    }
+
+    // Use the existing email if found, otherwise use the new generated one
+    if (existingUserEmail) {
+      userEmail = existingUserEmail;
     }
 
     // If still no user, create a new one
@@ -120,7 +136,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`User ready: ${userId}`);
+    console.log(`User ready: ${userId}, using email: ${userEmail}`);
 
     // Create session using recovery link
     let sessionData = null;
