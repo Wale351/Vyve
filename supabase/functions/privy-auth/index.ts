@@ -136,37 +136,77 @@ serve(async (req) => {
       }
     }
 
-    console.log(`User ready: ${userId}, using email: ${userEmail}`);
+    console.log(`User ready: ${userId}, initial email: ${userEmail}`);
 
-    // Create session using recovery link
+    // Ensure the auth user has a valid email that exists in Supabase Auth
+    // (required for generateLink -> verifyOtp impersonation flow)
+    if (userId) {
+      const { data: userById, error: userByIdError } = await supabaseAdmin.auth.admin.getUserById(userId as string);
+
+      if (userByIdError || !userById?.user) {
+        console.error("Auth user lookup failed:", userByIdError);
+        return new Response(
+          JSON.stringify({ error: "Failed to find auth user" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const currentEmail = userById.user.email;
+
+      // If the stored email is missing/invalid (e.g. old did:privy:* format), set a deterministic valid email.
+      if (!currentEmail || currentEmail.includes(":")) {
+        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId as string, {
+          email: generatedEmail,
+          email_confirm: true,
+        });
+
+        if (updateError) {
+          console.error("Update user email error:", updateError);
+          return new Response(
+            JSON.stringify({ error: "Failed to update user email" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        userEmail = generatedEmail;
+      } else {
+        userEmail = currentEmail;
+      }
+    }
+
+    console.log(`Using email for session: ${userEmail}`);
+
+    // Create session using magic link (token is returned, no email is sent)
     let sessionData = null;
     let lastError = null;
-    
+
     for (let attempt = 0; attempt < 3; attempt++) {
       const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-        type: "recovery",
+        type: "magiclink",
         email: userEmail,
       });
 
+      const hashedToken = linkData?.properties?.hashed_token;
       const emailOtp = linkData?.properties?.email_otp;
 
-      if (linkError || !emailOtp) {
+      if (linkError || (!hashedToken && !emailOtp)) {
         console.error(`Generate link error (attempt ${attempt + 1}):`, linkError);
         lastError = linkError;
         continue;
       }
 
-      const { data, error: sessionError } = await supabaseAuth.auth.verifyOtp({
-        email: userEmail,
-        token: emailOtp,
-        type: "recovery",
-      });
+      // Prefer hashed_token flow; fall back to email_otp if necessary.
+      const verifyParams: any = hashedToken
+        ? { token_hash: hashedToken, type: "email" }
+        : { email: userEmail, token: emailOtp, type: "magiclink" };
+
+      const { data, error: sessionError } = await supabaseAuth.auth.verifyOtp(verifyParams);
 
       if (sessionError) {
         console.error(`Verify OTP error (attempt ${attempt + 1}):`, sessionError);
         lastError = sessionError;
         if (attempt < 2) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
         continue;
       }
