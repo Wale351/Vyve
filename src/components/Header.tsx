@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -11,12 +12,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Radio, User, Play, LogOut, Gamepad2, Settings, ChevronDown, Bell, Heart, Coins, BarChart3, Search, ShieldCheck } from 'lucide-react';
+import { Radio, User, Play, LogOut, Gamepad2, Home, Settings, ChevronDown, Bell, Heart, Coins, BarChart3, Search } from 'lucide-react';
+import { useState as useSearchState } from 'react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
 import GlobalSearch from '@/components/GlobalSearch';
 import MobileSearch from '@/components/MobileSearch';
-import AuthButton from '@/components/AuthButton';
 import { useNotifications, useMarkNotificationsRead } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -51,7 +52,6 @@ const Header = () => {
     }
   }, [notificationsOpen, notifications]);
   const isStreamer = role === 'streamer' || role === 'admin';
-  const isAdmin = role === 'admin';
 
   const navItems = [
     { path: '/games', label: 'Activities', icon: Gamepad2, show: true },
@@ -236,15 +236,7 @@ const Header = () => {
                         Analytics
                       </Link>
                     </DropdownMenuItem>
-                    </>
-                )}
-                {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin" className="cursor-pointer">
-                      <ShieldCheck className="mr-2 h-4 w-4" />
-                      Admin
-                    </Link>
-                  </DropdownMenuItem>
+                  </>
                 )}
                 <DropdownMenuItem asChild>
                   <Link to="/settings" className="cursor-pointer">
@@ -255,15 +247,10 @@ const Header = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
+                  Disconnect
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
-
-          {/* Sign In Button for unauthenticated users */}
-          {!isAuthenticated && (
-            <AuthButton />
           )}
         </div>
       </div>

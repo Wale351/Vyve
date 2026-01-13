@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { Play, Zap, Shield, Users, TrendingUp, Sparkles } from 'lucide-react';
-import AuthButton from '@/components/AuthButton';
+import WalletConnectButton from '@/components/WalletConnectButton';
 import FeaturedGamesCarousel from '@/components/FeaturedGamesCarousel';
 
 const Landing = forwardRef<HTMLDivElement>(function Landing(_props, ref) {
@@ -16,9 +16,9 @@ const Landing = forwardRef<HTMLDivElement>(function Landing(_props, ref) {
             <span className="font-display text-xl font-bold">Vyve</span>
           </div>
 
-          <AuthButton variant="premium" size="sm" className="gap-2">
-            Sign In
-          </AuthButton>
+          <WalletConnectButton variant="premium" size="sm" className="gap-2">
+            Connect Wallet
+          </WalletConnectButton>
         </div>
       </header>
 
@@ -65,10 +65,10 @@ const Landing = forwardRef<HTMLDivElement>(function Landing(_props, ref) {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in"
               style={{ animationDelay: '300ms' }}
             >
-              <AuthButton variant="premium" size="lg" className="gap-2 text-lg px-8 py-6">
+              <WalletConnectButton variant="premium" size="lg" className="gap-2 text-lg px-8 py-6">
                 <Play className="h-5 w-5" />
                 Get Started
-              </AuthButton>
+              </WalletConnectButton>
             </div>
           </div>
         </div>

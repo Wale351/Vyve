@@ -1,63 +1,70 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
+import { useAccountModal, useConnectModal } from '@rainbow-me/rainbowkit';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
-/**
- * Custom hook for Privy wallet authentication integrated with Supabase.
- * Handles login/logout, session management, and wallet connectivity.
- */
+type SharedWalletAuthState = {
+  authenticatedAddress: string | null;
+  authAttemptInProgress: boolean;
+  suppressAuthUntil: number; // epoch ms
+  lastAuthAttemptAt: number; // epoch ms
+};
+
+const getSharedState = (): SharedWalletAuthState => {
+  const g = globalThis as unknown as { __vyve_wallet_auth__?: SharedWalletAuthState };
+  if (!g.__vyve_wallet_auth__) {
+    g.__vyve_wallet_auth__ = {
+      authenticatedAddress: null,
+      authAttemptInProgress: false,
+      suppressAuthUntil: 0,
+      lastAuthAttemptAt: 0,
+    };
+  }
+  return g.__vyve_wallet_auth__;
+};
+
+// Note: We don't aggressively clear localStorage anymore as it corrupts wagmi's internal state.
+// Instead, we rely on wagmi's disconnect() and the suppressAuthUntil timestamp to prevent re-auth.
+
 export const useWalletAuth = () => {
-  const { 
-    ready, 
-    authenticated, 
-    user: privyUser, 
-    login, 
-    logout: privyLogout,
-    linkWallet,
-    unlinkWallet,
-  } = usePrivy();
-  const { wallets } = useWallets();
-  
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { openConnectModal } = useConnectModal();
+  const { openAccountModal } = useAccountModal();
+  const { signMessageAsync } = useSignMessage();
+
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [supabaseInitialized, setSupabaseInitialized] = useState(false);
-  
-  // Track if we've already synced this Privy user with Supabase
-  const syncedPrivyUserRef = useRef<string | null>(null);
-  const authInProgressRef = useRef(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Get the primary wallet address (first linked wallet, if any)
-  const primaryWallet = wallets.find(w => w.walletClientType !== 'privy');
-  const embeddedWallet = wallets.find(w => w.walletClientType === 'privy');
-  const activeWallet = primaryWallet || embeddedWallet;
-  const walletAddress = activeWallet?.address?.toLowerCase();
+  // Local refs (per-hook-instance) + shared state (cross-component) to avoid multiple signature prompts.
+  const authenticatedAddressRef = useRef<string | null>(null);
+  const authAttemptInProgressRef = useRef(false);
 
-  // Computed: fully initialized when both Privy and Supabase are ready
-  // Use a more lenient check - consider initialized if Supabase is ready
-  // and either Privy is ready OR we've waited long enough
-  const [privyTimeout, setPrivyTimeout] = useState(false);
-  
-  // Add a timeout for Privy initialization (3 seconds max)
+  const shared = getSharedState();
+
+  const walletAddress = address;
+  const walletAddressLower = walletAddress?.toLowerCase();
+
+  // Keep an up-to-date reference to signMessageAsync without retriggering auth effects.
+  const signMessageAsyncRef = useRef(signMessageAsync);
   useEffect(() => {
-    if (ready) {
-      setPrivyTimeout(false);
-      return;
-    }
-    
-    const timer = setTimeout(() => {
-      console.warn('Privy initialization timeout - proceeding without Privy');
-      setPrivyTimeout(true);
-    }, 3000);
-    
-    return () => clearTimeout(timer);
-  }, [ready]);
+    signMessageAsyncRef.current = signMessageAsync;
+  }, [signMessageAsync]);
 
-  // Consider initialized if Supabase is ready - don't block on Privy
-  // This allows landing page to show immediately for unauthenticated users
-  const isInitialized = supabaseInitialized;
+  // Keep an up-to-date reference to RainbowKit modal openers (avoid stale closures).
+  const openConnectModalRef = useRef(openConnectModal);
+  useEffect(() => {
+    openConnectModalRef.current = openConnectModal;
+  }, [openConnectModal]);
+
+  const openAccountModalRef = useRef(openAccountModal);
+  useEffect(() => {
+    openAccountModalRef.current = openAccountModal;
+  }, [openAccountModal]);
 
   // Listen for Supabase auth state changes
   useEffect(() => {
@@ -66,9 +73,17 @@ export const useWalletAuth = () => {
     } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      
+
+      // If we got a session, mark this address as authenticated
+      if (currentSession && walletAddressLower) {
+        authenticatedAddressRef.current = walletAddressLower;
+        shared.authenticatedAddress = walletAddressLower;
+      }
+
+      // If signed out, reset the authenticated address
       if (event === 'SIGNED_OUT') {
-        syncedPrivyUserRef.current = null;
+        authenticatedAddressRef.current = null;
+        shared.authenticatedAddress = null;
       }
     });
 
@@ -76,151 +91,173 @@ export const useWalletAuth = () => {
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
-      setSupabaseInitialized(true);
+
+      // If we have an existing session and wallet is connected, mark as authenticated
+      if (existingSession && walletAddressLower) {
+        authenticatedAddressRef.current = walletAddressLower;
+        shared.authenticatedAddress = walletAddressLower;
+      }
+
+      setIsInitialized(true);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+    // Intentionally depend on walletAddressLower so switching wallets updates the authenticated marker.
+  }, [walletAddressLower, shared]);
 
-  // Sync Privy user with Supabase when authenticated
-  // Uses a debounce to prevent multiple rapid calls
+  // Auto-authenticate with Supabase when wallet connects
   useEffect(() => {
-    let cancelled = false;
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const authenticateWithSupabase = async () => {
+      // Wait for initialization
+      if (!isInitialized) return;
 
-    const syncWithSupabase = async () => {
-      // Wait for both Privy and Supabase to be ready
-      if (!ready || !supabaseInitialized) return;
+      // Check all conditions
+      if (!isConnected || !walletAddress || !walletAddressLower) return;
 
-      // If not authenticated with Privy, sign out of Supabase too
-      if (!authenticated || !privyUser) {
-        if (session) {
-          await supabase.auth.signOut();
-        }
-        return;
-      }
+      // Don't auto-auth right after a manual sign-out/disconnect.
+      if (Date.now() < shared.suppressAuthUntil) return;
 
-      // Already synced this user
-      if (syncedPrivyUserRef.current === privyUser.id) return;
+      // Already have a session
+      if (session) return;
 
-      // Already in progress
-      if (authInProgressRef.current || isAuthenticating) return;
+      // Already authenticated this address (shared across the whole app)
+      if (shared.authenticatedAddress === walletAddressLower) return;
 
-      // Already have a valid session
-      if (session?.user) {
-        syncedPrivyUserRef.current = privyUser.id;
-        return;
-      }
+      // Already authenticated this address (local)
+      if (authenticatedAddressRef.current === walletAddressLower) return;
 
-      // Start auth process
-      authInProgressRef.current = true;
+      // Already attempting authentication (shared + local)
+      if (shared.authAttemptInProgress || authAttemptInProgressRef.current || isAuthenticating) return;
+
+      // Basic throttle to avoid back-to-back prompts if multiple components mount at once.
+      if (Date.now() - shared.lastAuthAttemptAt < 1500) return;
+
+      // Mark that we're starting authentication
+      shared.authAttemptInProgress = true;
+      shared.lastAuthAttemptAt = Date.now();
+      authAttemptInProgressRef.current = true;
       setIsAuthenticating(true);
 
       try {
-        // Get the wallet address or email from Privy user
-        const privyWalletAddress = privyUser.wallet?.address?.toLowerCase();
-        const privyEmail = privyUser.email?.address;
+        // Generate a cryptographically secure nonce
+        const array = new Uint8Array(16);
+        crypto.getRandomValues(array);
+        const nonce = Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+        const timestamp = Date.now();
 
-        // Call our edge function to sync/create Supabase user
-        const { data, error } = await supabase.functions.invoke('privy-auth', {
+        const message = `Sign in to Vyve\n\nWallet: ${walletAddress}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
+
+        // Request signature from wallet
+        const signature = await signMessageAsyncRef.current({
+          message,
+          account: walletAddress as `0x${string}`,
+        });
+
+        // Send to backend for verification and session creation
+        const { data, error } = await supabase.functions.invoke('wallet-auth', {
           body: {
-            privy_user_id: privyUser.id,
-            wallet_address: privyWalletAddress || walletAddress,
-            email: privyEmail,
+            wallet_address: walletAddress,
+            signature,
+            message,
           },
         });
 
-        if (cancelled) return;
-
         if (error) {
-          console.error('Privy auth sync error:', error);
           toast.error('Authentication failed. Please try again.');
+          // Don't mark as authenticated on error so user can retry
           return;
         }
 
         if (data?.session) {
-          syncedPrivyUserRef.current = privyUser.id;
+          // Mark this address as authenticated BEFORE setting session
+          authenticatedAddressRef.current = walletAddressLower;
+          shared.authenticatedAddress = walletAddressLower;
 
+          // Set the session in Supabase client
           await supabase.auth.setSession({
             access_token: data.session.access_token,
             refresh_token: data.session.refresh_token,
           });
 
-          toast.success('Signed in successfully!');
+          toast.success('Successfully signed in!');
         }
-      } catch (error) {
-        if (!cancelled) {
-          console.error('Privy auth error:', error);
-          toast.error('Authentication failed.');
+      } catch (error: any) {
+        if (error?.message?.includes('User rejected') || error?.message?.includes('cancelled')) {
+          toast.error('Signature rejected');
+          // Prevent immediate re-prompt spam; user can disconnect/reconnect to try again.
+          authenticatedAddressRef.current = walletAddressLower;
+          shared.authenticatedAddress = walletAddressLower;
+          shared.suppressAuthUntil = Date.now() + 10_000;
+        } else {
+          toast.error('Authentication failed. Please try again.');
         }
       } finally {
-        if (!cancelled) {
-          setIsAuthenticating(false);
-          authInProgressRef.current = false;
-        }
+        setIsAuthenticating(false);
+        authAttemptInProgressRef.current = false;
+        shared.authAttemptInProgress = false;
       }
     };
 
-    // Debounce the sync call by 300ms to prevent multiple rapid calls
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      syncWithSupabase();
-    }, 300);
+    authenticateWithSupabase();
+  }, [isConnected, walletAddress, walletAddressLower, session, isInitialized, isAuthenticating, shared]);
 
-    return () => {
-      cancelled = true;
-      if (debounceTimer) clearTimeout(debounceTimer);
-    };
-  }, [ready, authenticated, privyUser?.id, session?.user?.id, isAuthenticating, walletAddress, supabaseInitialized]);
-
-  // Sign out from both Privy and Supabase
+  // Sign out from Supabase and disconnect wallet
   const signOut = useCallback(async () => {
     try {
-      syncedPrivyUserRef.current = null;
-      authInProgressRef.current = false;
-      
+      // Stop auto-auth from immediately re-triggering while we disconnect.
+      shared.suppressAuthUntil = Date.now() + 15_000;
+
+      // Reset markers
+      authenticatedAddressRef.current = null;
+      authAttemptInProgressRef.current = false;
+      shared.authenticatedAddress = null;
+      shared.authAttemptInProgress = false;
+
       await supabase.auth.signOut();
-      await privyLogout();
-      
+
+      // Disconnect the wallet (UI state) - wagmi handles its own cleanup
+      disconnect();
+
       toast.success('Signed out');
-    } catch (error) {
-      console.error('Sign out error:', error);
+    } catch {
       toast.error('Sign out failed');
     }
-  }, [privyLogout]);
+  }, [disconnect, shared]);
 
-  // Open Privy login modal
+  // Open RainbowKit connect/account modal
   const openLogin = useCallback(() => {
-    login();
-  }, [login]);
-
-  // Link an external wallet to the Privy account
-  const handleLinkWallet = useCallback(() => {
-    linkWallet();
-  }, [linkWallet]);
-
-  // Unlink a wallet from the Privy account
-  const handleUnlinkWallet = useCallback(async (address: string) => {
-    try {
-      await unlinkWallet(address);
-      toast.success('Wallet unlinked');
-    } catch (error) {
-      toast.error('Failed to unlink wallet');
+    // If user is already connected, open the account modal (so they can switch/disconnect).
+    if (isConnected) {
+      const openAccount = openAccountModalRef.current;
+      if (openAccount) {
+        openAccount();
+        return;
+      }
     }
-  }, [unlinkWallet]);
+
+    // Reset suppression when user explicitly wants to connect
+    shared.suppressAuthUntil = 0;
+    shared.authenticatedAddress = null;
+    authenticatedAddressRef.current = null;
+
+    const openConnect = openConnectModalRef.current;
+    if (openConnect) {
+      openConnect();
+      return;
+    }
+
+    // RainbowKit modal can be briefly undefined during provider init.
+    toast('Wallet modal is still loading. Try again in a moment.');
+    setTimeout(() => {
+      openConnectModalRef.current?.();
+    }, 150);
+  }, [isConnected, shared]);
 
   return {
-    // Privy state
-    ready,
-    authenticated,
-    privyUser,
-    wallets,
-    
     // Wallet state
+    ready: true,
+    authenticated: isConnected,
     walletAddress,
-    activeWallet,
-    primaryWallet,
-    embeddedWallet,
 
     // Supabase state
     session,
@@ -232,7 +269,5 @@ export const useWalletAuth = () => {
     // Actions
     openLogin,
     signOut,
-    linkWallet: handleLinkWallet,
-    unlinkWallet: handleUnlinkWallet,
   };
 };

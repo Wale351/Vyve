@@ -23,11 +23,6 @@ import {
   Palette,
   Lock,
   BellRing,
-  Wallet,
-  Link2,
-  Unlink,
-  Copy,
-  Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -281,9 +276,6 @@ const Settings = () => {
             </CardContent>
           </Card>
 
-          {/* Wallet Management Section */}
-          <WalletCard />
-
           {/* Notifications Section */}
           <NotificationsCard />
 
@@ -386,102 +378,6 @@ const NotificationsCard = () => {
             Notifications are blocked. Please enable them in your browser settings.
           </p>
         )}
-      </CardContent>
-    </Card>
-  );
-};
-
-// Separate component for wallet management
-const WalletCard = () => {
-  const { walletAddress, wallets, linkWallet, unlinkWallet } = useWalletAuth();
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    if (walletAddress) {
-      await navigator.clipboard.writeText(walletAddress);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.success('Wallet address copied!');
-    }
-  };
-
-  const handleUnlink = async (address: string) => {
-    if (wallets.length <= 1) {
-      toast.error('Cannot unlink your only wallet');
-      return;
-    }
-    await unlinkWallet(address);
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wallet className="h-5 w-5" />
-          Wallet
-        </CardTitle>
-        <CardDescription>
-          Manage your connected wallets (private to you only)
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {wallets.length > 0 ? (
-          <div className="space-y-3">
-            {wallets.map((wallet) => (
-              <div 
-                key={wallet.address} 
-                className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50"
-              >
-                <div className="flex items-center gap-3">
-                  <Wallet className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="font-mono text-sm">
-                      {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {wallet.walletClientType === 'privy' ? 'Embedded Wallet' : wallet.walletClientType}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={handleCopy}
-                  >
-                    {copied ? (
-                      <Check className="h-4 w-4 text-success" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                  {wallets.length > 1 && wallet.walletClientType !== 'privy' && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleUnlink(wallet.address)}
-                    >
-                      <Unlink className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">No wallets connected</p>
-        )}
-        
-        <Button
-          variant="outline"
-          className="w-full gap-2"
-          onClick={linkWallet}
-        >
-          <Link2 className="h-4 w-4" />
-          Link Another Wallet
-        </Button>
       </CardContent>
     </Card>
   );

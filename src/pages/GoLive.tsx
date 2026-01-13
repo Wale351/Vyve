@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import ProfileGate from '@/components/ProfileGate';
-import AuthButton from '@/components/AuthButton';
+import WalletConnectButton from '@/components/WalletConnectButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,7 +32,7 @@ interface StreamData {
 
 const GoLive = () => {
   const navigate = useNavigate();
-  const { authenticated, isAuthenticated, isAuthenticating, openLogin } = useWalletAuth();
+  const { authenticated, isAuthenticated, isAuthenticating } = useWalletAuth();
   const { data: games = [] } = useGames();
   const [title, setTitle] = useState('');
   const [gameId, setGameId] = useState('');
@@ -173,9 +173,9 @@ const GoLive = () => {
             <LogIn className="h-10 w-10 md:h-14 md:w-14 text-muted-foreground mx-auto mb-4 md:mb-6" />
             <h1 className="font-display text-xl md:text-2xl font-bold mb-2 md:mb-3">Sign In Required</h1>
             <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
-              Sign in to start streaming.
+              Connect your wallet to start streaming.
             </p>
-            <AuthButton 
+            <WalletConnectButton 
               variant="premium" 
               size="lg"
               disabled={isAuthenticating}
@@ -186,8 +186,8 @@ const GoLive = () => {
               ) : (
                 <LogIn className="h-4 w-4 md:h-5 md:w-5" />
               )}
-              {isAuthenticating ? 'Signing In...' : 'Sign In'}
-            </AuthButton>
+              {isAuthenticating ? 'Signing In...' : 'Connect Wallet'}
+            </WalletConnectButton>
           </div>
         </div>
       </div>
