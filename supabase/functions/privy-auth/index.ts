@@ -46,18 +46,38 @@ serve(async (req) => {
     let userId: string | null = null;
     let existingUserEmail: string | null = null;
 
-    // First, check if a profile already exists for this wallet
+    // First, check if a profile already exists for this wallet (case-insensitive).
+    // IMPORTANT: historically we stored wallet_address with mixed-case checksums, so equality checks are unreliable.
+    // We prefer the most "complete" profile (username + avatar_url) to avoid picking an empty duplicate row.
     if (normalizedWallet) {
-      const { data: existingProfile } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .eq("wallet_address", normalizedWallet)
-        .maybeSingle();
+      const findProfileByWallet = async (opts: { requireUsername?: boolean; requireAvatar?: boolean }) => {
+        let q = supabaseAdmin
+          .from("profiles")
+          .select("id, username, avatar_url, updated_at")
+          .ilike("wallet_address", normalizedWallet)
+          .order("updated_at", { ascending: false })
+          .limit(1);
 
-      if (existingProfile) {
+        if (opts.requireUsername) q = q.not("username", "is", null);
+        if (opts.requireAvatar) q = q.not("avatar_url", "is", null);
+
+        return q.maybeSingle();
+      };
+
+      const { data: profileComplete } = await findProfileByWallet({ requireUsername: true, requireAvatar: true });
+      const { data: profileWithUsername } = profileComplete
+        ? { data: profileComplete }
+        : await findProfileByWallet({ requireUsername: true });
+      const { data: anyProfile } = profileWithUsername
+        ? { data: profileWithUsername }
+        : await findProfileByWallet({});
+
+      const existingProfile = anyProfile;
+
+      if (existingProfile?.id) {
         userId = existingProfile.id;
-        console.log(`Found existing profile by wallet: ${normalizedWallet}`);
-        
+        console.log(`Found existing profile by wallet (case-insensitive): ${normalizedWallet}`);
+
         // Get the user's actual email from auth.users
         const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId as string);
         if (userData?.user?.email) {
@@ -204,14 +224,13 @@ serve(async (req) => {
           }, { onConflict: "id" });
       }
     } else {
-      // Update existing user's metadata and profile wallet if needed
+      // Update existing user's profile wallet if needed (normalize to lowercase).
+      // This avoids future mismatches and prevents creating duplicate profiles for the same wallet.
       if (normalizedWallet) {
-        // Update profile wallet address if not set
         await supabaseAdmin
           .from("profiles")
           .update({ wallet_address: normalizedWallet })
-          .eq("id", userId)
-          .is("wallet_address", null);
+          .eq("id", userId);
       }
     }
 
@@ -231,25 +250,44 @@ serve(async (req) => {
       }
 
       const currentEmail = userById.user.email;
+      const existingMeta = (userById.user.user_metadata ?? {}) as Record<string, any>;
+      const existingMetaWallet = typeof existingMeta.wallet_address === "string"
+        ? existingMeta.wallet_address.toLowerCase()
+        : null;
 
-      // If the stored email is missing/invalid (e.g. old did:privy:* format), set a deterministic valid email.
-      if (!currentEmail || currentEmail.includes(":")) {
-        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId as string, {
-          email: generatedEmail,
-          email_confirm: true,
-        });
+      const needsMetaUpdate =
+        existingMeta.privy_user_id !== privy_user_id ||
+        (normalizedWallet && existingMetaWallet !== normalizedWallet);
+
+      const needsEmailUpdate = !currentEmail || currentEmail.includes(":");
+
+      if (needsMetaUpdate || needsEmailUpdate) {
+        const nextMeta = needsMetaUpdate
+          ? {
+              ...existingMeta,
+              privy_user_id,
+              ...(normalizedWallet ? { wallet_address: normalizedWallet } : {}),
+            }
+          : undefined;
+
+        const updatePayload: any = {
+          ...(nextMeta ? { user_metadata: nextMeta } : {}),
+          ...(needsEmailUpdate ? { email: generatedEmail, email_confirm: true } : {}),
+        };
+
+        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId as string, updatePayload);
 
         if (updateError) {
-          console.error("Update user email error:", updateError);
+          console.error("Update user error:", updateError);
           return new Response(
-            JSON.stringify({ error: "Failed to update user email" }),
+            JSON.stringify({ error: needsEmailUpdate ? "Failed to update user email" : "Failed to update user metadata" }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        userEmail = generatedEmail;
+        userEmail = needsEmailUpdate ? generatedEmail : (currentEmail as string);
       } else {
-        userEmail = currentEmail;
+        userEmail = currentEmail as string;
       }
     }
 
