@@ -1,93 +1,87 @@
 import { motion } from 'framer-motion';
-import { Play, Github, Twitter, MessageCircle, ExternalLink } from 'lucide-react';
+import { Play } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const links = {
-  product: [
+const footerLinks = {
+  Platform: [
     { label: 'Features', href: '#features' },
     { label: 'For Creators', href: '#creators' },
-    { label: 'Roadmap', href: '#' },
+    { label: 'Games', href: '/games', isRoute: true },
   ],
-  resources: [
+  Resources: [
     { label: 'Documentation', href: '#' },
-    { label: 'API', href: '#' },
     { label: 'Get Testnet ETH', href: 'https://www.alchemy.com/faucets/base-sepolia', external: true },
   ],
-  community: [
-    { label: 'Discord', href: 'https://discord.gg/lovable-dev', external: true },
-    { label: 'Twitter', href: '#' },
-    { label: 'Blog', href: '#' },
+  Legal: [
+    { label: 'Privacy', href: '#' },
+    { label: 'Terms', href: '#' },
   ],
 };
 
-const socials = [
-  { icon: Twitter, href: '#', label: 'Twitter' },
-  { icon: MessageCircle, href: 'https://discord.gg/lovable-dev', label: 'Discord' },
-  { icon: Github, href: '#', label: 'GitHub' },
-];
-
 export default function LandingFooter() {
   return (
-    <footer className="relative border-t border-border/30">
-      {/* Gradient top border */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-
+    <footer className="relative border-t border-border/30 bg-card/50">
       <div className="container mx-auto px-4 py-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <motion.div 
-              className="flex items-center gap-3 mb-6"
-              whileHover={{ scale: 1.02 }}
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Play className="h-5 w-5 text-primary-foreground" fill="currentColor" />
+            <Link to="/" className="flex items-center gap-2.5 mb-6">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <Play className="h-4 w-4 text-primary-foreground" fill="currentColor" />
               </div>
-              <span className="font-varsity text-3xl tracking-wider">VYVE</span>
-            </motion.div>
+              <span className="font-varsity text-2xl tracking-wider">VYVE</span>
+            </Link>
             
-            <p className="text-muted-foreground mb-6 max-w-sm">
-              The decentralized streaming platform where creators truly own their content and audience.
+            <p className="text-muted-foreground text-sm max-w-xs mb-6 leading-relaxed">
+              Decentralized streaming for web3 gaming. Own your content, earn without limits.
             </p>
 
             {/* Social links */}
-            <div className="flex items-center gap-4">
-              {socials.map((social) => (
+            <div className="flex items-center gap-3">
+              {['Twitter', 'Discord', 'GitHub'].map((social) => (
                 <motion.a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.1, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-10 h-10 rounded-xl bg-muted hover:bg-primary/20 flex items-center justify-center transition-colors"
-                  aria-label={social.label}
+                  key={social}
+                  href="#"
+                  whileHover={{ y: -2 }}
+                  className="w-9 h-9 rounded-lg bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
                 >
-                  <social.icon className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+                  <span className="text-xs font-medium">{social[0]}</span>
                 </motion.a>
               ))}
             </div>
           </div>
 
           {/* Links */}
-          {Object.entries(links).map(([category, items]) => (
+          {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category}>
-              <h4 className="font-display font-semibold text-sm uppercase tracking-wider mb-4 text-foreground">
+              <h4 className="font-display font-semibold text-xs uppercase tracking-wider mb-4 text-foreground">
                 {category}
               </h4>
               <ul className="space-y-3">
-                {items.map((item) => (
-                  <li key={item.label}>
-                    <a
-                      href={item.href}
-                      target={item.external ? '_blank' : undefined}
-                      rel={item.external ? 'noopener noreferrer' : undefined}
-                      className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 group"
-                    >
-                      {item.label}
-                      {item.external && (
-                        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      )}
-                    </a>
+                {links.map((link) => (
+                  <li key={link.label}>
+                    {link.isRoute ? (
+                      <Link
+                        to={link.href}
+                        className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        target={link.external ? '_blank' : undefined}
+                        rel={link.external ? 'noopener noreferrer' : undefined}
+                        className="text-muted-foreground hover:text-foreground transition-colors text-sm inline-flex items-center gap-1"
+                      >
+                        {link.label}
+                        {link.external && (
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        )}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -98,12 +92,10 @@ export default function LandingFooter() {
         {/* Bottom bar */}
         <div className="pt-8 border-t border-border/30">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© {new Date().getFullYear()} Vyve. Built on Base Sepolia Testnet.</p>
-            <div className="flex items-center gap-6">
-              <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-              <a href="#" className="hover:text-primary transition-colors">Terms</a>
-              <a href="#" className="hover:text-primary transition-colors">Cookies</a>
-            </div>
+            <p>© {new Date().getFullYear()} Vyve. Built on Base Sepolia.</p>
+            <p className="text-xs">
+              Powered by <span className="text-foreground">Livepeer</span> & <span className="text-foreground">Supabase</span>
+            </p>
           </div>
         </div>
       </div>
