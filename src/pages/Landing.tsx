@@ -4,7 +4,7 @@ import HeroSection from '@/components/landing/HeroSection';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import HowItWorksSection from '@/components/landing/HowItWorksSection';
 import CreatorsSection from '@/components/landing/CreatorsSection';
-import CTASection from '@/components/landing/CTASection';
+import FeaturedGamesSection from '@/components/landing/FeaturedGamesSection';
 import LandingFooter from '@/components/landing/LandingFooter';
 
 const Landing = forwardRef<HTMLDivElement>(function Landing(_props, ref) {
@@ -15,7 +15,7 @@ const Landing = forwardRef<HTMLDivElement>(function Landing(_props, ref) {
       <FeaturesSection />
       <HowItWorksSection />
       <CreatorsSection />
-      <CTASection />
+      <FeaturedGamesSection />
       <LandingFooter />
     </div>
   );
