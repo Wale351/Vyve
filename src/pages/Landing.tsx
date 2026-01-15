@@ -1,7 +1,6 @@
 import { forwardRef } from 'react';
 import LandingHeader from '@/components/landing/LandingHeader';
 import HeroSection from '@/components/landing/HeroSection';
-import FeaturedGames from '@/components/landing/FeaturedGames';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import HowItWorksSection from '@/components/landing/HowItWorksSection';
 import CreatorsSection from '@/components/landing/CreatorsSection';
@@ -13,7 +12,6 @@ const Landing = forwardRef<HTMLDivElement>(function Landing(_props, ref) {
     <div ref={ref} className="min-h-screen bg-background overflow-x-hidden">
       <LandingHeader />
       <HeroSection />
-      <FeaturedGames />
       <FeaturesSection />
       <HowItWorksSection />
       <CreatorsSection />
