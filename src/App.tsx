@@ -14,6 +14,8 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Games from "./pages/Games";
 import GameDetail from "./pages/GameDetail";
+import ApplyStreamer from "./pages/ApplyStreamer";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import OnboardingModal from "./components/OnboardingModal";
 
@@ -45,6 +47,8 @@ const App = () => (
               <Route path="/settings" element={<Settings />} />
               <Route path="/games" element={<Games />} />
               <Route path="/games/:slug" element={<GameDetail />} />
+              <Route path="/apply/streamer" element={<ApplyStreamer />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

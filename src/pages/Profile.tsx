@@ -430,20 +430,16 @@ const Profile = () => {
                         </Button>
                         
                         {profile.role === 'viewer' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleRequestStreamer}
-                            disabled={requestStreamer.isPending}
-                            className="gap-2"
-                          >
-                            {requestStreamer.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
+                          <Link to="/apply/streamer">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                            >
                               <Shield className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            )}
-                            Become Streamer
-                          </Button>
+                              Become Streamer
+                            </Button>
+                          </Link>
                         )}
                         
                         {(profile.role === 'streamer' || profile.role === 'admin') && (
