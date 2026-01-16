@@ -118,7 +118,6 @@ const GameCard = ({ game, isActive }: { game: typeof featuredGames[0]; isActive:
 
 export default function FeaturedGamesSection() {
   const ref = useRef<HTMLElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -133,15 +132,15 @@ export default function FeaturedGamesSection() {
     return () => clearInterval(interval);
   }, [isPaused]);
 
-  // Scroll to active game
-  useEffect(() => {
-    if (scrollRef.current) {
-      const cardWidth = 180; // Approximate card width + gap
-      const containerWidth = scrollRef.current.clientWidth;
-      const scrollPosition = (activeIndex * cardWidth) - (containerWidth / 2) + (cardWidth / 2);
-      scrollRef.current.scrollTo({ left: Math.max(0, scrollPosition), behavior: 'smooth' });
+  // Get visible games (3 before, active, 3 after for smooth transitions)
+  const getVisibleGames = () => {
+    const result = [];
+    for (let i = -2; i <= 2; i++) {
+      const index = (activeIndex + i + featuredGames.length) % featuredGames.length;
+      result.push({ game: featuredGames[index], offset: i, originalIndex: index });
     }
-  }, [activeIndex]);
+    return result;
+  };
 
   return (
     <section ref={ref} className="py-20 md:py-32 relative overflow-hidden">
@@ -196,7 +195,7 @@ export default function FeaturedGamesSection() {
           </p>
         </motion.div>
 
-        {/* Current game spotlight */}
+        {/* Current game spotlight name */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeIndex}
@@ -212,35 +211,45 @@ export default function FeaturedGamesSection() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Carousel */}
+        {/* Centered Carousel */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.4 }}
           className="relative"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
         >
           {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
           
-          {/* Scrollable container */}
-          <div
-            ref={scrollRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide py-8 px-12 -mx-4 items-center justify-start"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-            onTouchStart={() => setIsPaused(true)}
-            onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
-          >
-            {featuredGames.map((game, index) => (
-              <GameCard 
-                key={game.slug} 
-                game={game} 
-                isActive={index === activeIndex}
-              />
-            ))}
+          {/* Centered flex container */}
+          <div className="flex items-center justify-center gap-3 md:gap-6 py-8 min-h-[280px] md:min-h-[320px]">
+            <AnimatePresence mode="popLayout">
+              {getVisibleGames().map(({ game, offset, originalIndex }) => (
+                <motion.div
+                  key={`${game.slug}-${originalIndex}`}
+                  layout
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ 
+                    opacity: offset === 0 ? 1 : Math.abs(offset) === 1 ? 0.5 : 0.25,
+                    scale: offset === 0 ? 1.15 : Math.abs(offset) === 1 ? 0.85 : 0.7,
+                    x: offset * (offset === 0 ? 0 : 20),
+                    zIndex: offset === 0 ? 10 : 5 - Math.abs(offset),
+                  }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  className="flex-shrink-0 cursor-pointer"
+                  onClick={() => setActiveIndex(originalIndex)}
+                >
+                  <GameCard game={game} isActive={offset === 0} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </motion.div>
 

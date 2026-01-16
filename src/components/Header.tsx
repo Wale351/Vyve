@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Radio, User, Play, LogOut, Gamepad2, Home, Settings, ChevronDown, Bell, Heart, Coins, BarChart3, Search } from 'lucide-react';
+import { Radio, User, Play, LogOut, Gamepad2, Home, Settings, ChevronDown, Bell, Heart, Coins, BarChart3, Search, Shield } from 'lucide-react';
 import { useState as useSearchState } from 'react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
@@ -52,10 +52,12 @@ const Header = () => {
     }
   }, [notificationsOpen, notifications]);
   const isStreamer = role === 'streamer' || role === 'admin';
+  const isAdmin = role === 'admin';
 
   const navItems = [
     { path: '/games', label: 'Activities', icon: Gamepad2, show: true },
     { path: '/analytics', label: 'Analytics', icon: BarChart3, show: isStreamer },
+    { path: '/admin', label: 'Admin', icon: Shield, show: isAdmin },
   ];
 
 
@@ -236,7 +238,15 @@ const Header = () => {
                         Analytics
                       </Link>
                     </DropdownMenuItem>
-                  </>
+                    </>
+                )}
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" className="cursor-pointer">
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin Dashboard
+                    </Link>
+                  </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
                   <Link to="/settings" className="cursor-pointer">
