@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Play, Github, Twitter, MessageCircle, ExternalLink } from 'lucide-react';
+import { Play, Github, Twitter, ExternalLink } from 'lucide-react';
+import { SiDiscord } from 'react-icons/si';
 
 const links = {
   product: [
@@ -21,7 +22,7 @@ const links = {
 
 const socials = [
   { icon: Twitter, href: '#', label: 'Twitter' },
-  { icon: MessageCircle, href: 'https://discord.gg/lovable-dev', label: 'Discord' },
+  { icon: SiDiscord, href: 'https://discord.gg/lovable-dev', label: 'Discord' },
   { icon: Github, href: '#', label: 'GitHub' },
 ];
 
