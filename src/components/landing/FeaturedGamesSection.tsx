@@ -1,6 +1,7 @@
-import { motion, useInView } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { SiDiscord } from 'react-icons/si';
 
 const featuredGames = [
   { 
@@ -55,48 +56,57 @@ const featuredGames = [
   },
 ];
 
-const GameCard = ({ game, index }: { game: typeof featuredGames[0]; index: number }) => {
+const GameCard = ({ game, isActive }: { game: typeof featuredGames[0]; isActive: boolean }) => {
   const [imageError, setImageError] = useState(false);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, duration: 0.5 }}
+      animate={{ 
+        scale: isActive ? 1.1 : 0.85,
+        opacity: isActive ? 1 : 0.4,
+      }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
       className="flex-shrink-0"
     >
       <Link to={`/games/${game.slug}`}>
-        <div className="group relative w-[180px] h-[220px] md:w-[200px] md:h-[240px] rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 hover:scale-105">
+        <div className={`group relative w-[160px] h-[200px] md:w-[180px] md:h-[220px] rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 ${isActive ? 'ring-2 ring-primary shadow-2xl shadow-primary/30' : ''}`}>
           {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-card to-secondary/10 border border-border/50 group-hover:border-primary/50 transition-colors duration-300" />
+          <div className={`absolute inset-0 bg-gradient-to-br from-primary/10 via-card to-secondary/10 border border-border/50 transition-colors duration-300 ${isActive ? 'border-primary/70' : ''}`} />
           
-          {/* Glow effect */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent" />
-            <div className="absolute -inset-1 bg-primary/20 blur-xl -z-10" />
-          </div>
+          {/* Glow effect for active */}
+          {isActive && (
+            <motion.div 
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-transparent to-transparent" />
+              <div className="absolute -inset-2 bg-primary/20 blur-xl -z-10" />
+            </motion.div>
+          )}
           
           {/* Game logo */}
           <div className="absolute inset-0 flex items-center justify-center p-6">
             {imageError ? (
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-primary/20 flex items-center justify-center text-3xl font-bold text-foreground backdrop-blur-sm">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary/20 flex items-center justify-center text-2xl font-bold text-foreground backdrop-blur-sm">
                 {game.name.charAt(0)}
               </div>
             ) : (
               <motion.img
                 src={game.image}
                 alt={game.name}
-                className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-2xl shadow-2xl group-hover:shadow-primary/30 transition-all duration-500"
+                className={`w-16 h-16 md:w-20 md:h-20 object-cover rounded-2xl shadow-2xl transition-all duration-500 ${isActive ? 'shadow-primary/40' : ''}`}
                 onError={() => setImageError(true)}
-                whileHover={{ scale: 1.1, rotate: 3 }}
-                transition={{ type: "spring", stiffness: 300 }}
+                animate={{ scale: isActive ? 1.05 : 1 }}
+                transition={{ duration: 0.3 }}
               />
             )}
           </div>
           
           {/* Name */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/95 via-background/80 to-transparent">
-            <p className="font-display font-bold text-sm text-center text-foreground truncate">
+          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-background/95 via-background/80 to-transparent">
+            <p className={`font-display font-bold text-xs md:text-sm text-center truncate transition-colors ${isActive ? 'text-primary' : 'text-foreground'}`}>
               {game.name}
             </p>
           </div>
@@ -109,28 +119,29 @@ const GameCard = ({ game, index }: { game: typeof featuredGames[0]; index: numbe
 export default function FeaturedGamesSection() {
   const ref = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Auto-scroll with 3 second intervals
+  // Auto-rotate through games every 3 seconds
   useEffect(() => {
-    if (!isInView) return;
-    
     const interval = setInterval(() => {
-      if (scrollRef.current && !isPaused) {
-        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-        
-        // Reset when reaching end
-        if (scrollLeft + clientWidth >= scrollWidth - 20) {
-          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          scrollRef.current.scrollBy({ left: 220, behavior: 'smooth' });
-        }
+      if (!isPaused) {
+        setActiveIndex((prev) => (prev + 1) % featuredGames.length);
       }
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isInView, isPaused]);
+  }, [isPaused]);
+
+  // Scroll to active game
+  useEffect(() => {
+    if (scrollRef.current) {
+      const cardWidth = 180; // Approximate card width + gap
+      const containerWidth = scrollRef.current.clientWidth;
+      const scrollPosition = (activeIndex * cardWidth) - (containerWidth / 2) + (cardWidth / 2);
+      scrollRef.current.scrollTo({ left: Math.max(0, scrollPosition), behavior: 'smooth' });
+    }
+  }, [activeIndex]);
 
   return (
     <section ref={ref} className="py-20 md:py-32 relative overflow-hidden">
@@ -158,13 +169,15 @@ export default function FeaturedGamesSection() {
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
           <motion.span
             initial={{ opacity: 0, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
             transition={{ delay: 0.2 }}
             className="inline-block px-4 py-2 rounded-full bg-secondary/20 border border-secondary/30 text-secondary text-sm font-medium mb-6"
           >
@@ -183,44 +196,76 @@ export default function FeaturedGamesSection() {
           </p>
         </motion.div>
 
+        {/* Current game spotlight */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeIndex}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="text-center mb-8"
+          >
+            <span className="text-primary font-medium text-lg">
+              Now Featuring: {featuredGames[activeIndex].name}
+            </span>
+          </motion.div>
+        </AnimatePresence>
+
         {/* Carousel */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
           transition={{ delay: 0.4 }}
           className="relative"
         >
           {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
           
           {/* Scrollable container */}
           <div
             ref={scrollRef}
-            className="flex gap-5 overflow-x-auto scrollbar-hide py-4 px-8 -mx-4"
+            className="flex gap-4 overflow-x-auto scrollbar-hide py-8 px-12 -mx-4 items-center justify-start"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
             onTouchStart={() => setIsPaused(true)}
             onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
           >
-            {/* Duplicate games for infinite scroll effect */}
-            {[...featuredGames, ...featuredGames].map((game, index) => (
+            {featuredGames.map((game, index) => (
               <GameCard 
-                key={`${game.slug}-${index}`} 
+                key={game.slug} 
                 game={game} 
-                index={index % featuredGames.length} 
+                isActive={index === activeIndex}
               />
             ))}
           </div>
         </motion.div>
 
-        {/* View all link */}
+        {/* Indicator dots */}
+        <div className="flex justify-center gap-2 mt-6">
+          {featuredGames.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setActiveIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === activeIndex 
+                  ? 'bg-primary w-6' 
+                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* View all link with Discord */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ delay: 0.6 }}
-          className="text-center mt-10"
+          className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10"
         >
           <Link 
             to="/games" 
@@ -234,6 +279,16 @@ export default function FeaturedGamesSection() {
               →
             </motion.span>
           </Link>
+          
+          <a
+            href="https://discord.gg/vyve"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#5865F2] hover:bg-[#5865F2]/30 transition-colors"
+          >
+            <SiDiscord className="w-5 h-5" />
+            <span>Join Discord</span>
+          </a>
         </motion.div>
       </div>
     </section>
