@@ -892,6 +892,84 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_documents: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          document_type: string
+          document_url: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          document_type: string
+          document_url: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          document_type?: string
+          document_url?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      verification_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       admin_profiles: {
@@ -1004,6 +1082,15 @@ export type Database = {
         Returns: undefined
       }
       admin_global_unmute: { Args: { p_user_id: string }; Returns: undefined }
+      admin_review_verification: {
+        Args: {
+          p_notes?: string
+          p_rejection_reason?: string
+          p_request_id: string
+          p_status: string
+        }
+        Returns: undefined
+      }
       admin_search_users: {
         Args: { p_limit?: number; p_query: string }
         Returns: {
@@ -1049,6 +1136,18 @@ export type Database = {
       get_follower_count: { Args: { p_profile_id: string }; Returns: number }
       get_following_count: { Args: { p_profile_id: string }; Returns: number }
       get_my_stream_key: { Args: { p_stream_id: string }; Returns: string }
+      get_pending_verifications: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          document_count: number
+          id: string
+          status: string
+          submitted_at: string
+          user_id: string
+          username: string
+        }[]
+      }
       get_profile_by_wallet: {
         Args: { p_wallet_address: string }
         Returns: string

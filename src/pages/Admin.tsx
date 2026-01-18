@@ -39,6 +39,7 @@ import {
   VolumeX,
   BadgeCheck,
   LayoutDashboard,
+  ShieldCheck,
 } from 'lucide-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useUserRole } from '@/hooks/useProfile';
@@ -60,6 +61,7 @@ import {
   useApproveApplication, 
   useRejectApplication 
 } from '@/hooks/useStreamerApplication';
+import { usePendingVerifications, useReviewVerification } from '@/hooks/useVerification';
 
 export default function Admin() {
   const { user, isAuthenticated } = useWalletAuth();
@@ -75,6 +77,7 @@ export default function Admin() {
   const { data: searchResults = [], isLoading: searchLoading } = useAdminSearchUsers(searchQuery);
   const { data: liveStreams = [], isLoading: streamsLoading } = useAdminLiveStreams();
   const { data: applications = [], isLoading: appsLoading } = useAllApplications(applicationFilter);
+  const { data: verifications = [], isLoading: verificationsLoading } = usePendingVerifications();
 
   const setUserRole = useSetUserRole();
   const suspendUser = useSuspendUser();
@@ -86,6 +89,7 @@ export default function Admin() {
   const setVerified = useSetUserVerified();
   const approveApp = useApproveApplication();
   const rejectApp = useRejectApplication();
+  const reviewVerification = useReviewVerification();
 
   // Check admin access
   if (!isAuthenticated) {
