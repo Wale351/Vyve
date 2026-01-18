@@ -2,6 +2,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SiDiscord } from 'react-icons/si';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const featuredGames = [
   { 
@@ -56,91 +58,36 @@ const featuredGames = [
   },
 ];
 
-const GameCard = ({ game, isActive }: { game: typeof featuredGames[0]; isActive: boolean }) => {
-  const [imageError, setImageError] = useState(false);
-
-  return (
-    <motion.div
-      animate={{ 
-        scale: isActive ? 1.1 : 0.85,
-        opacity: isActive ? 1 : 0.4,
-      }}
-      transition={{ duration: 0.5, ease: "easeInOut" }}
-      className="flex-shrink-0"
-    >
-      <Link to={`/games/${game.slug}`}>
-        <div className={`group relative w-[160px] h-[200px] md:w-[180px] md:h-[220px] rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 ${isActive ? 'ring-2 ring-primary shadow-2xl shadow-primary/30' : ''}`}>
-          {/* Background gradient */}
-          <div className={`absolute inset-0 bg-gradient-to-br from-primary/10 via-card to-secondary/10 border border-border/50 transition-colors duration-300 ${isActive ? 'border-primary/70' : ''}`} />
-          
-          {/* Glow effect for active */}
-          {isActive && (
-            <motion.div 
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-transparent to-transparent" />
-              <div className="absolute -inset-2 bg-primary/20 blur-xl -z-10" />
-            </motion.div>
-          )}
-          
-          {/* Game logo */}
-          <div className="absolute inset-0 flex items-center justify-center p-6">
-            {imageError ? (
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary/20 flex items-center justify-center text-2xl font-bold text-foreground backdrop-blur-sm">
-                {game.name.charAt(0)}
-              </div>
-            ) : (
-              <motion.img
-                src={game.image}
-                alt={game.name}
-                className={`w-16 h-16 md:w-20 md:h-20 object-cover rounded-2xl shadow-2xl transition-all duration-500 ${isActive ? 'shadow-primary/40' : ''}`}
-                onError={() => setImageError(true)}
-                animate={{ scale: isActive ? 1.05 : 1 }}
-                transition={{ duration: 0.3 }}
-              />
-            )}
-          </div>
-          
-          {/* Name */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-background/95 via-background/80 to-transparent">
-            <p className={`font-display font-bold text-xs md:text-sm text-center truncate transition-colors ${isActive ? 'text-primary' : 'text-foreground'}`}>
-              {game.name}
-            </p>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  );
-};
-
 export default function FeaturedGamesSection() {
   const ref = useRef<HTMLElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
-  // Auto-rotate through games every 3 seconds
+  // Auto-rotate through games every 4 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isPaused) {
         setActiveIndex((prev) => (prev + 1) % featuredGames.length);
       }
-    }, 3000);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [isPaused]);
 
-  // Get visible games (3 before, active, 3 after for smooth transitions)
-  const getVisibleGames = () => {
-    const result = [];
-    for (let i = -2; i <= 2; i++) {
-      const index = (activeIndex + i + featuredGames.length) % featuredGames.length;
-      result.push({ game: featuredGames[index], offset: i, originalIndex: index });
-    }
-    return result;
+  const goToPrevious = () => {
+    setActiveIndex((prev) => (prev - 1 + featuredGames.length) % featuredGames.length);
   };
+
+  const goToNext = () => {
+    setActiveIndex((prev) => (prev + 1) % featuredGames.length);
+  };
+
+  const handleImageError = (slug: string) => {
+    setImageErrors(prev => new Set(prev).add(slug));
+  };
+
+  const activeGame = featuredGames[activeIndex];
 
   return (
     <section ref={ref} className="py-20 md:py-32 relative overflow-hidden">
@@ -195,75 +142,104 @@ export default function FeaturedGamesSection() {
           </p>
         </motion.div>
 
-        {/* Current game spotlight name */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeIndex}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="text-center mb-8"
-          >
-            <span className="text-primary font-medium text-lg">
-              Now Featuring: {featuredGames[activeIndex].name}
-            </span>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Centered Carousel */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="relative"
+        {/* Centered Spotlight Carousel */}
+        <div
+          className="relative max-w-2xl mx-auto"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          onTouchStart={() => setIsPaused(true)}
-          onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
         >
-          {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-          
-          {/* Centered flex container */}
-          <div className="flex items-center justify-center gap-3 md:gap-6 py-8 min-h-[280px] md:min-h-[320px]">
-            <AnimatePresence mode="popLayout">
-              {getVisibleGames().map(({ game, offset, originalIndex }) => (
-                <motion.div
-                  key={`${game.slug}-${originalIndex}`}
-                  layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ 
-                    opacity: offset === 0 ? 1 : Math.abs(offset) === 1 ? 0.5 : 0.25,
-                    scale: offset === 0 ? 1.15 : Math.abs(offset) === 1 ? 0.85 : 0.7,
-                    x: offset * (offset === 0 ? 0 : 20),
-                    zIndex: offset === 0 ? 10 : 5 - Math.abs(offset),
-                  }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                  className="flex-shrink-0 cursor-pointer"
-                  onClick={() => setActiveIndex(originalIndex)}
-                >
-                  <GameCard game={game} isActive={offset === 0} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </motion.div>
+          {/* Navigation Arrows */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={goToPrevious}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm border border-border hover:bg-primary/20"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={goToNext}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm border border-border hover:bg-primary/20"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+
+          {/* Featured Game Spotlight */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeGame.slug}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -20 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="flex flex-col items-center py-8"
+            >
+              <Link to={`/games/${activeGame.slug}`} className="group">
+                {/* Main spotlight card */}
+                <div className="relative w-[200px] h-[250px] md:w-[280px] md:h-[350px] rounded-3xl overflow-hidden">
+                  {/* Glow effect */}
+                  <div className="absolute -inset-4 bg-gradient-to-r from-primary/40 via-secondary/40 to-primary/40 rounded-3xl blur-2xl opacity-60" />
+                  
+                  {/* Card background */}
+                  <div className="relative w-full h-full bg-gradient-to-br from-primary/20 via-card to-secondary/20 border-2 border-primary/50 rounded-3xl overflow-hidden shadow-2xl shadow-primary/30">
+                    {/* Game logo */}
+                    <div className="absolute inset-0 flex items-center justify-center p-8">
+                      {imageErrors.has(activeGame.slug) ? (
+                        <div className="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-primary/30 flex items-center justify-center text-4xl md:text-5xl font-bold text-foreground backdrop-blur-sm">
+                          {activeGame.name.charAt(0)}
+                        </div>
+                      ) : (
+                        <motion.img
+                          src={activeGame.image}
+                          alt={activeGame.name}
+                          className="w-28 h-28 md:w-36 md:h-36 object-cover rounded-3xl shadow-2xl ring-2 ring-primary/50"
+                          onError={() => handleImageError(activeGame.slug)}
+                          initial={{ scale: 0.8 }}
+                          animate={{ scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      )}
+                    </div>
+                    
+                    {/* Name overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background/90 to-transparent">
+                      <p className="font-display font-bold text-xl md:text-2xl text-center text-primary">
+                        {activeGame.name}
+                      </p>
+                    </div>
+
+                    {/* Hover effect */}
+                    <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                </div>
+              </Link>
+
+              {/* Now Featuring label */}
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 text-muted-foreground text-sm"
+              >
+                Now Featuring
+              </motion.p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
         {/* Indicator dots */}
-        <div className="flex justify-center gap-2 mt-6">
-          {featuredGames.map((_, index) => (
+        <div className="flex justify-center gap-2 mt-4">
+          {featuredGames.map((game, index) => (
             <button
-              key={index}
+              key={game.slug}
               onClick={() => setActiveIndex(index)}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
                 index === activeIndex 
-                  ? 'bg-primary w-6' 
+                  ? 'bg-primary w-8' 
                   : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
               }`}
+              aria-label={`View ${game.name}`}
             />
           ))}
         </div>
