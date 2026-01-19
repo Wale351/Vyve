@@ -48,16 +48,24 @@ export async function fetchPublicProfileByUsername(username: string) {
 }
 
 // Fetch multiple public profiles by IDs (for batch operations)
+// Uses public_profiles view to avoid RLS issues
 export async function fetchPublicProfiles(profileIds: string[]) {
   if (profileIds.length === 0) return [];
   
   const { data, error } = await supabase
-    .from('profiles')
-    .select(PUBLIC_PROFILE_FIELDS)
+    .from('public_profiles')
+    .select('id, username, avatar_url, bio, verified_creator, created_at')
     .in('id', profileIds);
   
   if (error) throw error;
-  return data || [];
+  return (data || []).map(p => ({
+    id: p.id!,
+    username: p.username,
+    avatar_url: p.avatar_url,
+    bio: p.bio,
+    verified_creator: p.verified_creator,
+    created_at: p.created_at,
+  }));
 }
 
 // Fetch profiles for chat messages (minimal fields)
