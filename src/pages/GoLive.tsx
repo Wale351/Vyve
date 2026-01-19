@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import ProfileGate from '@/components/ProfileGate';
 import WalletConnectButton from '@/components/WalletConnectButton';
@@ -15,10 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2 } from 'lucide-react';
+import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useUserRole } from '@/hooks/useProfile';
 import { useGames } from '@/hooks/useGames';
 
 type Step = 'setup' | 'creating' | 'ready';
@@ -32,7 +33,8 @@ interface StreamData {
 
 const GoLive = () => {
   const navigate = useNavigate();
-  const { authenticated, isAuthenticated, isAuthenticating } = useWalletAuth();
+  const { user, authenticated, isAuthenticated, isAuthenticating } = useWalletAuth();
+  const { data: role, isLoading: roleLoading } = useUserRole(user?.id);
   const { data: games = [] } = useGames();
   const [title, setTitle] = useState('');
   const [gameId, setGameId] = useState('');
@@ -188,6 +190,44 @@ const GoLive = () => {
               )}
               {isAuthenticating ? 'Signing In...' : 'Connect Wallet'}
             </WalletConnectButton>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Role loading state
+  if (roleLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="h-14 md:h-16" />
+        <div className="container py-16 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  // Not a streamer or admin - show apply message
+  if (role !== 'streamer' && role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-background page-enter">
+        <Header />
+        <div className="h-14 md:h-16" />
+        <div className="container px-4 py-12 md:py-20 flex items-center justify-center">
+          <div className="glass-card max-w-sm md:max-w-md p-6 md:p-10 text-center w-full">
+            <Lock className="h-10 w-10 md:h-14 md:w-14 text-muted-foreground mx-auto mb-4 md:mb-6" />
+            <h1 className="font-display text-xl md:text-2xl font-bold mb-2 md:mb-3">Streamer Access Required</h1>
+            <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
+              You need to be an approved streamer to go live. Apply now to start streaming!
+            </p>
+            <Link to="/apply/streamer">
+              <Button variant="premium" size="lg" className="gap-2 w-full sm:w-auto">
+                <Radio className="h-4 w-4 md:h-5 md:w-5" />
+                Apply to Become a Streamer
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

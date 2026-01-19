@@ -132,6 +132,21 @@ export default function Admin() {
         case 'end-stream':
           await endStream.mutateAsync(actionDialog.data.id);
           break;
+        case 'approve-verification':
+          await reviewVerification.mutateAsync({ 
+            requestId: actionDialog.data.id, 
+            status: 'approved', 
+            notes: actionNotes 
+          });
+          break;
+        case 'reject-verification':
+          await reviewVerification.mutateAsync({ 
+            requestId: actionDialog.data.id, 
+            status: 'rejected', 
+            notes: actionNotes,
+            rejectionReason: actionNotes 
+          });
+          break;
       }
     } finally {
       setActionDialog(null);
@@ -197,10 +212,14 @@ export default function Admin() {
 
         {/* Tabs */}
         <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsList className="grid w-full grid-cols-4 max-w-lg">
             <TabsTrigger value="applications" className="gap-2">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Applications</span>
+            </TabsTrigger>
+            <TabsTrigger value="verifications" className="gap-2">
+              <ShieldCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Verify</span>
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
@@ -287,6 +306,64 @@ export default function Admin() {
                           </Button>
                         </div>
                       )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Verifications Tab */}
+          <TabsContent value="verifications" className="space-y-4">
+            {verificationsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : verifications.length === 0 ? (
+              <div className="glass-card p-8 text-center">
+                <ShieldCheck className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground">No pending verification requests</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {verifications.map((v: any) => (
+                  <div key={v.id} className="glass-card p-4 md:p-6">
+                    <div className="flex items-start gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={v.avatar_url} />
+                        <AvatarFallback>{v.username?.[0]?.toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Link to={`/profile/${v.user_id}`} className="font-semibold hover:text-primary">
+                            @{v.username}
+                          </Link>
+                          <Badge variant="outline">
+                            {v.document_count} document{v.document_count !== 1 ? 's' : ''}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Submitted {new Date(v.submitted_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-success border-success/50"
+                          onClick={() => setActionDialog({ type: 'approve-verification', data: v })}
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-destructive border-destructive/50"
+                          onClick={() => setActionDialog({ type: 'reject-verification', data: v })}
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -437,6 +514,8 @@ export default function Admin() {
               {actionDialog?.type === 'suspend' && 'Suspend User'}
               {actionDialog?.type === 'mute' && 'Mute User Globally'}
               {actionDialog?.type === 'end-stream' && 'End Stream'}
+              {actionDialog?.type === 'approve-verification' && 'Approve Verification'}
+              {actionDialog?.type === 'reject-verification' && 'Reject Verification'}
             </DialogTitle>
             <DialogDescription>
               {actionDialog?.type === 'approve' && 'This will grant the user streamer privileges.'}
@@ -444,6 +523,8 @@ export default function Admin() {
               {actionDialog?.type === 'suspend' && 'The user will be unable to access the platform.'}
               {actionDialog?.type === 'mute' && 'The user will be unable to chat on any stream.'}
               {actionDialog?.type === 'end-stream' && 'This will immediately end the stream.'}
+              {actionDialog?.type === 'approve-verification' && 'This will verify the user and grant them the verified badge.'}
+              {actionDialog?.type === 'reject-verification' && 'The user will be notified of the rejection. Please provide a reason.'}
             </DialogDescription>
           </DialogHeader>
           {actionDialog?.type !== 'end-stream' && (
@@ -456,7 +537,7 @@ export default function Admin() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setActionDialog(null)}>Cancel</Button>
             <Button 
-              variant={actionDialog?.type === 'approve' ? 'default' : 'destructive'}
+              variant={actionDialog?.type === 'approve' || actionDialog?.type === 'approve-verification' ? 'default' : 'destructive'}
               onClick={handleAction}
             >
               Confirm
