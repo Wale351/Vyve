@@ -91,12 +91,12 @@ export default function Admin() {
   const rejectApp = useRejectApplication();
   const reviewVerification = useReviewVerification();
 
-  // Check admin access
-  if (!isAuthenticated) {
+  // Check admin access - wait for both auth and role to load
+  if (!isAuthenticated || !user?.id) {
     return <Navigate to="/" replace />;
   }
 
-  if (roleLoading) {
+  if (roleLoading || !role) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
