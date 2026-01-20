@@ -64,8 +64,8 @@ import {
 import { usePendingVerifications, useReviewVerification } from '@/hooks/useVerification';
 
 export default function Admin() {
-  const { user, isAuthenticated } = useWalletAuth();
-  const { data: role, isLoading: roleLoading } = useUserRole(user?.id);
+  const { user, isAuthenticated, isInitialized } = useWalletAuth();
+  const { data: userRole, isLoading: roleLoading } = useUserRole(user?.id);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [applicationFilter, setApplicationFilter] = useState('pending');
@@ -91,12 +91,8 @@ export default function Admin() {
   const rejectApp = useRejectApplication();
   const reviewVerification = useReviewVerification();
 
-  // Check admin access - wait for both auth and role to load
-  if (!isAuthenticated || !user?.id) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (roleLoading || !role) {
+  // Wait for initialization
+  if (!isInitialized) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -108,7 +104,24 @@ export default function Admin() {
     );
   }
 
-  if (role !== 'admin') {
+  // Check admin access - wait for both auth and role to load
+  if (!isAuthenticated || !user?.id) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (roleLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="h-14 md:h-16" />
+        <div className="container py-16 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole !== 'admin') {
     return <Navigate to="/" replace />;
   }
 

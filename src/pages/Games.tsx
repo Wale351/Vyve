@@ -1,12 +1,26 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import GameCard from '@/components/GameCard';
 import { useGames, useGameCategories } from '@/hooks/useGames';
 import { useLiveStreams } from '@/hooks/useStreams';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Search, Loader2, Filter } from 'lucide-react';
+import { Search, Loader2, Gamepad2 } from 'lucide-react';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.04, delayChildren: 0.05 }
+  }
+};
 
 const Games = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,89 +65,107 @@ const Games = () => {
     setSearchParams(searchParams);
   };
 
-
   return (
-    <div className="min-h-screen bg-background page-enter">
+    <div className="min-h-screen bg-background">
       <Header />
       
       {/* Spacer for fixed header */}
       <div className="h-14 md:h-16" />
       
-      <div className="container py-8">
+      <div className="container px-4 py-10">
         {/* Header */}
-        <div className="mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10"
+        >
           <div className="flex items-center gap-3 mb-2">
-            <Sparkles className="h-8 w-8 text-primary" />
+            <div className="p-2.5 rounded-xl bg-primary/10">
+              <Gamepad2 className="h-6 w-6 text-primary" />
+            </div>
             <h1 className="font-display text-3xl font-bold">Browse Activities</h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground ml-14">
             Discover activities and find live streams
           </p>
-        </div>
+        </motion.div>
         
         {/* Search and filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex flex-col sm:flex-row gap-4 mb-10"
+        >
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search activities..."
-              className="pl-10 bg-muted/30 border-border/50"
+              className="pl-11 h-11 bg-card border-border/40 rounded-xl"
             />
           </div>
           
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
             <Button 
-              variant={!categoryFilter ? "soft" : "ghost"} 
+              variant={!categoryFilter ? "default" : "ghost"} 
               size="sm"
               onClick={() => handleCategoryClick('')}
+              className="rounded-lg"
             >
               All
             </Button>
             {categories.map(category => (
               <Button
                 key={category}
-                variant={categoryFilter === category ? "soft" : "ghost"}
+                variant={categoryFilter === category ? "default" : "ghost"}
                 size="sm"
                 onClick={() => handleCategoryClick(category)}
+                className="rounded-lg whitespace-nowrap"
               >
                 {category}
               </Button>
             ))}
           </div>
-        </div>
+        </motion.div>
         
         {/* Games grid */}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20">
+          <div className="flex flex-col items-center justify-center py-24">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="mt-4 text-muted-foreground">Loading games...</p>
+            <p className="mt-4 text-muted-foreground">Loading activities...</p>
           </div>
         ) : sortedGames.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {sortedGames.map((game, index) => (
-              <div 
-                key={game.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
+          <motion.div 
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+          >
+            {sortedGames.map((game) => (
+              <motion.div key={game.id} variants={fadeInUp}>
                 <GameCard 
                   game={game} 
                   liveCount={liveCountByGame[game.id] || 0}
                 />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
-          <div className="text-center py-20 glass-card">
-            <Sparkles className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
-            <h3 className="font-display text-2xl font-bold mb-3">No Activities Found</h3>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-20 bg-card/50 rounded-3xl border border-border/30"
+          >
+            <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
+              <Gamepad2 className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="font-display text-2xl font-bold mb-2">No Activities Found</h3>
             <p className="text-muted-foreground max-w-md mx-auto">
               {search ? `No activities match "${search}"` : 'No activities available yet'}
             </p>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

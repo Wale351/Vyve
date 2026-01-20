@@ -1,11 +1,25 @@
+import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import StreamCard from '@/components/StreamCard';
 import GameCard from '@/components/GameCard';
 import { useLiveStreams } from '@/hooks/useStreams';
 import { useGames, useLiveStreamCountByGame } from '@/hooks/useGames';
-import { Play, TrendingUp, Users, Loader2, Radio, Sparkles, Flame } from 'lucide-react';
+import { Play, TrendingUp, Users, Loader2, Radio, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 }
+  }
+};
 
 const Home = () => {
   const { data: liveStreams = [], isLoading } = useLiveStreams();
@@ -26,111 +40,147 @@ const Home = () => {
     .slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-background page-enter">
+    <div className="min-h-screen bg-background">
       <Header />
       
       {/* Spacer for fixed header */}
       <div className="h-14 md:h-16" />
       
-      {/* Stats Banner */}
-      <section className="border-b border-border/30 bg-card/30">
-        <div className="container px-4 py-4">
-          <div className="flex items-center justify-center gap-8">
+      {/* Stats Banner - Minimal */}
+      <motion.section 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+        className="border-b border-border/20"
+      >
+        <div className="container px-4 py-3">
+          <div className="flex items-center justify-center gap-6 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
-              <span className="text-sm font-medium">{liveStreams.length} Live</span>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
+              </span>
+              <span className="font-medium text-foreground">{liveStreams.length} Live</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{totalViewers.toLocaleString()} watching</span>
+            <div className="h-4 w-px bg-border" />
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Users className="h-3.5 w-3.5" />
+              <span>{totalViewers.toLocaleString()} watching</span>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Featured / Popular Streams */}
       {popularStreams.length > 0 && (
-        <section className="container px-4 py-8">
-          <div className="flex items-center gap-2 mb-6">
-            <Flame className="h-5 w-5 text-orange-500" />
-            <h2 className="font-varsity text-xl md:text-2xl tracking-wide">POPULAR NOW</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {popularStreams.map((stream, index) => (
-              <div 
-                key={stream.id} 
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 80}ms` }}
-              >
+        <section className="container px-4 py-10">
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+            className="flex items-center gap-2.5 mb-6"
+          >
+            <div className="p-2 rounded-xl bg-orange-500/10">
+              <Flame className="h-5 w-5 text-orange-500" />
+            </div>
+            <h2 className="font-display text-xl md:text-2xl font-semibold">Popular Now</h2>
+          </motion.div>
+          <motion.div 
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+          >
+            {popularStreams.map((stream) => (
+              <motion.div key={stream.id} variants={fadeInUp}>
                 <StreamCard stream={stream} />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </section>
       )}
 
       {/* Trending Games */}
       {trendingGames.length > 0 && (
         <section className="container px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <h2 className="font-varsity text-xl md:text-2xl tracking-wide">TRENDING ACTIVITIES</h2>
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+            className="flex items-center justify-between mb-6"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="font-display text-xl md:text-2xl font-semibold">Trending</h2>
             </div>
             <Link to="/games">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                 View All
               </Button>
             </Link>
-          </div>
+          </motion.div>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
-            {trendingGames.map((game) => (
-              <div key={game.id} className="flex-shrink-0 w-[160px] md:w-[200px]">
+            {trendingGames.map((game, index) => (
+              <motion.div 
+                key={game.id} 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex-shrink-0 w-[160px] md:w-[180px]"
+              >
                 <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
-              </div>
+              </motion.div>
             ))}
           </div>
         </section>
       )}
 
       {/* All Live Streams */}
-      <section className="container px-4 py-8 md:py-12">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 md:mb-8">
+      <section className="container px-4 py-10">
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUp}
+          className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8"
+        >
           <div>
-            <h2 className="font-display text-xl md:text-2xl lg:text-3xl font-bold">Live Streams</h2>
-            <p className="text-sm md:text-base text-muted-foreground mt-0.5">Discover live content from creators</p>
+            <h2 className="font-display text-2xl md:text-3xl font-bold">Live Streams</h2>
+            <p className="text-muted-foreground mt-1">Discover live content from creators</p>
           </div>
-          
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
-            <Button variant="soft" size="sm" className="flex-shrink-0">All</Button>
-            <Button variant="ghost" size="sm" className="text-muted-foreground flex-shrink-0">Gaming</Button>
-            <Button variant="ghost" size="sm" className="text-muted-foreground flex-shrink-0">IRL</Button>
-          </div>
-        </div>
+        </motion.div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16 md:py-20">
-            <Loader2 className="h-8 w-8 md:h-10 md:w-10 animate-spin text-primary" />
-            <p className="mt-3 md:mt-4 text-sm md:text-base text-muted-foreground">Loading streams...</p>
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="mt-4 text-muted-foreground">Loading streams...</p>
           </div>
         ) : liveStreams.length > 0 ? (
-          <div className="flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6">
-            {liveStreams.map((stream, index) => (
-              <div 
-                key={stream.id} 
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 80}ms` }}
-              >
+          <motion.div 
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+          >
+            {liveStreams.map((stream) => (
+              <motion.div key={stream.id} variants={fadeInUp}>
                 <StreamCard stream={stream} />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
-          <div className="text-center py-12 md:py-20 glass-card mx-auto max-w-md">
-            <Play className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground mx-auto mb-4 md:mb-6" />
-            <h3 className="font-display text-xl md:text-2xl font-bold mb-2 md:mb-3">No Live Streams</h3>
-            <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8 px-4">
-              Be the first to go live!
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-16 bg-card/50 rounded-3xl border border-border/30 mx-auto max-w-lg"
+          >
+            <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
+              <Play className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="font-display text-2xl font-bold mb-2">No Live Streams</h3>
+            <p className="text-muted-foreground mb-8 px-4">
+              Be the first to go live and start streaming!
             </p>
             <Link to="/go-live">
               <Button variant="premium" size="lg" className="gap-2">
@@ -138,58 +188,68 @@ const Home = () => {
                 Start Streaming
               </Button>
             </Link>
-          </div>
+          </motion.div>
         )}
       </section>
 
-      {/* Browse by Category */}
+      {/* Browse by Category - Only show if no trending */}
       {games.length > 0 && !trendingGames.length && (
-        <section className="container px-4 py-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h2 className="font-varsity text-xl md:text-2xl tracking-wide">BROWSE ACTIVITIES</h2>
+        <section className="container px-4 py-10">
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+            className="flex items-center justify-between mb-6"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="font-display text-xl md:text-2xl font-semibold">Browse Activities</h2>
             </div>
             <Link to="/games">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                 View All
               </Button>
             </Link>
-          </div>
+          </motion.div>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
-            {games.slice(0, 8).map((game) => (
-              <div key={game.id} className="flex-shrink-0 w-[160px] md:w-[200px]">
+            {games.slice(0, 8).map((game, index) => (
+              <motion.div 
+                key={game.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex-shrink-0 w-[160px] md:w-[180px]"
+              >
                 <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
-              </div>
+              </motion.div>
             ))}
           </div>
         </section>
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-border/30 bg-card/50 mt-auto">
-        <div className="container px-4 py-6 md:py-10">
-          <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between md:gap-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Play className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary-foreground" fill="currentColor" />
+      {/* Footer - Minimal */}
+      <footer className="border-t border-border/20 mt-10">
+        <div className="container px-4 py-8">
+          <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <Play className="h-3.5 w-3.5 text-primary-foreground" fill="currentColor" />
               </div>
-              <span className="font-display text-lg md:text-xl font-bold">Vyve</span>
+              <span className="font-display text-lg font-bold">Vyve</span>
             </div>
             
-            <p className="text-xs md:text-sm text-muted-foreground text-center">
-              Built on Base Sepolia Testnet • Powered by Livepeer
+            <p className="text-xs text-muted-foreground text-center">
+              Built on Base • Powered by Livepeer
             </p>
             
-            <div className="flex items-center gap-4 md:gap-6">
-              <button className="text-muted-foreground hover:text-foreground transition-colors text-xs md:text-sm">
+            <div className="flex items-center gap-6">
+              <button className="text-muted-foreground hover:text-foreground transition-colors text-xs">
                 Terms
               </button>
-              <button className="text-muted-foreground hover:text-foreground transition-colors text-xs md:text-sm">
+              <button className="text-muted-foreground hover:text-foreground transition-colors text-xs">
                 Privacy
-              </button>
-              <button className="text-muted-foreground hover:text-foreground transition-colors text-xs md:text-sm">
-                Discord
               </button>
             </div>
           </div>
