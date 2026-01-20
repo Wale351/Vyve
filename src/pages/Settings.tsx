@@ -1,17 +1,15 @@
 import { useState, useRef } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useCanUpdateProfileImage, useUserRole } from '@/hooks/useProfile';
-import { useProfileUpdate, useProfileImageUpload, useRequestStreamerRole } from '@/hooks/useProfileUpdate';
+import { useProfileUpdate, useProfileImageUpload } from '@/hooks/useProfileUpdate';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { 
   Camera, 
@@ -20,11 +18,24 @@ import {
   User, 
   Shield, 
   Bell,
-  Palette,
-  Lock,
   BellRing,
+  Radio,
+  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.05 }
+  }
+};
 
 const Settings = () => {
   const { user, isAuthenticated, isInitialized } = useWalletAuth();
@@ -40,7 +51,6 @@ const Settings = () => {
 
   const profileUpdate = useProfileUpdate();
   const imageUpload = useProfileImageUpload();
-  const requestStreamer = useRequestStreamerRole();
   const isUpdating = profileUpdate.isPending || imageUpload.isPending;
 
   // Initialize form when profile loads
@@ -114,41 +124,47 @@ const Settings = () => {
     }
   };
 
-  const handleRequestStreamer = async () => {
-    if (!user?.id) return;
-    await requestStreamer.mutateAsync(user.id);
-  };
-
   const displayAvatar = avatarPreview || profile?.avatar_url;
 
   return (
-    <div className="min-h-screen bg-background page-enter">
+    <div className="min-h-screen bg-background">
       <Header />
       
       {/* Spacer for fixed header */}
       <div className="h-14 md:h-16" />
       
-      <div className="container max-w-3xl px-4 py-8">
-        <div className="mb-8">
+      <div className="container max-w-2xl px-4 py-8 md:py-12">
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10"
+        >
           <h1 className="font-display text-3xl font-bold">Settings</h1>
           <p className="text-muted-foreground mt-1">Manage your account preferences</p>
-        </div>
+        </motion.div>
 
-        <div className="space-y-6">
+        <motion.div 
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="space-y-6"
+        >
           {/* Profile Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Profile
-              </CardTitle>
-              <CardDescription>
-                Customize your public profile information
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <motion.div variants={fadeInUp} className="bg-card rounded-2xl border border-border/40 overflow-hidden">
+            <div className="p-5 border-b border-border/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-display font-semibold text-lg">Profile</h2>
+                  <p className="text-sm text-muted-foreground">Customize your public profile</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 space-y-6">
               {/* Avatar */}
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-5">
                 <div className="relative">
                   {imageUpdateInfo?.canUpdate ? (
                     <div 
@@ -159,12 +175,12 @@ const Settings = () => {
                         {displayAvatar ? (
                           <AvatarImage src={displayAvatar} alt="Avatar" />
                         ) : (
-                          <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-2xl">
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-2xl font-semibold">
                             {profile?.username?.charAt(0).toUpperCase() || 'U'}
                           </AvatarFallback>
                         )}
                       </Avatar>
-                      <div className="absolute inset-0 rounded-full bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="absolute inset-0 rounded-full bg-background/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <Camera className="h-6 w-6" />
                       </div>
                     </div>
@@ -173,7 +189,7 @@ const Settings = () => {
                       {profile?.avatar_url ? (
                         <AvatarImage src={profile.avatar_url} alt="Avatar" />
                       ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-2xl">
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-2xl font-semibold">
                           {profile?.username?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
                       )}
@@ -189,12 +205,11 @@ const Settings = () => {
                 </div>
                 <div>
                   <p className="font-medium">{profile?.username}</p>
-                  {!imageUpdateInfo?.canUpdate && imageUpdateInfo?.nextUpdateDate && (
+                  {!imageUpdateInfo?.canUpdate && imageUpdateInfo?.nextUpdateDate ? (
                     <p className="text-xs text-muted-foreground mt-1">
                       Avatar can be changed on {imageUpdateInfo.nextUpdateDate.toLocaleDateString()}
                     </p>
-                  )}
-                  {imageUpdateInfo?.canUpdate && (
+                  ) : (
                     <p className="text-xs text-muted-foreground mt-1">
                       Click to change profile picture
                     </p>
@@ -202,118 +217,87 @@ const Settings = () => {
                 </div>
               </div>
 
-              <Separator />
-
-              {/* Username (read-only) */}
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Username</Label>
-                <Input 
-                  value={profile?.username || ''} 
-                  disabled 
-                  className="bg-muted/30"
-                />
-                <p className="text-xs text-muted-foreground">Username cannot be changed</p>
-              </div>
-
               {/* Bio */}
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
+                <Label htmlFor="bio" className="text-sm text-muted-foreground">Bio</Label>
                 <Textarea
                   id="bio"
                   value={editBio || profile?.bio || ''}
                   onChange={(e) => handleBioChange(e.target.value.slice(0, 500))}
                   placeholder="Tell others about yourself..."
-                  className="bg-muted/30 resize-none"
-                  rows={4}
+                  className="bg-muted/30 border-border/50 resize-none min-h-[100px]"
                   maxLength={500}
                 />
                 <p className="text-xs text-muted-foreground text-right">
                   {(editBio || profile?.bio || '').length}/500
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
 
           {/* Streamer Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Creator Status
-              </CardTitle>
-              <CardDescription>
-                Upgrade to streamer to go live
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {role === 'streamer' || role === 'admin' ? (
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
+          <motion.div variants={fadeInUp} className="bg-card rounded-2xl border border-border/40 overflow-hidden">
+            <div className="p-5 border-b border-border/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10">
                   <Shield className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">You're a Streamer!</p>
+                </div>
+                <div>
+                  <h2 className="font-display font-semibold text-lg">Creator Status</h2>
+                  <p className="text-sm text-muted-foreground">Streaming permissions</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-5">
+              {role === 'streamer' || role === 'admin' ? (
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-success/10 border border-success/20">
+                  <div className="p-2 rounded-lg bg-success/20">
+                    <Radio className="h-5 w-5 text-success" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-success">You're a Streamer!</p>
                     <p className="text-sm text-muted-foreground">You can go live and stream to your audience</p>
                   </div>
+                  <Link to="/go-live">
+                    <Button variant="subtle" size="sm" className="gap-1">
+                      Go Live <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
                 </div>
               ) : (
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="font-medium">Become a Streamer</p>
-                    <p className="text-sm text-muted-foreground">Unlock the ability to go live and stream</p>
+                    <p className="text-sm text-muted-foreground">Unlock the ability to go live</p>
                   </div>
-                  <Button
-                    variant="premium"
-                    onClick={handleRequestStreamer}
-                    disabled={requestStreamer.isPending}
-                  >
-                    {requestStreamer.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      'Upgrade'
-                    )}
-                  </Button>
+                  <Link to="/apply/streamer">
+                    <Button variant="premium" size="sm">
+                      Apply
+                    </Button>
+                  </Link>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
 
           {/* Notifications Section */}
-          <NotificationsCard />
-
-          <Card className="opacity-60">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Appearance
-                <span className="text-xs bg-muted px-2 py-0.5 rounded-full ml-2">Coming Soon</span>
-              </CardTitle>
-              <CardDescription>
-                Customize the look and feel of Vyve
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="opacity-60">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Privacy & Security
-                <span className="text-xs bg-muted px-2 py-0.5 rounded-full ml-2">Coming Soon</span>
-              </CardTitle>
-              <CardDescription>
-                Manage your privacy settings
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <motion.div variants={fadeInUp}>
+            <NotificationsCard />
+          </motion.div>
 
           {/* Save Button */}
           {hasChanges && (
-            <div className="sticky bottom-4 flex justify-end">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="sticky bottom-6 flex justify-end"
+            >
               <Button
                 variant="premium"
                 size="lg"
                 onClick={handleSave}
                 disabled={isUpdating}
-                className="shadow-lg"
+                className="shadow-xl"
               >
                 {isUpdating ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -322,9 +306,9 @@ const Settings = () => {
                 )}
                 Save Changes
               </Button>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -341,20 +325,24 @@ const NotificationsCard = () => {
   } = usePushNotifications();
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bell className="h-5 w-5" />
-          Notifications
-        </CardTitle>
-        <CardDescription>
-          Manage your notification preferences
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="bg-card rounded-2xl border border-border/40 overflow-hidden">
+      <div className="p-5 border-b border-border/30">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-primary/10">
+            <Bell className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="font-display font-semibold text-lg">Notifications</h2>
+            <p className="text-sm text-muted-foreground">Manage your notification preferences</p>
+          </div>
+        </div>
+      </div>
+      <div className="p-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BellRing className="h-5 w-5 text-muted-foreground" />
+            <div className="p-2 rounded-lg bg-muted/50">
+              <BellRing className="h-5 w-5 text-muted-foreground" />
+            </div>
             <div>
               <p className="font-medium">Push Notifications</p>
               <p className="text-sm text-muted-foreground">
@@ -362,7 +350,7 @@ const NotificationsCard = () => {
                   ? "Not supported in this browser"
                   : permission === 'denied'
                   ? "Blocked in browser settings"
-                  : "Get notified when streamers you follow go live"}
+                  : "Get notified when streamers go live"}
               </p>
             </div>
           </div>
@@ -374,12 +362,12 @@ const NotificationsCard = () => {
         </div>
         
         {permission === 'denied' && (
-          <p className="text-xs text-destructive">
+          <p className="text-xs text-destructive mt-3">
             Notifications are blocked. Please enable them in your browser settings.
           </p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
