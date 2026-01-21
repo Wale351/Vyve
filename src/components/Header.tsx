@@ -119,15 +119,6 @@ const Header = () => {
           </Button>
           <MobileSearch open={mobileSearchOpen} onOpenChange={setMobileSearchOpen} />
 
-          {/* Go Live Button for streamers */}
-          {isStreamer && (
-            <Link to="/go-live" className="hidden md:block">
-              <Button variant="premium" size="sm" className="gap-2">
-                <Radio className="h-4 w-4" />
-                Go Live
-              </Button>
-            </Link>
-          )}
 
           {/* Notifications Dropdown */}
           {isAuthenticated && (

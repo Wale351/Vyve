@@ -51,15 +51,15 @@ export default function CreatorsSection() {
           className="text-center mb-16"
         >
           <span className="inline-block px-4 py-1.5 rounded-full bg-success/10 border border-success/20 text-success text-sm font-medium mb-6">
-            For Creators
+            Creator Stories
           </span>
           
           <h2 className="font-varsity text-5xl md:text-6xl lg:text-7xl tracking-wider mb-6">
-            JOIN THE <span className="text-success">REVOLUTION</span>
+            BUILT FOR <span className="text-success">CREATORS</span>
           </h2>
           
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Hear from creators who've already made the switch to true ownership.
+            Real streamers share why they chose true ownership and instant payments.
           </p>
         </motion.div>
 
