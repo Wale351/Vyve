@@ -225,20 +225,20 @@ export default function Admin() {
 
         {/* Tabs */}
         <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-lg">
-            <TabsTrigger value="applications" className="gap-2">
+          <TabsList className="w-full max-w-lg bg-muted/50 p-1 rounded-xl">
+            <TabsTrigger value="applications" className="flex-1 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Applications</span>
             </TabsTrigger>
-            <TabsTrigger value="verifications" className="gap-2">
+            <TabsTrigger value="verifications" className="flex-1 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg">
               <ShieldCheck className="h-4 w-4" />
               <span className="hidden sm:inline">Verify</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="gap-2">
+            <TabsTrigger value="users" className="flex-1 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="streams" className="gap-2">
+            <TabsTrigger value="streams" className="flex-1 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg">
               <Radio className="h-4 w-4" />
               <span className="hidden sm:inline">Streams</span>
             </TabsTrigger>
