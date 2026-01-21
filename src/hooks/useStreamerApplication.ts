@@ -157,24 +157,33 @@ export const useAllApplications = (status?: string) => {
   return useQuery({
     queryKey: ['all-applications', status],
     queryFn: async () => {
+      // First fetch applications
       let query = supabase
         .from('streamer_applications')
-        .select(`
-          *,
-          profiles:user_id (
-            avatar_url,
-            verified_creator
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
       if (status && status !== 'all') {
         query = query.eq('status', status);
       }
       
-      const { data, error } = await query;
+      const { data: applications, error } = await query;
       if (error) throw error;
-      return data;
+      if (!applications?.length) return [];
+      
+      // Then fetch profiles separately to avoid join issues
+      const userIds = [...new Set(applications.map(app => app.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, avatar_url, verified_creator')
+        .in('id', userIds);
+      
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      
+      return applications.map(app => ({
+        ...app,
+        profiles: profileMap.get(app.user_id) || null,
+      }));
     },
   });
 };

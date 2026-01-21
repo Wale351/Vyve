@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,10 +18,11 @@ import {
   VolumeX,
   Ban,
   Crown,
-  BadgeCheck
+  Coins,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
-import { useChatMessages, useSendMessage } from '@/hooks/useChatMessages';
+import { useChatMessages, useSendMessage, ChatMessageWithSender } from '@/hooks/useChatMessages';
+import { useStreamTips, StreamTip } from '@/hooks/useStreamTips';
 import { useOwnProfile, useProfileComplete } from '@/hooks/useProfile';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useIsStreamOwner, useMuteUser, useBlockUser, useMutedUsers } from '@/hooks/useModeration';
@@ -52,13 +53,39 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
   const blockUserMutation = useBlockUser();
 
   const streamerId = stream?.streamer_id;
+  
+  // Fetch tips only for streamer (visible only to them)
+  const { data: tips = [] } = useStreamTips(streamId, streamerId, user?.id);
+  
+  // Merge messages and tips into a single timeline (tips only shown to streamer)
+  type ChatItem = 
+    | { type: 'message'; data: ChatMessageWithSender }
+    | { type: 'tip'; data: StreamTip };
+  
+  const chatItems = useMemo<ChatItem[]>(() => {
+    const items: ChatItem[] = messages.map(msg => ({ type: 'message' as const, data: msg }));
+    
+    // Only add tips if user is the streamer
+    if (streamerId && user?.id === streamerId) {
+      tips.forEach(tip => {
+        items.push({ type: 'tip' as const, data: tip });
+      });
+    }
+    
+    // Sort by created_at
+    items.sort((a, b) => 
+      new Date(a.data.created_at).getTime() - new Date(b.data.created_at).getTime()
+    );
+    
+    return items;
+  }, [messages, tips, streamerId, user?.id]);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages or tips
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [chatItems]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || !isConnected || !profile?.id) {
@@ -136,7 +163,38 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
           </div>
         ) : (
           <div className="space-y-0.5 md:space-y-1">
-            {messages.map((msg) => {
+            {chatItems.map((item) => {
+              // Render tip notification (only visible to streamer)
+              if (item.type === 'tip') {
+                const tip = item.data;
+                const timestamp = new Date(tip.created_at);
+                
+                return (
+                  <div 
+                    key={`tip-${tip.id}`} 
+                    className="py-2 px-3 mx-1 rounded-lg bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/30">
+                        <Coins className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs md:text-sm font-medium text-primary">
+                          <span className="text-foreground">{tip.sender_username}</span>
+                          {' '}tipped{' '}
+                          <span className="text-primary font-bold">{tip.amount_eth} ETH</span>
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+              
+              // Render regular message
+              const msg = item.data;
               const senderName = msg.profiles?.username || 'User';
               const timestamp = new Date(msg.created_at);
               const isStreamer = msg.sender_id === streamerId;
@@ -225,7 +283,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
               );
             })}
             
-            {messages.length === 0 && (
+            {chatItems.length === 0 && (
               <div className="text-center py-8 md:py-12">
                 <MessageCircle className="h-8 w-8 md:h-10 md:w-10 text-muted-foreground mx-auto mb-2 md:mb-3" />
                 <p className="text-muted-foreground text-xs md:text-sm">No messages yet</p>

@@ -22,6 +22,24 @@ export const useAdminStats = () => {
   });
 };
 
+// Fetch all users (paginated)
+export const useAdminAllUsers = (limit: number = 50) => {
+  return useQuery({
+    queryKey: ['admin-all-users', limit],
+    queryFn: async () => {
+      // Use admin_profiles view which has role information
+      const { data, error } = await supabase
+        .from('admin_profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+};
+
 // Search users
 export const useAdminSearchUsers = (query: string) => {
   return useQuery({
