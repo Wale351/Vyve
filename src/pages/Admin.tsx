@@ -45,7 +45,8 @@ import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useUserRole } from '@/hooks/useProfile';
 import { 
   useAdminStats, 
-  useAdminSearchUsers, 
+  useAdminSearchUsers,
+  useAdminAllUsers,
   useAdminLiveStreams,
   useSetUserRole,
   useSuspendUser,
@@ -74,10 +75,15 @@ export default function Admin() {
   const [actionNotes, setActionNotes] = useState('');
 
   const { data: stats, isLoading: statsLoading } = useAdminStats();
+  const { data: allUsers = [], isLoading: allUsersLoading } = useAdminAllUsers(100);
   const { data: searchResults = [], isLoading: searchLoading } = useAdminSearchUsers(searchQuery);
   const { data: liveStreams = [], isLoading: streamsLoading } = useAdminLiveStreams();
   const { data: applications = [], isLoading: appsLoading } = useAllApplications(applicationFilter);
   const { data: verifications = [], isLoading: verificationsLoading } = usePendingVerifications();
+  
+  // Use search results if searching, otherwise show all users
+  const displayedUsers = searchQuery.length >= 2 ? searchResults : allUsers;
+  const usersLoading = searchQuery.length >= 2 ? searchLoading : allUsersLoading;
 
   const setUserRole = useSetUserRole();
   const suspendUser = useSuspendUser();
@@ -396,21 +402,19 @@ export default function Admin() {
               />
             </div>
 
-            {searchQuery.length < 2 ? (
-              <div className="glass-card p-8 text-center">
-                <p className="text-muted-foreground">Enter at least 2 characters to search</p>
-              </div>
-            ) : searchLoading ? (
+            {usersLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
-            ) : searchResults.length === 0 ? (
+            ) : displayedUsers.length === 0 ? (
               <div className="glass-card p-8 text-center">
-                <p className="text-muted-foreground">No users found</p>
+                <p className="text-muted-foreground">
+                  {searchQuery.length >= 2 ? 'No users found' : 'No users yet'}
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
-                {searchResults.map((u: any) => (
+                {displayedUsers.map((u: any) => (
                   <div key={u.id} className="glass-card p-4 flex items-center gap-4">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={u.avatar_url} />
