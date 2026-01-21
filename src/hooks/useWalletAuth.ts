@@ -148,10 +148,28 @@ export const useWalletAuth = () => {
         const message = `Sign in to Vyve\n\nWallet: ${walletAddress}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
 
         // Request signature from wallet
-        const signature = await signMessageAsyncRef.current({
-          message,
-          account: walletAddress as `0x${string}`,
-        });
+        // On mobile, signMessageAsync may need explicit handling
+        let signature: string;
+        try {
+          signature = await signMessageAsyncRef.current({
+            message,
+            account: walletAddress as `0x${string}`,
+          });
+        } catch (signError: any) {
+          console.error('[useWalletAuth] Signature request failed:', signError);
+          // Handle mobile-specific issues
+          if (signError?.message?.includes('User rejected') || signError?.message?.includes('cancelled')) {
+            throw signError; // Re-throw to be caught by outer catch
+          }
+          // For other errors on mobile, show helpful message
+          toast.error('Please check your wallet app to complete signing');
+          throw signError;
+        }
+        
+        if (!signature) {
+          toast.error('No signature received from wallet');
+          return;
+        }
 
         // Send to backend for verification and session creation
         const { data, error } = await supabase.functions.invoke('wallet-auth', {
@@ -239,6 +257,10 @@ export const useWalletAuth = () => {
     shared.suppressAuthUntil = 0;
     shared.authenticatedAddress = null;
     authenticatedAddressRef.current = null;
+    
+    // Reset auth attempt flags to allow fresh attempt
+    shared.authAttemptInProgress = false;
+    authAttemptInProgressRef.current = false;
 
     const openConnect = openConnectModalRef.current;
     if (openConnect) {

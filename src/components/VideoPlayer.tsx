@@ -214,15 +214,24 @@ const VideoPlayer = ({
     }
   };
 
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
+    console.log('[VideoPlayer] Manual retry triggered');
     setRetryCount(0);
     setHasError(false);
+    setErrorMessage('');
+    setIsLoading(true);
+    
+    // Always call onRetry if provided (to refresh Livepeer status)
     if (onRetry) {
       onRetry();
-    } else {
-      initializePlayback();
     }
-  };
+    
+    // Also reinitialize playback directly
+    // Small delay to allow status check to complete
+    setTimeout(() => {
+      initializePlayback();
+    }, 500);
+  }, [onRetry, initializePlayback]);
 
   // IDLE state - no stream configured
   if (streamPhase === 'idle' || !effectivePlaybackUrl) {
