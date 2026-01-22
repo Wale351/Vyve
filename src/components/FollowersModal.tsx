@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -84,8 +85,12 @@ const useFollowingList = (profileId: string | undefined) => {
   });
 };
 
-const UserListItem = ({ user, onClick }: { user: FollowUser; onClick: () => void }) => (
+const UserListItem = React.forwardRef<
+  HTMLButtonElement,
+  { user: FollowUser; onClick: () => void }
+>(({ user, onClick }, ref) => (
   <button
+    ref={ref}
     onClick={onClick}
     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left rounded-lg"
   >
@@ -102,9 +107,11 @@ const UserListItem = ({ user, onClick }: { user: FollowUser; onClick: () => void
       <p className="font-medium truncate">{user.username || 'Unknown'}</p>
     </div>
   </button>
-);
+));
+UserListItem.displayName = 'UserListItem';
 
-const FollowersModal = ({ open, onOpenChange, profileId, initialTab = 'followers' }: FollowersModalProps) => {
+const FollowersModal = React.forwardRef<HTMLDivElement, FollowersModalProps>(
+  ({ open, onOpenChange, profileId, initialTab = 'followers' }, ref) => {
   const navigate = useNavigate();
   const [tab, setTab] = useState(initialTab);
   
@@ -118,7 +125,7 @@ const FollowersModal = ({ open, onOpenChange, profileId, initialTab = 'followers
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent ref={ref} className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Connections</DialogTitle>
         </DialogHeader>
@@ -180,6 +187,7 @@ const FollowersModal = ({ open, onOpenChange, profileId, initialTab = 'followers
       </DialogContent>
     </Dialog>
   );
-};
+});
+FollowersModal.displayName = 'FollowersModal';
 
 export default FollowersModal;
