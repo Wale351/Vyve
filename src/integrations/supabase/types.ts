@@ -682,6 +682,10 @@ export type Database = {
           started_at: string | null
           streamer_id: string
           tags: string[] | null
+          tip_goal_amount_eth: number | null
+          tip_goal_enabled: boolean
+          tip_goal_title: string | null
+          tip_goal_updated_at: string
           title: string
           viewer_count: number | null
         }
@@ -703,6 +707,10 @@ export type Database = {
           started_at?: string | null
           streamer_id: string
           tags?: string[] | null
+          tip_goal_amount_eth?: number | null
+          tip_goal_enabled?: boolean
+          tip_goal_title?: string | null
+          tip_goal_updated_at?: string
           title: string
           viewer_count?: number | null
         }
@@ -724,6 +732,10 @@ export type Database = {
           started_at?: string | null
           streamer_id?: string
           tags?: string[] | null
+          tip_goal_amount_eth?: number | null
+          tip_goal_enabled?: boolean
+          tip_goal_title?: string | null
+          tip_goal_updated_at?: string
           title?: string
           viewer_count?: number | null
         }
@@ -1082,6 +1094,20 @@ export type Database = {
         Returns: undefined
       }
       admin_global_unmute: { Args: { p_user_id: string }; Returns: undefined }
+      admin_list_users_paged: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          avatar_url: string
+          bio: string
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          suspended: boolean
+          username: string
+          verified_creator: boolean
+          wallet_address: string
+        }[]
+      }
       admin_review_verification: {
         Args: {
           p_notes?: string
@@ -1102,6 +1128,7 @@ export type Database = {
           suspended: boolean
           username: string
           verified_creator: boolean
+          wallet_address: string
         }[]
       }
       admin_set_stream_hidden: {
@@ -1156,6 +1183,7 @@ export type Database = {
         Args: { p_wallet_address: string }
         Returns: string
       }
+      get_stream_tip_total: { Args: { p_stream_id: string }; Returns: number }
       get_user_application_status: {
         Args: { p_user_id: string }
         Returns: Json

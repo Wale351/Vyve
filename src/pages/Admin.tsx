@@ -46,7 +46,7 @@ import { useUserRole } from '@/hooks/useProfile';
 import { 
   useAdminStats, 
   useAdminSearchUsers,
-  useAdminAllUsers,
+  useAdminUsersPaged,
   useAdminLiveStreams,
   useSetUserRole,
   useSuspendUser,
@@ -75,15 +75,16 @@ export default function Admin() {
   const [actionNotes, setActionNotes] = useState('');
 
   const { data: stats, isLoading: statsLoading } = useAdminStats();
-  const { data: allUsers = [], isLoading: allUsersLoading } = useAdminAllUsers(100);
+  const usersPaged = useAdminUsersPaged(50);
   const { data: searchResults = [], isLoading: searchLoading } = useAdminSearchUsers(searchQuery);
   const { data: liveStreams = [], isLoading: streamsLoading } = useAdminLiveStreams();
   const { data: applications = [], isLoading: appsLoading } = useAllApplications(applicationFilter);
   const { data: verifications = [], isLoading: verificationsLoading } = usePendingVerifications();
   
-  // Use search results if searching, otherwise show all users
-  const displayedUsers = searchQuery.length >= 2 ? searchResults : allUsers;
-  const usersLoading = searchQuery.length >= 2 ? searchLoading : allUsersLoading;
+  const pagedUsers = usersPaged.data?.pages?.flat() || [];
+  // Use search results if searching, otherwise show paged users
+  const displayedUsers = searchQuery.length >= 2 ? searchResults : pagedUsers;
+  const usersLoading = searchQuery.length >= 2 ? searchLoading : usersPaged.isLoading;
 
   const setUserRole = useSetUserRole();
   const suspendUser = useSuspendUser();
@@ -429,6 +430,9 @@ export default function Admin() {
                         <Badge variant="outline">{u.role}</Badge>
                         {u.suspended && <Badge variant="destructive">Suspended</Badge>}
                       </div>
+                      {u.wallet_address && (
+                        <p className="text-xs text-muted-foreground truncate mt-1">Wallet: {u.wallet_address}</p>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <Select 
@@ -472,6 +476,18 @@ export default function Admin() {
                     </div>
                   </div>
                 ))}
+
+                {searchQuery.length < 2 && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="outline"
+                      disabled={!usersPaged.hasNextPage || usersPaged.isFetchingNextPage}
+                      onClick={() => usersPaged.fetchNextPage()}
+                    >
+                      {usersPaged.isFetchingNextPage ? 'Loading…' : usersPaged.hasNextPage ? 'Load more' : 'All loaded'}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>
