@@ -21,11 +21,22 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { useStream } from '@/hooks/useStreams';
 import { useEndStream } from '@/hooks/useStreamControls';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useViewerPresence, useStreamRealtime } from '@/hooks/useViewerPresence';
 import { useLivepeerStatus, StreamPhase } from '@/hooks/useLivepeerStatus';
+import { useSetStreamTipGoal, useStreamTipTotal } from '@/hooks/useTipGoal';
 import { formatViewerCount, formatDuration } from '@/lib/formatters';
 import { Users, Clock, Share2, Loader2, Play, StopCircle, MessageCircle, ChevronUp, Radio, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -38,6 +49,9 @@ const Watch = () => {
   const endStreamMutation = useEndStream();
   const [chatOpen, setChatOpen] = useState(false);
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
+  const [tipGoalOpen, setTipGoalOpen] = useState(false);
+  const [tipGoalTitle, setTipGoalTitle] = useState('');
+  const [tipGoalAmount, setTipGoalAmount] = useState('');
   
   // Real-time viewer presence tracking
   const { viewerCount: liveViewerCount, isConnected } = useViewerPresence(streamId);
@@ -59,6 +73,10 @@ const Watch = () => {
   const canEndStream = Boolean(
     isStreamOwner && stream && !stream.ended_at && (stream.is_live || livepeerStatus.isActive)
   );
+
+  const setTipGoal = useSetStreamTipGoal();
+  const tipGoalEnabled = Boolean(stream?.tip_goal_enabled && stream?.tip_goal_amount_eth);
+  const tipTotalQuery = useStreamTipTotal(stream?.id, !!stream?.id);
 
   // Determine the effective stream phase
   const getStreamPhase = (): StreamPhase => {
@@ -121,6 +139,11 @@ const Watch = () => {
   const streamerAvatar = stream.profiles?.avatar_url;
   const streamerId = stream.profiles?.id || '';
   const isVerified = stream.profiles?.verified_creator;
+
+  const goalTarget = stream.tip_goal_amount_eth ? Number(stream.tip_goal_amount_eth) : 0;
+  const goalTitle = stream.tip_goal_title || 'Tip goal';
+  const currentTotal = tipTotalQuery.data ?? 0;
+  const progress = goalTarget > 0 ? Math.min(100, (currentTotal / goalTarget) * 100) : 0;
 
   // Stream phase indicator component
   const StreamPhaseIndicator = () => {
@@ -327,6 +350,36 @@ const Watch = () => {
                     </Button>
                   </div>
                 </div>
+
+                {/* Tip goal */}
+                {(tipGoalEnabled || isStreamOwner) && (
+                  <div className="mt-5 pt-5 border-t border-border/30">
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{goalTitle}</p>
+                        {goalTarget > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {currentTotal.toFixed(3)} / {goalTarget.toFixed(3)} ETH
+                          </p>
+                        )}
+                      </div>
+                      {isStreamOwner && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setTipGoalTitle(stream.tip_goal_title || '');
+                            setTipGoalAmount(stream.tip_goal_amount_eth ? String(stream.tip_goal_amount_eth) : '');
+                            setTipGoalOpen(true);
+                          }}
+                        >
+                          Set goal
+                        </Button>
+                      )}
+                    </div>
+                    {goalTarget > 0 && <Progress value={progress} />}
+                  </div>
+                )}
               </div>
             </motion.div>
             
@@ -367,6 +420,63 @@ const Watch = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Tip goal dialog */}
+      <Dialog open={tipGoalOpen} onOpenChange={setTipGoalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tip goal</DialogTitle>
+            <DialogDescription>Set a goal viewers can track during the stream.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Title</p>
+              <Input
+                value={tipGoalTitle}
+                onChange={(e) => setTipGoalTitle(e.target.value)}
+                placeholder="e.g. New headset"
+              />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Goal (ETH)</p>
+              <Input
+                value={tipGoalAmount}
+                onChange={(e) => setTipGoalAmount(e.target.value)}
+                placeholder="e.g. 0.50"
+                inputMode="decimal"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTipGoalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!stream?.id) return;
+                const amt = tipGoalAmount.trim() === '' ? null : Number(tipGoalAmount);
+                if (amt !== null && (!Number.isFinite(amt) || amt <= 0)) {
+                  toast.error('Goal must be a positive number');
+                  return;
+                }
+
+                await setTipGoal.mutateAsync({
+                  streamId: stream.id,
+                  enabled: amt !== null,
+                  title: tipGoalTitle.trim() || undefined,
+                  amountEth: amt,
+                });
+                setTipGoalOpen(false);
+              }}
+              disabled={setTipGoal.isPending}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

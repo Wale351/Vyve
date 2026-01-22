@@ -203,6 +203,10 @@ export const useApproveApplication = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-applications'] });
       queryClient.invalidateQueries({ queryKey: ['all-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-paged'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       toast.success('Application approved!');
     },
     onError: (error) => {
@@ -227,6 +231,9 @@ export const useRejectApplication = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-applications'] });
       queryClient.invalidateQueries({ queryKey: ['all-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-paged'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
       toast.success('Application rejected');
     },
     onError: (error) => {

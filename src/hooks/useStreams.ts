@@ -19,6 +19,10 @@ export interface StreamWithProfile {
   started_at: string | null;
   ended_at: string | null;
   streamer_id: string;
+  tip_goal_enabled?: boolean | null;
+  tip_goal_title?: string | null;
+  tip_goal_amount_eth?: number | null;
+  tip_goal_updated_at?: string | null;
   profiles: {
     id: string;
     username: string;
@@ -69,6 +73,10 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
           livepeer_stream_id,
           started_at,
           ended_at,
+          tip_goal_enabled,
+          tip_goal_title,
+          tip_goal_amount_eth,
+          tip_goal_updated_at,
           streamer_id,
           games (
             id,
@@ -123,6 +131,10 @@ export const useStream = (streamId: string | undefined) => {
           livepeer_stream_id,
           started_at,
           ended_at,
+          tip_goal_enabled,
+          tip_goal_title,
+          tip_goal_amount_eth,
+          tip_goal_updated_at,
           streamer_id,
           games (
             id,
@@ -177,6 +189,10 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
           livepeer_stream_id,
           started_at,
           ended_at,
+          tip_goal_enabled,
+          tip_goal_title,
+          tip_goal_amount_eth,
+          tip_goal_updated_at,
           streamer_id,
           games (
             id,
@@ -220,6 +236,10 @@ export const useStreamerRecordings = (streamerId: string | undefined) => {
           livepeer_stream_id,
           started_at,
           ended_at,
+          tip_goal_enabled,
+          tip_goal_title,
+          tip_goal_amount_eth,
+          tip_goal_updated_at,
           streamer_id,
           games (
             id,
@@ -264,6 +284,10 @@ export const useStreamsByGame = (gameId: string | undefined) => {
           livepeer_stream_id,
           started_at,
           ended_at,
+          tip_goal_enabled,
+          tip_goal_title,
+          tip_goal_amount_eth,
+          tip_goal_updated_at,
           streamer_id,
           games (
             id,

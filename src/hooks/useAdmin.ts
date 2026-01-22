@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,6 +8,18 @@ export interface AdminStats {
   live_streams: number;
   pending_applications: number;
   total_tips_eth: number;
+}
+
+export interface AdminUserRow {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  bio: string | null;
+  verified_creator: boolean;
+  suspended: boolean;
+  created_at: string;
+  role: 'viewer' | 'streamer' | 'admin';
+  wallet_address: string | null;
 }
 
 // Get admin dashboard stats
@@ -36,6 +48,28 @@ export const useAdminAllUsers = (limit: number = 50) => {
       
       if (error) throw error;
       return data || [];
+    },
+  });
+};
+
+// Admin users with load-more pagination
+export const useAdminUsersPaged = (pageSize: number = 50) => {
+  return useInfiniteQuery({
+    queryKey: ['admin-users-paged', pageSize],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      const offset = Number(pageParam) || 0;
+      const { data, error } = await supabase.rpc('admin_list_users_paged', {
+        p_limit: pageSize,
+        p_offset: offset,
+      });
+      if (error) throw error;
+      return (data || []) as AdminUserRow[];
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage || lastPage.length < pageSize) return undefined;
+      const loaded = allPages.reduce((sum, page) => sum + page.length, 0);
+      return loaded;
     },
   });
 };
@@ -97,6 +131,8 @@ export const useSetUserRole = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-paged'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       toast.success('User role updated');
     },
@@ -121,6 +157,8 @@ export const useSuspendUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-paged'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-users'] });
       toast.success('User suspended');
     },
     onError: (error) => {
@@ -143,6 +181,8 @@ export const useUnsuspendUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-paged'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-users'] });
       toast.success('User unsuspended');
     },
     onError: (error) => {
@@ -167,6 +207,8 @@ export const useGlobalMuteUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-paged'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-users'] });
       toast.success('User muted globally');
     },
     onError: (error) => {
@@ -189,6 +231,8 @@ export const useGlobalUnmuteUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-paged'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-users'] });
       toast.success('User unmuted');
     },
     onError: (error) => {
@@ -282,6 +326,8 @@ export const useSetUserVerified = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-search-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-paged'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-users'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       toast.success('Verification status updated');
     },
