@@ -15,7 +15,11 @@ const StreamCard = ({ stream }: StreamCardProps) => {
   const streamerUsername = stream.profiles?.username;
   const streamerAvatar = stream.profiles?.avatar_url;
   const isVerified = stream.profiles?.verified_creator;
-  const thumbnailUrl = `https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80`;
+  
+  // Use stream thumbnail if available, otherwise use game thumbnail, or fallback to placeholder
+  const thumbnailUrl = stream.thumbnail_url || 
+    stream.games?.thumbnail_url || 
+    `https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80`;
   
   return (
     <Link

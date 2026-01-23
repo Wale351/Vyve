@@ -7,54 +7,54 @@ import { Button } from '@/components/ui/button';
 
 const featuredGames = [
   { 
-    name: 'Super Champs', 
-    image: 'https://pbs.twimg.com/profile_images/1793295428961320960/h2-fANHd_400x400.jpg',
-    slug: 'super-champs' 
-  },
-  { 
-    name: 'Medieval Empires', 
-    image: 'https://pbs.twimg.com/profile_images/1754167049775755264/xKx0hLLb_400x400.jpg',
-    slug: 'medieval-empires' 
-  },
-  { 
-    name: 'Pixels', 
-    image: 'https://pbs.twimg.com/profile_images/1753118455371038720/Wv2VqBaL_400x400.jpg',
-    slug: 'pixels' 
-  },
-  { 
-    name: 'DeFi Kingdoms', 
-    image: 'https://pbs.twimg.com/profile_images/1621648377694441475/v1HgKKzL_400x400.jpg',
-    slug: 'defi-kingdoms' 
-  },
-  { 
-    name: 'Decimated', 
-    image: 'https://pbs.twimg.com/profile_images/1733119188011180032/nkJvwi_K_400x400.jpg',
-    slug: 'decimated' 
-  },
-  { 
-    name: 'Nyan Heroes', 
-    image: 'https://pbs.twimg.com/profile_images/1822992447804104705/xOgVVzqB_400x400.jpg',
-    slug: 'nyan-heroes' 
-  },
-  { 
-    name: 'OFF THE GRID', 
-    image: 'https://pbs.twimg.com/profile_images/1842597054251085824/0z_LRUiG_400x400.jpg',
+    name: 'Off The Grid', 
+    image: 'https://pbs.twimg.com/profile_images/1879581706081808384/bKWtDa8c_400x400.jpg',
     slug: 'off-the-grid' 
   },
   { 
-    name: 'Call Of The Voyd', 
-    image: 'https://pbs.twimg.com/profile_images/1866486212950437888/i0nPlHSV_400x400.jpg',
-    slug: 'call-of-the-voyd' 
+    name: 'Nyan Heroes', 
+    image: 'https://pbs.twimg.com/profile_images/1871953009287692288/IB3q7bOB_400x400.jpg',
+    slug: 'nyan-heroes' 
   },
   { 
-    name: 'Wilder World', 
-    image: 'https://pbs.twimg.com/profile_images/1800555777989414913/9WaQHLpq_400x400.jpg',
-    slug: 'wilder-world' 
+    name: 'Pixels', 
+    image: 'https://pbs.twimg.com/profile_images/1875991406251913216/jYBjqjpM_400x400.jpg',
+    slug: 'pixels' 
   },
   { 
-    name: 'Cornucopias', 
-    image: 'https://pbs.twimg.com/profile_images/1793284046534709248/H0BXSuxK_400x400.jpg',
-    slug: 'cornucopias' 
+    name: 'Super Champs', 
+    image: 'https://pbs.twimg.com/profile_images/1879499377829347328/mIujJY97_400x400.jpg',
+    slug: 'super-champs' 
+  },
+  { 
+    name: 'Illuvium', 
+    image: 'https://pbs.twimg.com/profile_images/1815339498290765824/0Hn4DUYM_400x400.jpg',
+    slug: 'illuvium' 
+  },
+  { 
+    name: 'Shrapnel', 
+    image: 'https://pbs.twimg.com/profile_images/1842982149071675392/cMYK2vnN_400x400.jpg',
+    slug: 'shrapnel' 
+  },
+  { 
+    name: 'MapleStory Universe', 
+    image: 'https://pbs.twimg.com/profile_images/1775102908817162240/OLKxpLmj_400x400.jpg',
+    slug: 'maplestory-universe' 
+  },
+  { 
+    name: 'Star Atlas', 
+    image: 'https://pbs.twimg.com/profile_images/1850222768160608256/e-OMlGOe_400x400.jpg',
+    slug: 'star-atlas' 
+  },
+  { 
+    name: 'Deadrop', 
+    image: 'https://pbs.twimg.com/profile_images/1739051295128145920/A1DUxzTp_400x400.jpg',
+    slug: 'deadrop' 
+  },
+  { 
+    name: 'Alien Worlds', 
+    image: 'https://pbs.twimg.com/profile_images/1645015820651130880/xqh93e0d_400x400.jpg',
+    slug: 'alien-worlds' 
   },
 ];
 

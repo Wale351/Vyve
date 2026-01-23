@@ -3,19 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import ProfileGate from '@/components/ProfileGate';
 import WalletConnectButton from '@/components/WalletConnectButton';
+import GameSearchCombobox from '@/components/GameSearchCombobox';
+import StreamThumbnailUpload from '@/components/StreamThumbnailUpload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2, Lock } from 'lucide-react';
+import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2, Lock, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
@@ -41,6 +36,7 @@ const GoLive = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [description, setDescription] = useState('');
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [step, setStep] = useState<Step>('setup');
   const [streamData, setStreamData] = useState<StreamData | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
@@ -75,6 +71,7 @@ const GoLive = () => {
           game_category: selectedGame?.name || null,
           game_id: gameId || null,
           tags: tags,
+          thumbnail_url: thumbnailUrl,
         },
       });
 
@@ -149,6 +146,7 @@ const GoLive = () => {
     setTags([]);
     setTagInput('');
     setDescription('');
+    setThumbnailUrl(null);
     setStep('setup');
   };
   
@@ -311,22 +309,27 @@ const GoLive = () => {
                       <Gamepad2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
                       Activity
                     </Label>
-                    <Select value={gameId} onValueChange={setGameId}>
-                      <SelectTrigger className="bg-muted/30 border-border/50 h-10 md:h-12 text-sm md:text-base">
-                        <SelectValue placeholder="Select an activity..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {games.map(game => (
-                          <SelectItem key={game.id} value={game.id}>
-                            <span className="flex items-center gap-2">
-                              {game.name}
-                              <span className="text-xs text-muted-foreground">({game.category})</span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <GameSearchCombobox
+                      value={gameId}
+                      onValueChange={setGameId}
+                      placeholder="Search and select an activity..."
+                    />
                   </div>
+
+                  {/* Thumbnail Upload */}
+                  {user && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-sm">
+                        <Image className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        Stream Thumbnail
+                      </Label>
+                      <StreamThumbnailUpload
+                        userId={user.id}
+                        value={thumbnailUrl}
+                        onChange={setThumbnailUrl}
+                      />
+                    </div>
+                  )}
                   
                   <div className="space-y-2">
                     <Label className="text-sm">Tags (up to 5)</Label>

@@ -682,6 +682,7 @@ export type Database = {
           started_at: string | null
           streamer_id: string
           tags: string[] | null
+          thumbnail_url: string | null
           tip_goal_amount_eth: number | null
           tip_goal_enabled: boolean
           tip_goal_title: string | null
@@ -707,6 +708,7 @@ export type Database = {
           started_at?: string | null
           streamer_id: string
           tags?: string[] | null
+          thumbnail_url?: string | null
           tip_goal_amount_eth?: number | null
           tip_goal_enabled?: boolean
           tip_goal_title?: string | null
@@ -732,6 +734,7 @@ export type Database = {
           started_at?: string | null
           streamer_id?: string
           tags?: string[] | null
+          thumbnail_url?: string | null
           tip_goal_amount_eth?: number | null
           tip_goal_enabled?: boolean
           tip_goal_title?: string | null
