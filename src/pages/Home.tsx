@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import StreamCard from '@/components/StreamCard';
 import GameCard from '@/components/GameCard';
+import TrendingGamesWidget from '@/components/TrendingGamesWidget';
 import { useLiveStreams } from '@/hooks/useStreams';
 import { useGames, useLiveStreamCountByGame } from '@/hooks/useGames';
 import { Play, TrendingUp, Users, Loader2, Radio, Flame } from 'lucide-react';
@@ -137,60 +138,72 @@ const Home = () => {
         </section>
       )}
 
-      {/* All Live Streams */}
-      <section className="container px-4 py-10">
-        <motion.div 
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8"
-        >
-          <div>
-            <h2 className="font-display text-2xl md:text-3xl font-bold">Live Streams</h2>
-            <p className="text-muted-foreground mt-1">Discover live content from creators</p>
-          </div>
-        </motion.div>
+      {/* Main Content with Sidebar */}
+      <div className="container px-4 py-10">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main Content */}
+          <div className="flex-1">
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8"
+            >
+              <div>
+                <h2 className="font-display text-2xl md:text-3xl font-bold">Live Streams</h2>
+                <p className="text-muted-foreground mt-1">Discover live content from creators</p>
+              </div>
+            </motion.div>
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="mt-4 text-muted-foreground">Loading streams...</p>
-          </div>
-        ) : liveStreams.length > 0 ? (
-          <motion.div 
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
-          >
-            {liveStreams.map((stream) => (
-              <motion.div key={stream.id} variants={fadeInUp}>
-                <StreamCard stream={stream} />
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p className="mt-4 text-muted-foreground">Loading streams...</p>
+              </div>
+            ) : liveStreams.length > 0 ? (
+              <motion.div 
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5"
+              >
+                {liveStreams.map((stream) => (
+                  <motion.div key={stream.id} variants={fadeInUp}>
+                    <StreamCard stream={stream} />
+                  </motion.div>
+                ))}
               </motion.div>
-            ))}
-          </motion.div>
-        ) : (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16 bg-card/50 rounded-3xl border border-border/30 mx-auto max-w-lg"
-          >
-            <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
-              <Play className="h-8 w-8 text-muted-foreground" />
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-16 bg-card/50 rounded-3xl border border-border/30 mx-auto max-w-lg"
+              >
+                <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
+                  <Play className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="font-display text-2xl font-bold mb-2">No Live Streams</h3>
+                <p className="text-muted-foreground mb-8 px-4">
+                  Be the first to go live and start streaming!
+                </p>
+                <Link to="/go-live">
+                  <Button variant="premium" size="lg" className="gap-2">
+                    <Radio className="h-5 w-5" />
+                    Start Streaming
+                  </Button>
+                </Link>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Sidebar - Trending Games Widget */}
+          <aside className="hidden lg:block w-72 flex-shrink-0">
+            <div className="sticky top-20">
+              <TrendingGamesWidget />
             </div>
-            <h3 className="font-display text-2xl font-bold mb-2">No Live Streams</h3>
-            <p className="text-muted-foreground mb-8 px-4">
-              Be the first to go live and start streaming!
-            </p>
-            <Link to="/go-live">
-              <Button variant="premium" size="lg" className="gap-2">
-                <Radio className="h-5 w-5" />
-                Start Streaming
-              </Button>
-            </Link>
-          </motion.div>
-        )}
-      </section>
+          </aside>
+        </div>
+      </div>
 
       {/* Browse by Category - Only show if no trending */}
       {games.length > 0 && !trendingGames.length && (

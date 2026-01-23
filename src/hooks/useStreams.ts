@@ -16,6 +16,7 @@ export interface StreamWithProfile {
   recording_url: string | null;
   recording_asset_id: string | null;
   livepeer_stream_id: string | null;
+  thumbnail_url: string | null;
   started_at: string | null;
   ended_at: string | null;
   streamer_id: string;
@@ -35,6 +36,7 @@ export interface StreamWithProfile {
     name: string;
     slug: string;
     category: string;
+    thumbnail_url?: string | null;
   } | null;
 }
 
@@ -71,6 +73,7 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
           recording_url,
           recording_asset_id,
           livepeer_stream_id,
+          thumbnail_url,
           started_at,
           ended_at,
           tip_goal_enabled,
@@ -82,7 +85,8 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
             id,
             name,
             slug,
-            category
+            category,
+            thumbnail_url
           )
         `)
         .eq('is_live', true);
@@ -129,6 +133,7 @@ export const useStream = (streamId: string | undefined) => {
           recording_url,
           recording_asset_id,
           livepeer_stream_id,
+          thumbnail_url,
           started_at,
           ended_at,
           tip_goal_enabled,
@@ -140,7 +145,8 @@ export const useStream = (streamId: string | undefined) => {
             id,
             name,
             slug,
-            category
+            category,
+            thumbnail_url
           )
         `)
         .eq('id', streamId)
@@ -174,32 +180,11 @@ export const useStreamerStreams = (streamerId: string | undefined) => {
       const { data, error } = await supabase
         .from('streams')
         .select(`
-          id,
-          title,
-          description,
-          game_category,
-          game_id,
-          tags,
-          is_live,
-          viewer_count,
-          playback_url,
-          playback_id,
-          recording_url,
-          recording_asset_id,
-          livepeer_stream_id,
-          started_at,
-          ended_at,
-          tip_goal_enabled,
-          tip_goal_title,
-          tip_goal_amount_eth,
-          tip_goal_updated_at,
-          streamer_id,
-          games (
-            id,
-            name,
-            slug,
-            category
-          )
+          id, title, description, game_category, game_id, tags, is_live, viewer_count,
+          playback_url, playback_id, recording_url, recording_asset_id, livepeer_stream_id,
+          thumbnail_url, started_at, ended_at, tip_goal_enabled, tip_goal_title,
+          tip_goal_amount_eth, tip_goal_updated_at, streamer_id,
+          games (id, name, slug, category, thumbnail_url)
         `)
         .eq('streamer_id', streamerId)
         .order('started_at', { ascending: false });
@@ -221,32 +206,11 @@ export const useStreamerRecordings = (streamerId: string | undefined) => {
       const { data, error } = await supabase
         .from('streams')
         .select(`
-          id,
-          title,
-          description,
-          game_category,
-          game_id,
-          tags,
-          is_live,
-          viewer_count,
-          playback_url,
-          playback_id,
-          recording_url,
-          recording_asset_id,
-          livepeer_stream_id,
-          started_at,
-          ended_at,
-          tip_goal_enabled,
-          tip_goal_title,
-          tip_goal_amount_eth,
-          tip_goal_updated_at,
-          streamer_id,
-          games (
-            id,
-            name,
-            slug,
-            category
-          )
+          id, title, description, game_category, game_id, tags, is_live, viewer_count,
+          playback_url, playback_id, recording_url, recording_asset_id, livepeer_stream_id,
+          thumbnail_url, started_at, ended_at, tip_goal_enabled, tip_goal_title,
+          tip_goal_amount_eth, tip_goal_updated_at, streamer_id,
+          games (id, name, slug, category, thumbnail_url)
         `)
         .eq('streamer_id', streamerId)
         .eq('is_live', false)
@@ -269,32 +233,11 @@ export const useStreamsByGame = (gameId: string | undefined) => {
       const { data, error } = await supabase
         .from('streams')
         .select(`
-          id,
-          title,
-          description,
-          game_category,
-          game_id,
-          tags,
-          is_live,
-          viewer_count,
-          playback_url,
-          playback_id,
-          recording_url,
-          recording_asset_id,
-          livepeer_stream_id,
-          started_at,
-          ended_at,
-          tip_goal_enabled,
-          tip_goal_title,
-          tip_goal_amount_eth,
-          tip_goal_updated_at,
-          streamer_id,
-          games (
-            id,
-            name,
-            slug,
-            category
-          )
+          id, title, description, game_category, game_id, tags, is_live, viewer_count,
+          playback_url, playback_id, recording_url, recording_asset_id, livepeer_stream_id,
+          thumbnail_url, started_at, ended_at, tip_goal_enabled, tip_goal_title,
+          tip_goal_amount_eth, tip_goal_updated_at, streamer_id,
+          games (id, name, slug, category, thumbnail_url)
         `)
         .eq('game_id', gameId)
         .eq('is_live', true)
