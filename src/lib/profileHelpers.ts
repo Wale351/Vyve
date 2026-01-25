@@ -48,7 +48,7 @@ export async function fetchPublicProfileByUsername(username: string) {
 }
 
 // Fetch multiple public profiles by IDs (for batch operations)
-// Uses public_profiles view to avoid RLS issues
+// Uses public_profiles view which excludes wallet_address for security
 export async function fetchPublicProfiles(profileIds: string[]) {
   if (profileIds.length === 0) return [];
   
