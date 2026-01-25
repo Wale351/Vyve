@@ -155,16 +155,23 @@ export const useStream = (streamId: string | undefined) => {
       if (error) throw error;
       if (!data) return null;
       
-      // Fetch profile for the streamer from profiles table
+      // Fetch profile for the streamer from public_profiles view (not profiles table)
+      // This ensures viewers can see streamer info without owner-only RLS blocking
       const { data: profile } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, username, avatar_url, bio, verified_creator')
         .eq('id', data.streamer_id)
         .maybeSingle();
       
       return {
         ...data,
-        profiles: profile || null,
+        profiles: profile ? {
+          id: profile.id!,
+          username: profile.username || 'Unknown',
+          avatar_url: profile.avatar_url,
+          bio: profile.bio,
+          verified_creator: profile.verified_creator || false,
+        } : null,
       } as StreamWithProfile;
     },
     enabled: !!streamId,
