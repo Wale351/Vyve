@@ -52,13 +52,14 @@ export const useChatMessages = (streamId: string | undefined) => {
     staleTime: Infinity, // Don't refetch - rely on realtime
   });
 
-  // Real-time subscription with instant updates
+  // Real-time subscription with improved deduplication
   useEffect(() => {
     if (!streamId) return;
 
     // Clean up existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
     }
 
     const channel = supabase
@@ -73,28 +74,38 @@ export const useChatMessages = (streamId: string | undefined) => {
         },
         async (payload) => {
           const newMsg = payload.new as any;
-          console.log('[Chat] Realtime message received:', newMsg.id);
           
-          // Check if this message is already in the cache (from optimistic update or duplicate)
+          // Check if this message is already in the cache (by ID or matching optimistic message)
           const currentMessages = queryClient.getQueryData<ChatMessageWithSender[]>(['chat', streamId]) || [];
-          const exists = currentMessages.some(m => m.id === newMsg.id || (m.id.startsWith('optimistic-') && m.message === newMsg.message && m.sender_id === newMsg.sender_id));
           
-          if (exists) {
-            // Replace optimistic message with real one if found
-            const optimisticMatch = currentMessages.find(m => m.id.startsWith('optimistic-') && m.message === newMsg.message && m.sender_id === newMsg.sender_id);
-            if (optimisticMatch) {
-              queryClient.setQueryData<ChatMessageWithSender[]>(
-                ['chat', streamId],
-                (old) => old?.map(m => m.id === optimisticMatch.id ? { ...m, id: newMsg.id } : m) || []
-              );
-            }
-            console.log('[Chat] Message already exists, skipping duplicate');
+          // Check for exact ID match
+          if (currentMessages.some(m => m.id === newMsg.id)) {
+            return; // Already have this message, skip
+          }
+          
+          // Check for optimistic match (same sender, same message content, within 10 seconds)
+          const optimisticMatch = currentMessages.find(m => 
+            m.id.startsWith('optimistic-') && 
+            m.sender_id === newMsg.sender_id && 
+            m.message === newMsg.message
+          );
+          
+          if (optimisticMatch) {
+            // Replace optimistic message with real one
+            queryClient.setQueryData<ChatMessageWithSender[]>(
+              ['chat', streamId],
+              (old) => old?.map(m => m.id === optimisticMatch.id ? {
+                ...m,
+                id: newMsg.id,
+                created_at: newMsg.created_at,
+              } : m) || []
+            );
             return;
           }
 
-          // Fetch profile for the sender from profiles table
+          // Fetch profile for the sender
           const { data: profile } = await supabase
-            .from('profiles')
+            .from('public_profiles')
             .select('id, username, avatar_url')
             .eq('id', newMsg.sender_id)
             .maybeSingle();
@@ -105,7 +116,7 @@ export const useChatMessages = (streamId: string | undefined) => {
             sender_id: newMsg.sender_id,
             message: newMsg.message,
             created_at: newMsg.created_at,
-            profiles: profile ? { username: profile.username, avatar_url: profile.avatar_url } : null,
+            profiles: profile ? { username: profile.username || 'Unknown', avatar_url: profile.avatar_url } : null,
           };
 
           queryClient.setQueryData<ChatMessageWithSender[]>(
@@ -114,9 +125,7 @@ export const useChatMessages = (streamId: string | undefined) => {
           );
         }
       )
-      .subscribe((status) => {
-        console.log('[Chat] Realtime subscription status:', status);
-      });
+      .subscribe();
 
     channelRef.current = channel;
 

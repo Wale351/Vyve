@@ -93,6 +93,7 @@ export async function fetchStreamProfiles(streamerIds: string[]) {
 }
 
 // Search profiles by username (case-insensitive partial match)
+// Returns username for routing (not UUID)
 export async function searchProfiles(query: string, limit = 10) {
   const { data, error } = await supabase
     .from('profiles')
@@ -111,4 +112,16 @@ export async function searchProfiles(query: string, limit = 10) {
   );
   
   return profilesWithRoles;
+}
+
+// Get username by user ID (for routing purposes)
+export async function getUsername(userId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('public_profiles')
+    .select('username')
+    .eq('id', userId)
+    .maybeSingle();
+  
+  if (error || !data) return null;
+  return data.username;
 }
