@@ -3,8 +3,11 @@ import Header from '@/components/Header';
 import StreamCard from '@/components/StreamCard';
 import GameCard from '@/components/GameCard';
 import TrendingGamesWidget from '@/components/TrendingGamesWidget';
+import RecentlyPlayedGames from '@/components/RecentlyPlayedGames';
+import UpcomingStreamsWidget from '@/components/UpcomingStreamsWidget';
 import { useLiveStreams } from '@/hooks/useStreams';
 import { useGames, useLiveStreamCountByGame } from '@/hooks/useGames';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { Play, TrendingUp, Users, Loader2, Radio, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -26,6 +29,7 @@ const Home = () => {
   const { data: liveStreams = [], isLoading } = useLiveStreams();
   const { data: games = [] } = useGames();
   const { data: liveCountByGame = {} } = useLiveStreamCountByGame();
+  const { authenticated } = useWalletAuth();
   
   const totalViewers = liveStreams.reduce((acc, s) => acc + (s.viewer_count || 0), 0);
 
@@ -196,10 +200,12 @@ const Home = () => {
             )}
           </div>
 
-          {/* Sidebar - Trending Games Widget */}
+          {/* Sidebar */}
           <aside className="hidden lg:block w-72 flex-shrink-0">
-            <div className="sticky top-20">
+            <div className="sticky top-20 space-y-6">
               <TrendingGamesWidget />
+              {authenticated && <RecentlyPlayedGames />}
+              <UpcomingStreamsWidget />
             </div>
           </aside>
         </div>

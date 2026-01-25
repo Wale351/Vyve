@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '@/components/Header';
@@ -37,6 +37,7 @@ import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useViewerPresence, useStreamRealtime } from '@/hooks/useViewerPresence';
 import { useLivepeerStatus, StreamPhase } from '@/hooks/useLivepeerStatus';
 import { useSetStreamTipGoal, useStreamTipTotal } from '@/hooks/useTipGoal';
+import { useRecordView } from '@/hooks/useViewingHistory';
 import { formatViewerCount, formatDuration } from '@/lib/formatters';
 import { Users, Clock, Share2, Loader2, Play, StopCircle, MessageCircle, ChevronUp, Radio, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -75,6 +76,7 @@ const Watch = () => {
   );
 
   const setTipGoal = useSetStreamTipGoal();
+  const recordView = useRecordView();
   const tipGoalEnabled = Boolean(stream?.tip_goal_enabled && stream?.tip_goal_amount_eth);
   const tipTotalQuery = useStreamTipTotal(stream?.id, !!stream?.id);
 
@@ -89,6 +91,13 @@ const Watch = () => {
   };
   
   const streamPhase = getStreamPhase();
+
+  // Record viewing history when user watches a stream with a game
+  React.useEffect(() => {
+    if (stream?.game_id && user?.id) {
+      recordView.mutate({ gameId: stream.game_id, streamId: stream.id });
+    }
+  }, [stream?.id, stream?.game_id, user?.id]);
 
   if (isLoading) {
     return (
