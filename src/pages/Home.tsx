@@ -8,7 +8,7 @@ import UpcomingStreamsWidget from '@/components/UpcomingStreamsWidget';
 import { useLiveStreams } from '@/hooks/useStreams';
 import { useGames, useLiveStreamCountByGame } from '@/hooks/useGames';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
-import { Play, Loader2, Radio, Flame, Sparkles } from 'lucide-react';
+import { Play, Loader2, Radio, Flame, Sparkles, Gamepad2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -23,6 +23,9 @@ const Home = () => {
     .filter(g => liveCountByGame[g.id] > 0)
     .sort((a, b) => (liveCountByGame[b.id] || 0) - (liveCountByGame[a.id] || 0))
     .slice(0, 8);
+
+  // Get all games for browse section (top 12)
+  const browseGames = games.slice(0, 12);
 
   // Popular streams sorted by viewers
   const popularStreams = [...liveStreams]
@@ -107,6 +110,42 @@ const Home = () => {
                 className="flex-shrink-0 w-[140px]"
               >
                 <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} compact />
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Browse Activities Section */}
+      {browseGames.length > 0 && (
+        <section className="container px-4 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-secondary/10">
+                <Gamepad2 className="h-5 w-5 text-secondary" />
+              </div>
+              <div>
+                <h2 className="font-display text-xl font-semibold">Browse Activities</h2>
+                <p className="text-sm text-muted-foreground">Explore games and categories</p>
+              </div>
+            </div>
+            <Link to="/games">
+              <Button variant="outline" size="sm" className="gap-2">
+                View All
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {browseGames.map((game, i) => (
+              <motion.div
+                key={game.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+              >
+                <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
               </motion.div>
             ))}
           </div>
