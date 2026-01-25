@@ -998,46 +998,28 @@ export type Database = {
     Views: {
       public_profiles: {
         Row: {
-          avatar_last_updated_at: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string | null
           id: string | null
-          suspended: boolean | null
-          suspended_at: string | null
-          suspended_reason: string | null
-          updated_at: string | null
           username: string | null
           verified_creator: boolean | null
-          wallet_address: string | null
         }
         Insert: {
-          avatar_last_updated_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
           id?: string | null
-          suspended?: boolean | null
-          suspended_at?: string | null
-          suspended_reason?: string | null
-          updated_at?: string | null
           username?: string | null
           verified_creator?: boolean | null
-          wallet_address?: string | null
         }
         Update: {
-          avatar_last_updated_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
           id?: string | null
-          suspended?: boolean | null
-          suspended_at?: string | null
-          suspended_reason?: string | null
-          updated_at?: string | null
           username?: string | null
           verified_creator?: boolean | null
-          wallet_address?: string | null
         }
         Relationships: []
       }
