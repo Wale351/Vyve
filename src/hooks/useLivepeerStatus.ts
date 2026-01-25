@@ -125,9 +125,18 @@ export const useLivepeerStatus = ({
   }, [playbackId, endedAt, pollInterval, checkStatus, getInitialPhase]);
 
   const retry = useCallback(() => {
+    console.log('[useLivepeerStatus] Manual retry triggered');
     setError(null);
+    setStatus(prev => ({ ...prev, isActive: false })); // Reset active state
+    
+    // Re-check status immediately
     checkStatus();
-  }, [checkStatus]);
+    
+    // Also restart polling if it was stopped
+    if (!pollRef.current && playbackId && !endedAt) {
+      pollRef.current = setInterval(checkStatus, pollInterval);
+    }
+  }, [checkStatus, playbackId, endedAt, pollInterval]);
 
   return {
     ...status,

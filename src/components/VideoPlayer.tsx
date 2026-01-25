@@ -12,6 +12,7 @@ interface VideoPlayerProps {
   title: string;
   isLive?: boolean;
   thumbnailUrl?: string;
+  gameThumbnailUrl?: string;
   streamPhase?: StreamPhase;
   onRetry?: () => void;
 }
@@ -22,9 +23,12 @@ const VideoPlayer = ({
   title, 
   isLive = false, 
   thumbnailUrl,
+  gameThumbnailUrl,
   streamPhase = 'idle',
   onRetry,
 }: VideoPlayerProps) => {
+  // Effective thumbnail: custom first, then game thumbnail, then nothing
+  const effectiveThumbnail = thumbnailUrl || gameThumbnailUrl;
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -215,30 +219,36 @@ const VideoPlayer = ({
   };
 
   const handleRetry = useCallback(() => {
-    console.log('[VideoPlayer] Manual retry triggered');
+    console.log('[VideoPlayer] Manual retry triggered, streamPhase:', streamPhase);
+    
+    // Reset all error/retry states
     setRetryCount(0);
     setHasError(false);
     setErrorMessage('');
-    setIsLoading(true);
     
-    // Always call onRetry if provided (to refresh Livepeer status)
+    // Call onRetry first to refresh Livepeer status (which might update streamPhase)
     if (onRetry) {
+      console.log('[VideoPlayer] Calling onRetry callback');
       onRetry();
     }
     
-    // Also reinitialize playback directly
-    // Small delay to allow status check to complete
-    setTimeout(() => {
-      initializePlayback();
-    }, 500);
-  }, [onRetry, initializePlayback]);
+    // If we're in live phase, reinitialize playback after a brief delay
+    // The delay allows the Livepeer status check to complete first
+    if (streamPhase === 'live' || effectivePlaybackUrl) {
+      setIsLoading(true);
+      setTimeout(() => {
+        console.log('[VideoPlayer] Reinitializing playback after retry');
+        initializePlayback();
+      }, 800);
+    }
+  }, [onRetry, initializePlayback, streamPhase, effectivePlaybackUrl]);
 
   // IDLE state - no stream configured
   if (streamPhase === 'idle' || !effectivePlaybackUrl) {
     return (
       <div className="relative aspect-video bg-background rounded-xl overflow-hidden">
-        {thumbnailUrl ? (
-          <img src={thumbnailUrl} alt={title} className="w-full h-full object-cover opacity-50" />
+        {effectiveThumbnail ? (
+          <img src={effectiveThumbnail} alt={title} className="w-full h-full object-cover opacity-50" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-muted to-background" />
         )}
@@ -260,8 +270,8 @@ const VideoPlayer = ({
   if (streamPhase === 'waiting') {
     return (
       <div className="relative aspect-video bg-background rounded-xl overflow-hidden">
-        {thumbnailUrl ? (
-          <img src={thumbnailUrl} alt={title} className="w-full h-full object-cover opacity-30" />
+        {effectiveThumbnail ? (
+          <img src={effectiveThumbnail} alt={title} className="w-full h-full object-cover opacity-30" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
         )}
@@ -291,8 +301,8 @@ const VideoPlayer = ({
   if (streamPhase === 'ended') {
     return (
       <div className="relative aspect-video bg-background rounded-xl overflow-hidden">
-        {thumbnailUrl ? (
-          <img src={thumbnailUrl} alt={title} className="w-full h-full object-cover opacity-30" />
+        {effectiveThumbnail ? (
+          <img src={effectiveThumbnail} alt={title} className="w-full h-full object-cover opacity-30" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-muted to-background" />
         )}
@@ -326,7 +336,7 @@ const VideoPlayer = ({
         className="w-full h-full object-contain bg-black"
         playsInline
         muted={isMuted}
-        poster={thumbnailUrl}
+        poster={effectiveThumbnail}
       />
 
       {/* Loading state */}

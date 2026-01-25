@@ -204,6 +204,8 @@ const Watch = () => {
                 playbackId={stream.playback_id || undefined}
                 title={stream.title}
                 isLive={streamPhase === 'live'}
+                thumbnailUrl={stream.thumbnail_url || undefined}
+                gameThumbnailUrl={stream.games?.thumbnail_url || undefined}
                 streamPhase={streamPhase}
                 onRetry={livepeerStatus.retry}
               />
