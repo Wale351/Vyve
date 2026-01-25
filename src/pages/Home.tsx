@@ -8,9 +8,22 @@ import UpcomingStreamsWidget from '@/components/UpcomingStreamsWidget';
 import { useLiveStreams } from '@/hooks/useStreams';
 import { useGames, useLiveStreamCountByGame } from '@/hooks/useGames';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
-import { Play, Loader2, Radio, Flame, Sparkles, Gamepad2, ArrowRight } from 'lucide-react';
+import { Play, TrendingUp, Users, Loader2, Radio, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 }
+  }
+};
 
 const Home = () => {
   const { data: liveStreams = [], isLoading } = useLiveStreams();
@@ -18,16 +31,15 @@ const Home = () => {
   const { data: liveCountByGame = {} } = useLiveStreamCountByGame();
   const { authenticated } = useWalletAuth();
   
-  // Get trending games (games with live streams)
+  const totalViewers = liveStreams.reduce((acc, s) => acc + (s.viewer_count || 0), 0);
+
+  // Get trending games (games with live streams, sorted by viewer count)
   const trendingGames = games
     .filter(g => liveCountByGame[g.id] > 0)
     .sort((a, b) => (liveCountByGame[b.id] || 0) - (liveCountByGame[a.id] || 0))
-    .slice(0, 8);
+    .slice(0, 6);
 
-  // Get all games for browse section (top 12)
-  const browseGames = games.slice(0, 12);
-
-  // Popular streams sorted by viewers
+  // Get popular streamers from live streams (sorted by viewer count)
   const popularStreams = [...liveStreams]
     .sort((a, b) => (b.viewer_count || 0) - (a.viewer_count || 0))
     .slice(0, 4);
@@ -35,115 +47,93 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      
+      {/* Spacer for fixed header */}
       <div className="h-14 md:h-16" />
       
-      {/* Hero Stats */}
-      {liveStreams.length > 0 && (
-        <div className="border-b border-border/30 bg-card/30">
-          <div className="container px-4 py-4">
-            <div className="flex items-center justify-center gap-8 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
-                </span>
-                <span className="font-semibold">{liveStreams.length}</span>
-                <span className="text-muted-foreground">live now</span>
-              </div>
+      {/* Stats Banner - Minimal */}
+      <motion.section 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+        className="border-b border-border/20"
+      >
+        <div className="container px-4 py-3">
+          <div className="flex items-center justify-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
+              </span>
+              <span className="font-medium text-foreground">{liveStreams.length} Live</span>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Users className="h-3.5 w-3.5" />
+              <span>{totalViewers.toLocaleString()} watching</span>
             </div>
           </div>
         </div>
-      )}
+      </motion.section>
 
-      {/* Featured Streams */}
+      {/* Featured / Popular Streams */}
       {popularStreams.length > 0 && (
-        <section className="container px-4 pt-10 pb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20">
+        <section className="container px-4 py-10">
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+            className="flex items-center gap-2.5 mb-6"
+          >
+            <div className="p-2 rounded-xl bg-orange-500/10">
               <Flame className="h-5 w-5 text-orange-500" />
             </div>
-            <div>
-              <h2 className="font-display text-xl font-semibold">Popular Now</h2>
-              <p className="text-sm text-muted-foreground">Most watched streams right now</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {popularStreams.map((stream, i) => (
-              <motion.div
-                key={stream.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
+            <h2 className="font-display text-xl md:text-2xl font-semibold">Popular Now</h2>
+          </motion.div>
+          <motion.div 
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+          >
+            {popularStreams.map((stream) => (
+              <motion.div key={stream.id} variants={fadeInUp}>
                 <StreamCard stream={stream} />
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </section>
       )}
 
-      {/* Trending Games - Horizontal Scroll */}
+      {/* Trending Games */}
       {trendingGames.length > 0 && (
         <section className="container px-4 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+            className="flex items-center justify-between mb-6"
+          >
+            <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-primary/10">
-                <Sparkles className="h-5 w-5 text-primary" />
+                <TrendingUp className="h-5 w-5 text-primary" />
               </div>
-              <h2 className="font-display text-lg font-semibold">Trending Activities</h2>
+              <h2 className="font-display text-xl md:text-2xl font-semibold">Trending</h2>
             </div>
             <Link to="/games">
-              <Button variant="ghost" size="sm" className="text-muted-foreground">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                 View All
               </Button>
             </Link>
-          </div>
-          
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-            {trendingGames.map((game, i) => (
-              <motion.div
-                key={game.id}
+          </motion.div>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+            {trendingGames.map((game, index) => (
+              <motion.div 
+                key={game.id} 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="flex-shrink-0 w-[140px]"
-              >
-                <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} compact />
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Browse Activities Section */}
-      {browseGames.length > 0 && (
-        <section className="container px-4 py-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-secondary/10">
-                <Gamepad2 className="h-5 w-5 text-secondary" />
-              </div>
-              <div>
-                <h2 className="font-display text-xl font-semibold">Browse Activities</h2>
-                <p className="text-sm text-muted-foreground">Explore games and categories</p>
-              </div>
-            </div>
-            <Link to="/games">
-              <Button variant="outline" size="sm" className="gap-2">
-                View All
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {browseGames.map((game, i) => (
-              <motion.div
-                key={game.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex-shrink-0 w-[160px] md:w-[180px]"
               >
                 <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
               </motion.div>
@@ -152,50 +142,57 @@ const Home = () => {
         </section>
       )}
 
-      {/* Main Grid */}
-      <div className="container px-4 py-8">
+      {/* Main Content with Sidebar */}
+      <div className="container px-4 py-10">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Stream Grid */}
+          {/* Main Content */}
           <div className="flex-1">
-            <div className="mb-6">
-              <h2 className="font-display text-2xl font-bold">Live Streams</h2>
-              <p className="text-sm text-muted-foreground mt-1">Discover creators going live</p>
-            </div>
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8"
+            >
+              <div>
+                <h2 className="font-display text-2xl md:text-3xl font-bold">Live Streams</h2>
+                <p className="text-muted-foreground mt-1">Discover live content from creators</p>
+              </div>
+            </motion.div>
 
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="mt-3 text-sm text-muted-foreground">Loading streams...</p>
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p className="mt-4 text-muted-foreground">Loading streams...</p>
               </div>
             ) : liveStreams.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {liveStreams.map((stream, i) => (
-                  <motion.div
-                    key={stream.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                  >
+              <motion.div 
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5"
+              >
+                {liveStreams.map((stream) => (
+                  <motion.div key={stream.id} variants={fadeInUp}>
                     <StreamCard stream={stream} />
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-16 bg-card/50 rounded-2xl border border-border/30"
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-16 bg-card/50 rounded-3xl border border-border/30 mx-auto max-w-lg"
               >
-                <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                  <Play className="h-7 w-7 text-muted-foreground" />
+                <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
+                  <Play className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="font-display text-xl font-bold mb-2">No Live Streams</h3>
-                <p className="text-muted-foreground mb-6 text-sm">
-                  Be the first to go live!
+                <h3 className="font-display text-2xl font-bold mb-2">No Live Streams</h3>
+                <p className="text-muted-foreground mb-8 px-4">
+                  Be the first to go live and start streaming!
                 </p>
                 <Link to="/go-live">
-                  <Button variant="premium" className="gap-2">
-                    <Radio className="h-4 w-4" />
+                  <Button variant="premium" size="lg" className="gap-2">
+                    <Radio className="h-5 w-5" />
                     Start Streaming
                   </Button>
                 </Link>
@@ -205,26 +202,75 @@ const Home = () => {
 
           {/* Sidebar */}
           <aside className="hidden lg:block w-72 flex-shrink-0">
-            <div className="sticky top-20 space-y-5">
-              <UpcomingStreamsWidget />
+            <div className="sticky top-20 space-y-6">
               <TrendingGamesWidget />
               {authenticated && <RecentlyPlayedGames />}
+              <UpcomingStreamsWidget />
             </div>
           </aside>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-border/30 mt-12">
-        <div className="container px-4 py-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Play className="h-3 w-3 text-primary-foreground" fill="currentColor" />
+      {/* Browse by Category - Only show if no trending */}
+      {games.length > 0 && !trendingGames.length && (
+        <section className="container px-4 py-10">
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+            className="flex items-center justify-between mb-6"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <TrendingUp className="h-5 w-5 text-primary" />
               </div>
-              <span className="font-display font-semibold text-foreground">Vyve</span>
+              <h2 className="font-display text-xl md:text-2xl font-semibold">Browse Activities</h2>
             </div>
-            <span>Built on Base • Powered by Livepeer</span>
+            <Link to="/games">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                View All
+              </Button>
+            </Link>
+          </motion.div>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+            {games.slice(0, 8).map((game, index) => (
+              <motion.div 
+                key={game.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex-shrink-0 w-[160px] md:w-[180px]"
+              >
+                <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Footer - Minimal */}
+      <footer className="border-t border-border/20 mt-10">
+        <div className="container px-4 py-8">
+          <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <Play className="h-3.5 w-3.5 text-primary-foreground" fill="currentColor" />
+              </div>
+              <span className="font-display text-lg font-bold">Vyve</span>
+            </div>
+            
+            <p className="text-xs text-muted-foreground text-center">
+              Built on Base • Powered by Livepeer
+            </p>
+            
+            <div className="flex items-center gap-6">
+              <button className="text-muted-foreground hover:text-foreground transition-colors text-xs">
+                Terms
+              </button>
+              <button className="text-muted-foreground hover:text-foreground transition-colors text-xs">
+                Privacy
+              </button>
+            </div>
           </div>
         </div>
       </footer>

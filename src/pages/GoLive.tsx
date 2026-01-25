@@ -1,24 +1,21 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { format, formatDistanceToNow } from 'date-fns';
 import Header from '@/components/Header';
 import ProfileGate from '@/components/ProfileGate';
 import WalletConnectButton from '@/components/WalletConnectButton';
 import GameSearchCombobox from '@/components/GameSearchCombobox';
 import StreamThumbnailUpload from '@/components/StreamThumbnailUpload';
-import ScheduleStreamModal from '@/components/ScheduleStreamModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2, Lock, Image, CalendarClock, Trash2 } from 'lucide-react';
+import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2, Lock, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useUserRole } from '@/hooks/useProfile';
 import { useGames } from '@/hooks/useGames';
-import { useStreamerSchedule, useCancelScheduledStream } from '@/hooks/useScheduledStreams';
 
 type Step = 'setup' | 'creating' | 'ready';
 
@@ -34,8 +31,6 @@ const GoLive = () => {
   const { user, authenticated, isAuthenticated, isAuthenticating } = useWalletAuth();
   const { data: role, isLoading: roleLoading } = useUserRole(user?.id);
   const { data: games = [] } = useGames();
-  const { data: scheduledStreams = [], isLoading: scheduledLoading } = useStreamerSchedule(user?.id);
-  const cancelSchedule = useCancelScheduledStream();
   const [title, setTitle] = useState('');
   const [gameId, setGameId] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -47,18 +42,8 @@ const GoLive = () => {
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedRtmp, setCopiedRtmp] = useState(false);
   const [isGoingLive, setIsGoingLive] = useState(false);
-  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   
   const selectedGame = games.find(g => g.id === gameId);
-  
-  const handleCancelSchedule = async (scheduleId: string) => {
-    try {
-      await cancelSchedule.mutateAsync(scheduleId);
-      toast.success('Schedule cancelled');
-    } catch {
-      toast.error('Failed to cancel schedule');
-    }
-  };
 
   const handleCreateStream = async () => {
     if (!title.trim()) {
@@ -256,14 +241,14 @@ const GoLive = () => {
       
       <ProfileGate fallbackMessage="You need to complete your profile before you can go live.">
       <div className="container px-4 py-6 md:py-12">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-lg mx-auto">
           {/* Header */}
           <div className="text-center mb-6 md:mb-10">
             <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-3">
               Go Live
             </h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              Start streaming or schedule for later
+              Set up your stream
             </p>
           </div>
 
@@ -535,82 +520,8 @@ const GoLive = () => {
               </div>
             )}
           </div>
-          
-          {/* Scheduled Streams Section */}
-          <div className="mt-8 glass-card p-4 md:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-                  <CalendarClock className="h-4 w-4 md:h-5 md:w-5 text-secondary" />
-                </div>
-                <div>
-                  <h2 className="font-display font-semibold text-base md:text-lg">Scheduled Streams</h2>
-                  <p className="text-xs md:text-sm text-muted-foreground">Announce upcoming streams to your followers</p>
-                </div>
-              </div>
-              <Button 
-                variant="soft" 
-                size="sm" 
-                onClick={() => setScheduleModalOpen(true)}
-                className="gap-1.5"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Schedule</span>
-              </Button>
-            </div>
-            
-            {scheduledLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : scheduledStreams.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <CalendarClock className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">No scheduled streams</p>
-                <p className="text-xs mt-1">Schedule a stream to let followers know when you'll be live</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {scheduledStreams.map((schedule) => (
-                  <div 
-                    key={schedule.id} 
-                    className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/30"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{schedule.title}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                        <span>{format(new Date(schedule.scheduled_for), 'MMM d, h:mm a')}</span>
-                        <span className="text-primary">
-                          ({formatDistanceToNow(new Date(schedule.scheduled_for), { addSuffix: true })})
-                        </span>
-                      </div>
-                      {schedule.games && (
-                        <Badge variant="secondary" className="mt-1.5 text-xs">
-                          {schedule.games.name}
-                        </Badge>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleCancelSchedule(schedule.id)}
-                      disabled={cancelSchedule.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
-      
-      <ScheduleStreamModal 
-        open={scheduleModalOpen} 
-        onOpenChange={setScheduleModalOpen} 
-      />
       </ProfileGate>
     </div>
   );

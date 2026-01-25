@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Play, Menu, X } from 'lucide-react';
+import { Play, Menu, X, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import WalletConnectButton from '@/components/WalletConnectButton';
@@ -11,29 +11,46 @@ export default function LandingHeader() {
     <motion.header 
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className="fixed top-0 left-0 right-0 z-50"
     >
       <div className="mx-4 mt-4">
-        <div className="max-w-5xl mx-auto px-5 py-3 rounded-xl bg-card/80 backdrop-blur-xl border border-border/50">
+        <div className="max-w-7xl mx-auto px-6 py-4 rounded-2xl bg-card/80 backdrop-blur-xl border border-border/50">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Play className="h-4 w-4 text-primary-foreground" fill="currentColor" />
+            <motion.div 
+              className="flex items-center gap-3"
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <div className="relative">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <Play className="h-5 w-5 text-primary-foreground" fill="currentColor" />
+                </div>
+                <motion.div 
+                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-secondary"
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
               </div>
-              <span className="font-display text-xl font-bold">Vyve</span>
-            </Link>
+              <span className="font-varsity text-3xl tracking-wider text-foreground">VYVE</span>
+            </motion.div>
+
+            {/* Nav Links */}
+            <div className="hidden md:flex items-center gap-6">
+              <Link 
+                to="/how-it-works" 
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <HelpCircle className="h-4 w-4" />
+                How it Works
+              </Link>
+            </div>
 
             {/* CTA */}
-            <div className="hidden md:flex items-center gap-3">
-              <Link to="/">
-                <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Browse
-                </span>
-              </Link>
+            <div className="hidden md:block">
               <WalletConnectButton variant="premium" size="sm">
-                Connect
+                Launch App
               </WalletConnectButton>
             </div>
 
@@ -42,7 +59,7 @@ export default function LandingHeader() {
               className="md:hidden p-2 text-foreground"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -56,14 +73,15 @@ export default function LandingHeader() {
       >
         <div className="bg-card/95 backdrop-blur-xl rounded-xl border border-border/50 p-4 space-y-3">
           <Link 
-            to="/" 
-            className="block text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+            to="/how-it-works" 
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
             onClick={() => setMobileMenuOpen(false)}
           >
-            Browse Streams
+            <HelpCircle className="h-4 w-4" />
+            How it Works
           </Link>
           <WalletConnectButton variant="premium" size="sm" className="w-full">
-            Connect Wallet
+            Launch App
           </WalletConnectButton>
         </div>
       </motion.div>

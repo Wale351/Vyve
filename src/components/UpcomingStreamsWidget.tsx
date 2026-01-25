@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, Bell } from 'lucide-react';
 import { useUpcomingStreams } from '@/hooks/useScheduledStreams';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format, differenceInSeconds } from 'date-fns';
+import { format, formatDistanceToNow, differenceInSeconds } from 'date-fns';
 
-function Countdown({ targetDate }: { targetDate: Date }) {
+interface CountdownProps {
+  targetDate: Date;
+}
+
+function Countdown({ targetDate }: CountdownProps) {
   const [timeLeft, setTimeLeft] = useState('');
   
   useEffect(() => {
     const update = () => {
-      const diff = differenceInSeconds(targetDate, new Date());
+      const now = new Date();
+      const diff = differenceInSeconds(targetDate, now);
       
       if (diff <= 0) {
         setTimeLeft('Starting soon');
@@ -21,22 +27,25 @@ function Countdown({ targetDate }: { targetDate: Date }) {
       const days = Math.floor(diff / 86400);
       const hours = Math.floor((diff % 86400) / 3600);
       const minutes = Math.floor((diff % 3600) / 60);
+      const seconds = diff % 60;
       
       if (days > 0) {
-        setTimeLeft(`${days}d ${hours}h`);
+        setTimeLeft(`${days}d ${hours}h ${minutes}m`);
       } else if (hours > 0) {
-        setTimeLeft(`${hours}h ${minutes}m`);
+        setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
       } else {
-        setTimeLeft(`${minutes}m`);
+        setTimeLeft(`${minutes}m ${seconds}s`);
       }
     };
     
     update();
-    const interval = setInterval(update, 60000); // Update every minute
+    const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [targetDate]);
   
-  return <span className="font-mono text-xs text-primary">{timeLeft}</span>;
+  return (
+    <span className="font-mono text-xs text-primary font-medium">{timeLeft}</span>
+  );
 }
 
 export default function UpcomingStreamsWidget() {
@@ -44,17 +53,17 @@ export default function UpcomingStreamsWidget() {
   
   if (isLoading) {
     return (
-      <div className="bg-card rounded-xl border border-border/50 p-4">
+      <div className="bg-card/50 rounded-2xl border border-border/30 p-5">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="h-4 w-4 text-muted-foreground" />
-          <h3 className="font-semibold text-sm">Upcoming</h3>
+          <h3 className="font-semibold text-sm">Upcoming Streams</h3>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
             <div key={i} className="flex items-center gap-3">
-              <Skeleton className="w-9 h-9 rounded-full" />
+              <Skeleton className="w-10 h-10 rounded-full" />
               <div className="flex-1 space-y-1">
-                <Skeleton className="h-3.5 w-full" />
+                <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-3 w-2/3" />
               </div>
             </div>
@@ -66,38 +75,38 @@ export default function UpcomingStreamsWidget() {
   
   if (!streams?.length) {
     return (
-      <div className="bg-card rounded-xl border border-border/50 p-4">
+      <div className="bg-card/50 rounded-2xl border border-border/30 p-5">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="h-4 w-4 text-muted-foreground" />
-          <h3 className="font-semibold text-sm">Upcoming</h3>
+          <h3 className="font-semibold text-sm">Upcoming Streams</h3>
         </div>
-        <p className="text-xs text-muted-foreground text-center py-3">
-          No scheduled streams
+        <p className="text-sm text-muted-foreground text-center py-4">
+          No scheduled streams yet
         </p>
       </div>
     );
   }
   
   return (
-    <div className="bg-card rounded-xl border border-border/50 p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold text-sm">Upcoming</h3>
-        </div>
-        <span className="text-xs text-muted-foreground">{streams.length} scheduled</span>
+    <div className="bg-card/50 rounded-2xl border border-border/30 p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <Calendar className="h-4 w-4 text-primary" />
+        <h3 className="font-semibold text-sm">Upcoming Streams</h3>
       </div>
       
       <div className="space-y-3">
         {streams.map(stream => (
-          <div key={stream.id} className="group">
+          <div
+            key={stream.id}
+            className="p-3 rounded-xl bg-muted/30 border border-border/20"
+          >
             <div className="flex items-start gap-3">
               <Link to={stream.profiles?.username ? `/profile/${stream.profiles.username}` : '#'}>
-                <Avatar className="w-9 h-9 border border-border">
+                <Avatar className="w-10 h-10 border border-border">
                   {stream.profiles?.avatar_url ? (
                     <AvatarImage src={stream.profiles.avatar_url} />
                   ) : (
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                    <AvatarFallback className="bg-primary/20 text-primary text-sm">
                       {stream.profiles?.username?.charAt(0).toUpperCase() || '?'}
                     </AvatarFallback>
                   )}
@@ -105,10 +114,8 @@ export default function UpcomingStreamsWidget() {
               </Link>
               
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                  {stream.title}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
+                <p className="font-medium text-sm truncate">{stream.title}</p>
+                <div className="flex items-center gap-2 mt-1">
                   <Link
                     to={stream.profiles?.username ? `/profile/${stream.profiles.username}` : '#'}
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -117,10 +124,10 @@ export default function UpcomingStreamsWidget() {
                   </Link>
                   {stream.games && (
                     <>
-                      <span className="text-muted-foreground/50">·</span>
+                      <span className="text-muted-foreground">·</span>
                       <Link
                         to={`/games/${stream.games.slug}`}
-                        className="text-xs text-primary/70 hover:text-primary"
+                        className="text-xs text-primary/80 hover:text-primary"
                       >
                         {stream.games.name}
                       </Link>
@@ -129,7 +136,7 @@ export default function UpcomingStreamsWidget() {
                 </div>
                 
                 <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center gap-1 text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     <span className="text-xs">
                       {format(new Date(stream.scheduled_for), 'MMM d, h:mm a')}
