@@ -5,6 +5,7 @@ import ProfileGate from '@/components/ProfileGate';
 import WalletConnectButton from '@/components/WalletConnectButton';
 import GameSearchCombobox from '@/components/GameSearchCombobox';
 import StreamThumbnailUpload from '@/components/StreamThumbnailUpload';
+import GoLiveScheduleSection from '@/components/GoLiveScheduleSection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -520,6 +521,9 @@ const GoLive = () => {
               </div>
             )}
           </div>
+
+          {/* Scheduled Streams Section */}
+          {user && <GoLiveScheduleSection userId={user.id} />}
         </div>
       </div>
       </ProfileGate>
