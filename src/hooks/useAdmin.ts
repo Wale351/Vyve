@@ -34,20 +34,19 @@ export const useAdminStats = () => {
   });
 };
 
-// Fetch all users (paginated)
+// Fetch all users (paginated) - uses secure RPC with admin role check
 export const useAdminAllUsers = (limit: number = 50) => {
   return useQuery({
     queryKey: ['admin-all-users', limit],
     queryFn: async () => {
-      // Use admin_profiles view which has role information
-      const { data, error } = await supabase
-        .from('admin_profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(limit);
+      // Use secure RPC function that checks admin role
+      const { data, error } = await supabase.rpc('admin_list_users_paged', {
+        p_limit: limit,
+        p_offset: 0,
+      });
       
       if (error) throw error;
-      return data || [];
+      return (data || []) as AdminUserRow[];
     },
   });
 };
