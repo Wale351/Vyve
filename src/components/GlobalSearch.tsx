@@ -56,7 +56,8 @@ const GlobalSearch = () => {
   }, [query]);
 
   const handleSelect = (result: SearchResult) => {
-    navigate(`/profile/${result.id}`);
+    // Navigate using username for clean URLs
+    navigate(`/profile/${result.username}`);
     setQuery('');
     setIsOpen(false);
   };

@@ -185,7 +185,7 @@ const TipButton = ({ streamerId, streamerName, streamId }: TipButtonProps) => {
           }}
         >
           <Coins className="h-4 w-4" />
-          Tip
+          <span>Tip on Base</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="glass-card border-border/50 sm:max-w-md">

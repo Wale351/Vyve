@@ -30,7 +30,7 @@ const UserHoverCard = ({ userId, children }: UserHoverCardProps) => {
         ) : profile ? (
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <Link to={`/profile/${profile.id}`}>
+              <Link to={`/profile/${profile.username}`}>
                 <Avatar className="h-12 w-12 border-2 border-border hover:border-primary/50 transition-colors">
                   {profile.avatar_url ? (
                     <AvatarImage src={profile.avatar_url} alt={profile.username} />
@@ -42,7 +42,7 @@ const UserHoverCard = ({ userId, children }: UserHoverCardProps) => {
                 </Avatar>
               </Link>
               <div className="flex-1 min-w-0">
-                <Link to={`/profile/${profile.id}`} className="flex items-center gap-1 hover:underline">
+                <Link to={`/profile/${profile.username}`} className="flex items-center gap-1 hover:underline">
                   <span className="font-semibold truncate">{profile.username}</span>
                   {profile.verified_creator && (
                     <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />

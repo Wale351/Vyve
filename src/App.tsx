@@ -17,6 +17,7 @@ import GameDetail from "./pages/GameDetail";
 import ApplyStreamer from "./pages/ApplyStreamer";
 import Admin from "./pages/Admin";
 import VerifyAccount from "./pages/VerifyAccount";
+import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
 import OnboardingModal from "./components/OnboardingModal";
 
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/games/:slug" element={<GameDetail />} />
               <Route path="/apply/streamer" element={<ApplyStreamer />} />
               <Route path="/verify" element={<VerifyAccount />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

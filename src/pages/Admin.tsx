@@ -286,7 +286,7 @@ export default function Admin() {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <Link to={`/profile/${app.user_id}`} className="font-semibold hover:text-primary">
+                          <Link to={`/profile/${app.username}`} className="font-semibold hover:text-primary">
                             @{app.username}
                           </Link>
                           <Badge variant={
@@ -355,7 +355,7 @@ export default function Admin() {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <Link to={`/profile/${v.user_id}`} className="font-semibold hover:text-primary">
+                          <Link to={`/profile/${v.username}`} className="font-semibold hover:text-primary">
                             @{v.username}
                           </Link>
                           <Badge variant="outline">
@@ -423,7 +423,7 @@ export default function Admin() {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <Link to={`/profile/${u.id}`} className="font-semibold hover:text-primary">
+                        <Link to={`/profile/${u.username}`} className="font-semibold hover:text-primary">
                           @{u.username}
                         </Link>
                         {u.verified_creator && <BadgeCheck className="h-4 w-4 text-primary" />}

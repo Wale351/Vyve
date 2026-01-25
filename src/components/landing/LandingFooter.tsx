@@ -99,7 +99,13 @@ export default function LandingFooter() {
         {/* Bottom bar */}
         <div className="pt-8 border-t border-border/30">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© {new Date().getFullYear()} Vyve. Built on Base Sepolia Testnet.</p>
+            <div className="flex items-center gap-2">
+              <span>© {new Date().getFullYear()} Vyve. Built on Base Sepolia Testnet.</span>
+              <span className="text-muted-foreground/50">•</span>
+              <span className="flex items-center gap-1">
+                Powered by <span className="font-semibold text-[#0052FF]">Base</span>
+              </span>
+            </div>
             <div className="flex items-center gap-6">
               <a href="#" className="hover:text-primary transition-colors">Privacy</a>
               <a href="#" className="hover:text-primary transition-colors">Terms</a>

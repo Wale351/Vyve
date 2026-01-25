@@ -118,9 +118,10 @@ const FollowersModal = React.forwardRef<HTMLDivElement, FollowersModalProps>(
   const { data: followers = [], isLoading: followersLoading } = useFollowersList(open ? profileId : undefined);
   const { data: following = [], isLoading: followingLoading } = useFollowingList(open ? profileId : undefined);
 
-  const handleUserClick = (userId: string) => {
+  const handleUserClick = (user: FollowUser) => {
     onOpenChange(false);
-    navigate(`/profile/${userId}`);
+    // Navigate using username for clean URLs
+    navigate(`/profile/${user.username || user.id}`);
   };
 
   return (
@@ -148,7 +149,7 @@ const FollowersModal = React.forwardRef<HTMLDivElement, FollowersModalProps>(
                     <UserListItem 
                       key={user.id} 
                       user={user} 
-                      onClick={() => handleUserClick(user.id)} 
+                      onClick={() => handleUserClick(user)} 
                     />
                   ))}
                 </div>
@@ -172,7 +173,7 @@ const FollowersModal = React.forwardRef<HTMLDivElement, FollowersModalProps>(
                     <UserListItem 
                       key={user.id} 
                       user={user} 
-                      onClick={() => handleUserClick(user.id)} 
+                      onClick={() => handleUserClick(user)} 
                     />
                   ))}
                 </div>
