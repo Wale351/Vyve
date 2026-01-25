@@ -1,63 +1,82 @@
 import { Link } from 'react-router-dom';
 import { Game } from '@/hooks/useGames';
-import { Gamepad2, Users } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Radio } from 'lucide-react';
 
 interface GameCardProps {
   game: Game;
   liveCount?: number;
+  compact?: boolean;
 }
 
-const GameCard = ({ game, liveCount = 0 }: GameCardProps) => {
-  return (
-    <Link 
-      to={`/games/${game.slug}`}
-      className="group block"
-    >
-      <div className="glass-card overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-primary/30">
-        {/* Thumbnail */}
-        <div className="aspect-[3/4] bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 relative overflow-hidden">
+const GameCard = ({ game, liveCount = 0, compact = false }: GameCardProps) => {
+  const isLive = liveCount > 0;
+
+  if (compact) {
+    return (
+      <Link to={`/games/${game.slug}`} className="block group">
+        <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted">
           {game.thumbnail_url ? (
             <img 
               src={game.thumbnail_url} 
               alt={game.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Gamepad2 className="h-16 w-16 text-muted-foreground/50" />
-            </div>
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
           )}
           
-          {/* Live count overlay */}
-          {liveCount > 0 && (
-            <div className="absolute top-3 left-3">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/90 text-destructive-foreground text-xs font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                {liveCount} Live
-              </div>
+          {isLive && (
+            <div className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground text-[10px] font-medium">
+              <Radio className="h-2.5 w-2.5" />
+              {liveCount}
             </div>
           )}
-          
-          {/* Category badge */}
-          <div className="absolute bottom-3 left-3">
-            <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
-              {game.category}
-            </Badge>
+        </div>
+        <p className="font-medium text-xs mt-2 truncate group-hover:text-primary transition-colors">
+          {game.name}
+        </p>
+      </Link>
+    );
+  }
+
+  return (
+    <Link to={`/games/${game.slug}`} className="block group">
+      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted border border-border/30">
+        {game.thumbnail_url ? (
+          <img 
+            src={game.thumbnail_url} 
+            alt={game.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+            <span className="text-3xl font-bold text-primary/30">{game.name.charAt(0)}</span>
           </div>
-        </div>
+        )}
         
-        {/* Info */}
-        <div className="p-4">
-          <h3 className="font-display font-semibold text-lg group-hover:text-primary transition-colors line-clamp-1">
-            {game.name}
-          </h3>
-          {game.description && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-              {game.description}
-            </p>
-          )}
+        {/* Live indicator */}
+        {isLive && (
+          <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-background/90 backdrop-blur-sm border border-border/50">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
+            </span>
+            <span className="text-xs font-medium">{liveCount} live</span>
+          </div>
+        )}
+        
+        {/* Category badge */}
+        <div className="absolute bottom-2 left-2 right-2">
+          <span className="inline-block px-2 py-0.5 rounded bg-background/80 backdrop-blur-sm text-[10px] text-muted-foreground">
+            {game.category}
+          </span>
         </div>
+      </div>
+      
+      <div className="mt-3">
+        <h3 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+          {game.name}
+        </h3>
       </div>
     </Link>
   );
