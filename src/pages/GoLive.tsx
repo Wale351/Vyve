@@ -64,6 +64,9 @@ const GoLive = () => {
 
     setStep('creating');
     
+    // Use game thumbnail as fallback if no custom thumbnail uploaded
+    const finalThumbnail = thumbnailUrl || selectedGame?.thumbnail_url || null;
+    
     try {
       const { data, error } = await supabase.functions.invoke('create-stream', {
         body: {
@@ -72,7 +75,7 @@ const GoLive = () => {
           game_category: selectedGame?.name || null,
           game_id: gameId || null,
           tags: tags,
-          thumbnail_url: thumbnailUrl,
+          thumbnail_url: finalThumbnail,
         },
       });
 
