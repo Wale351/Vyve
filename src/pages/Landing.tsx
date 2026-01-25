@@ -1,27 +1,16 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform, useInView } from 'framer-motion';
-import { 
-  Play, 
-  ArrowRight, 
-  Wallet, 
-  Radio, 
-  Coins, 
-  Shield, 
-  Eye,
-  Send,
-  Lock,
-  Zap,
-} from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { Play, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LandingHeader from '@/components/landing/LandingHeader';
 import LandingFooter from '@/components/landing/LandingFooter';
-import WalletConnectButton from '@/components/WalletConnectButton';
+import BuiltDifferentSection from '@/components/landing/BuiltDifferentSection';
+import HowItWorksSteps from '@/components/landing/HowItWorksSteps';
+import FeaturedGamesCarousel from '@/components/landing/FeaturedGamesCarousel';
 
 export default function Landing() {
   const heroRef = useRef<HTMLDivElement>(null);
-  const howItWorksRef = useRef<HTMLDivElement>(null);
-  const isHowItWorksInView = useInView(howItWorksRef, { once: true, margin: "-100px" });
   
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -35,7 +24,7 @@ export default function Landing() {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <LandingHeader />
       
-      {/* Hero Section - Clean and Bold */}
+      {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex items-center pt-20">
         {/* Subtle gradient background */}
         <div className="absolute inset-0">
@@ -140,121 +129,14 @@ export default function Landing() {
         </motion.div>
       </section>
       
-      {/* How It Works - Merged, Clean */}
-      <section ref={howItWorksRef} className="py-24 md:py-32 relative">
-        <div className="container px-4">
-          {/* Section Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={isHowItWorksInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-16"
-          >
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              How Vyve Works
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              A streaming platform built for creators, powered by Base
-            </p>
-          </motion.div>
-          
-          {/* Two column layout - Viewers & Streamers */}
-          <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* For Viewers */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={isHowItWorksInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-card rounded-2xl border border-border/50 p-8"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Eye className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="font-display text-xl font-semibold">For Viewers</h3>
-              </div>
-              
-              <div className="space-y-5">
-                {[
-                  { icon: Play, title: 'Watch instantly', desc: 'No signup needed to browse and watch live streams' },
-                  { icon: Wallet, title: 'Connect to interact', desc: 'Link your wallet to chat, follow, and tip' },
-                  { icon: Coins, title: 'Tip on Base', desc: 'Send ETH directly to creators — no middleman' },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      <item.icon className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{item.title}</p>
-                      <p className="text-sm text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-            
-            {/* For Streamers */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={isHowItWorksInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-card rounded-2xl border border-border/50 p-8"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-                  <Radio className="h-5 w-5 text-secondary" />
-                </div>
-                <h3 className="font-display text-xl font-semibold">For Streamers</h3>
-              </div>
-              
-              <div className="space-y-5">
-                {[
-                  { icon: Send, title: 'Apply to stream', desc: 'Quick application to maintain quality content' },
-                  { icon: Radio, title: 'Go live with OBS', desc: 'Use your stream key with any RTMP software' },
-                  { icon: Coins, title: 'Keep 100%', desc: 'All tips go straight to your wallet, instantly' },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      <item.icon className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{item.title}</p>
-                      <p className="text-sm text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <Link to="/apply/streamer" className="block mt-6">
-                <Button variant="premium" className="w-full gap-2">
-                  Apply to Stream
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </motion.div>
-          </div>
-          
-          {/* Trust indicators */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={isHowItWorksInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-12"
-          >
-            {[
-              { icon: Lock, label: 'Wallet privacy protected' },
-              { icon: Shield, label: 'Vetted streamers' },
-              { icon: Zap, label: 'Low gas on Base' },
-              { icon: Eye, label: 'Onchain transparency' },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                <item.icon className="h-4 w-4 text-primary/70" />
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      {/* Built Different Section */}
+      <BuiltDifferentSection />
+      
+      {/* How It Works Steps */}
+      <HowItWorksSteps />
+      
+      {/* Featured Games Carousel */}
+      <FeaturedGamesCarousel />
       
       {/* CTA Section */}
       <section className="py-24 relative">
