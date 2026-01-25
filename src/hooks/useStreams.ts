@@ -113,7 +113,9 @@ export const useLiveStreams = (filters?: { gameId?: string; category?: string })
 
 export const useStream = (streamId: string | undefined) => {
   return useQuery({
-    queryKey: ['streams', streamId],
+    // Version the key to avoid stale cached results from the previous implementation
+    // (which attempted to read from the owner-only `profiles` table and returned null for viewers).
+    queryKey: ['streams', 'v2', streamId],
     queryFn: async () => {
       if (!streamId) return null;
       
