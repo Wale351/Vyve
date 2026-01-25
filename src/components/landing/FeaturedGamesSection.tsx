@@ -2,70 +2,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SiDiscord } from 'react-icons/si';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-const featuredGames = [
-  { 
-    name: 'Off The Grid', 
-    image: 'https://pbs.twimg.com/profile_images/1879581706081808384/bKWtDa8c_400x400.jpg',
-    slug: 'off-the-grid' 
-  },
-  { 
-    name: 'Nyan Heroes', 
-    image: 'https://pbs.twimg.com/profile_images/1871953009287692288/IB3q7bOB_400x400.jpg',
-    slug: 'nyan-heroes' 
-  },
-  { 
-    name: 'Pixels', 
-    image: 'https://pbs.twimg.com/profile_images/1875991406251913216/jYBjqjpM_400x400.jpg',
-    slug: 'pixels' 
-  },
-  { 
-    name: 'Super Champs', 
-    image: 'https://pbs.twimg.com/profile_images/1879499377829347328/mIujJY97_400x400.jpg',
-    slug: 'super-champs' 
-  },
-  { 
-    name: 'Illuvium', 
-    image: 'https://pbs.twimg.com/profile_images/1815339498290765824/0Hn4DUYM_400x400.jpg',
-    slug: 'illuvium' 
-  },
-  { 
-    name: 'Shrapnel', 
-    image: 'https://pbs.twimg.com/profile_images/1842982149071675392/cMYK2vnN_400x400.jpg',
-    slug: 'shrapnel' 
-  },
-  { 
-    name: 'MapleStory Universe', 
-    image: 'https://pbs.twimg.com/profile_images/1775102908817162240/OLKxpLmj_400x400.jpg',
-    slug: 'maplestory-universe' 
-  },
-  { 
-    name: 'Star Atlas', 
-    image: 'https://pbs.twimg.com/profile_images/1850222768160608256/e-OMlGOe_400x400.jpg',
-    slug: 'star-atlas' 
-  },
-  { 
-    name: 'Deadrop', 
-    image: 'https://pbs.twimg.com/profile_images/1739051295128145920/A1DUxzTp_400x400.jpg',
-    slug: 'deadrop' 
-  },
-  { 
-    name: 'Alien Worlds', 
-    image: 'https://pbs.twimg.com/profile_images/1645015820651130880/xqh93e0d_400x400.jpg',
-    slug: 'alien-worlds' 
-  },
-];
+import { useFeaturedGames } from '@/hooks/useFeaturedGames';
 
 export default function FeaturedGamesSection() {
   const ref = useRef<HTMLElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  
+  const { data: featuredGames = [], isLoading } = useFeaturedGames();
 
   // Auto-rotate through games every 4 seconds
   useEffect(() => {
+    if (!featuredGames.length) return;
+    
     const interval = setInterval(() => {
       if (!isPaused) {
         setActiveIndex((prev) => (prev + 1) % featuredGames.length);
@@ -73,7 +25,7 @@ export default function FeaturedGamesSection() {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [isPaused]);
+  }, [isPaused, featuredGames.length]);
 
   const goToPrevious = () => {
     setActiveIndex((prev) => (prev - 1 + featuredGames.length) % featuredGames.length);
@@ -86,6 +38,18 @@ export default function FeaturedGamesSection() {
   const handleImageError = (slug: string) => {
     setImageErrors(prev => new Set(prev).add(slug));
   };
+
+  if (isLoading) {
+    return (
+      <section ref={ref} className="py-20 md:py-32 relative overflow-hidden">
+        <div className="container relative mx-auto px-4 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!featuredGames.length) return null;
 
   const activeGame = featuredGames[activeIndex];
 
@@ -178,34 +142,33 @@ export default function FeaturedGamesSection() {
             >
               <Link to={`/games/${activeGame.slug}`} className="group">
                 {/* Main spotlight card */}
-                <div className="relative w-[200px] h-[250px] md:w-[280px] md:h-[350px] rounded-3xl overflow-hidden">
+                <div className="relative w-[200px] h-[280px] md:w-[220px] md:h-[300px] rounded-2xl overflow-hidden">
                   {/* Glow effect */}
                   <div className="absolute -inset-4 bg-gradient-to-r from-primary/40 via-secondary/40 to-primary/40 rounded-3xl blur-2xl opacity-60" />
                   
-                  {/* Card background */}
-                  <div className="relative w-full h-full bg-gradient-to-br from-primary/20 via-card to-secondary/20 border-2 border-primary/50 rounded-3xl overflow-hidden shadow-2xl shadow-primary/30">
-                    {/* Game logo */}
-                    <div className="absolute inset-0 flex items-center justify-center p-8">
-                      {imageErrors.has(activeGame.slug) ? (
-                        <div className="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-primary/30 flex items-center justify-center text-4xl md:text-5xl font-bold text-foreground backdrop-blur-sm">
+                  {/* Card with game box art */}
+                  <div className="relative w-full h-full border-2 border-primary/50 rounded-2xl overflow-hidden shadow-2xl shadow-primary/30">
+                    {imageErrors.has(activeGame.slug) || !activeGame.thumbnail_url ? (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 via-card to-secondary/20 flex items-center justify-center">
+                        <span className="text-4xl font-bold text-foreground">
                           {activeGame.name.charAt(0)}
-                        </div>
-                      ) : (
-                        <motion.img
-                          src={activeGame.image}
-                          alt={activeGame.name}
-                          className="w-28 h-28 md:w-36 md:h-36 object-cover rounded-3xl shadow-2xl ring-2 ring-primary/50"
-                          onError={() => handleImageError(activeGame.slug)}
-                          initial={{ scale: 0.8 }}
-                          animate={{ scale: 1 }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      )}
-                    </div>
+                        </span>
+                      </div>
+                    ) : (
+                      <motion.img
+                        src={activeGame.thumbnail_url}
+                        alt={activeGame.name}
+                        className="w-full h-full object-cover"
+                        onError={() => handleImageError(activeGame.slug)}
+                        initial={{ scale: 1.1 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    )}
                     
                     {/* Name overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background/90 to-transparent">
-                      <p className="font-display font-bold text-xl md:text-2xl text-center text-primary">
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background/90 to-transparent">
+                      <p className="font-display font-bold text-lg md:text-xl text-center text-primary">
                         {activeGame.name}
                       </p>
                     </div>

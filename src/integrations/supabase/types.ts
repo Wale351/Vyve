@@ -386,6 +386,53 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_streams: {
+        Row: {
+          created_at: string
+          description: string | null
+          game_id: string | null
+          id: string
+          is_cancelled: boolean
+          scheduled_for: string
+          streamer_id: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          game_id?: string | null
+          id?: string
+          is_cancelled?: boolean
+          scheduled_for: string
+          streamer_id: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          game_id?: string | null
+          id?: string
+          is_cancelled?: boolean
+          scheduled_for?: string
+          streamer_id?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_streams_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_clips: {
         Row: {
           asset_id: string | null
@@ -985,6 +1032,45 @@ export type Database = {
         }
         Relationships: []
       }
+      viewing_history: {
+        Row: {
+          game_id: string
+          id: string
+          stream_id: string | null
+          user_id: string
+          watched_at: string
+        }
+        Insert: {
+          game_id: string
+          id?: string
+          stream_id?: string | null
+          user_id: string
+          watched_at?: string
+        }
+        Update: {
+          game_id?: string
+          id?: string
+          stream_id?: string | null
+          user_id?: string
+          watched_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viewing_history_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viewing_history_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       admin_profiles: {
@@ -1185,6 +1271,16 @@ export type Database = {
       get_public_profile_by_wallet: {
         Args: { p_wallet_address: string }
         Returns: string
+      }
+      get_recent_games: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          game_id: string
+          game_name: string
+          game_slug: string
+          game_thumbnail: string
+          last_watched: string
+        }[]
       }
       get_stream_tip_total: { Args: { p_stream_id: string }; Returns: number }
       get_user_application_status: {
