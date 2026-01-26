@@ -6,19 +6,20 @@ import WalletConnectButton from '@/components/WalletConnectButton';
 import GameSearchCombobox from '@/components/GameSearchCombobox';
 import StreamThumbnailUpload from '@/components/StreamThumbnailUpload';
 import GoLiveScheduleSection from '@/components/GoLiveScheduleSection';
+import TestStreamPreview from '@/components/TestStreamPreview';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2, Lock, Image } from 'lucide-react';
+import { Radio, Copy, Check, Loader2, AlertCircle, Settings, ArrowRight, Shield, LogIn, X, Plus, Gamepad2, Lock, Image, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useUserRole } from '@/hooks/useProfile';
 import { useGames } from '@/hooks/useGames';
 
-type Step = 'setup' | 'creating' | 'ready';
+type Step = 'setup' | 'creating' | 'ready' | 'testing';
 
 interface StreamData {
   id: string;
@@ -256,18 +257,22 @@ const GoLive = () => {
             </p>
           </div>
 
-          {/* Progress steps - Simplified on mobile */}
-          <div className="flex items-center justify-center gap-2 md:gap-4 mb-6 md:mb-10">
-            <div className={`step-dot w-8 h-8 md:w-10 md:h-10 text-xs md:text-sm ${step === 'setup' ? 'active' : step === 'creating' || step === 'ready' ? 'completed' : 'pending'}`}>
-              {step === 'creating' || step === 'ready' ? <Check className="h-4 w-4 md:h-5 md:w-5" /> : '1'}
+          {/* Progress steps - 4 steps now */}
+          <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-6 md:mb-10">
+            <div className={`step-dot w-7 h-7 md:w-9 md:h-9 text-[10px] md:text-xs ${step === 'setup' ? 'active' : ['creating', 'ready', 'testing'].includes(step) ? 'completed' : 'pending'}`}>
+              {['creating', 'ready', 'testing'].includes(step) ? <Check className="h-3.5 w-3.5 md:h-4 md:w-4" /> : '1'}
             </div>
-            <div className={`h-px w-8 md:w-16 rounded ${step === 'creating' || step === 'ready' ? 'bg-success' : 'bg-muted'}`} />
-            <div className={`step-dot w-8 h-8 md:w-10 md:h-10 text-xs md:text-sm ${step === 'creating' ? 'active' : step === 'ready' ? 'completed' : 'pending'}`}>
-              {step === 'ready' ? <Check className="h-4 w-4 md:h-5 md:w-5" /> : '2'}
+            <div className={`h-px w-6 md:w-12 rounded ${['creating', 'ready', 'testing'].includes(step) ? 'bg-success' : 'bg-muted'}`} />
+            <div className={`step-dot w-7 h-7 md:w-9 md:h-9 text-[10px] md:text-xs ${step === 'creating' ? 'active' : ['ready', 'testing'].includes(step) ? 'completed' : 'pending'}`}>
+              {['ready', 'testing'].includes(step) ? <Check className="h-3.5 w-3.5 md:h-4 md:w-4" /> : '2'}
             </div>
-            <div className={`h-px w-8 md:w-16 rounded ${step === 'ready' ? 'bg-success' : 'bg-muted'}`} />
-            <div className={`step-dot w-8 h-8 md:w-10 md:h-10 text-xs md:text-sm ${step === 'ready' ? 'active' : 'pending'}`}>
-              3
+            <div className={`h-px w-6 md:w-12 rounded ${['ready', 'testing'].includes(step) ? 'bg-success' : 'bg-muted'}`} />
+            <div className={`step-dot w-7 h-7 md:w-9 md:h-9 text-[10px] md:text-xs ${step === 'ready' ? 'active' : step === 'testing' ? 'completed' : 'pending'}`}>
+              {step === 'testing' ? <Check className="h-3.5 w-3.5 md:h-4 md:w-4" /> : '3'}
+            </div>
+            <div className={`h-px w-6 md:w-12 rounded ${step === 'testing' ? 'bg-success' : 'bg-muted'}`} />
+            <div className={`step-dot w-7 h-7 md:w-9 md:h-9 text-[10px] md:text-xs ${step === 'testing' ? 'active' : 'pending'}`}>
+              4
             </div>
           </div>
 
@@ -508,6 +513,14 @@ const GoLive = () => {
                     New Stream
                   </Button>
                   <Button
+                    variant="secondary"
+                    className="flex-1 gap-2"
+                    onClick={() => setStep('testing')}
+                  >
+                    <Monitor className="h-4 w-4" />
+                    Test Stream
+                  </Button>
+                  <Button
                     variant="premium"
                     className="flex-1 gap-2"
                     onClick={handleGoLive}
@@ -518,9 +531,21 @@ const GoLive = () => {
                     ) : (
                       <Radio className="h-4 w-4" />
                     )}
-                    {isGoingLive ? 'Going Live...' : "I'm Live!"}
+                    {isGoingLive ? 'Going Live...' : 'Skip to Live'}
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {step === 'testing' && streamData && (
+              <div className="p-4 md:p-8">
+                <TestStreamPreview
+                  playbackUrl={streamData.playback_url}
+                  streamId={streamData.id}
+                  onConfirmLive={handleGoLive}
+                  onCancel={() => setStep('ready')}
+                  isGoingLive={isGoingLive}
+                />
               </div>
             )}
           </div>
