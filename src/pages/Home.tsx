@@ -210,7 +210,7 @@ const Home = () => {
               )}
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar - Desktop */}
             <aside className="hidden lg:block w-72 flex-shrink-0">
               <div className="sticky top-20 space-y-5">
                 <TrendingGamesWidget />
@@ -218,6 +218,13 @@ const Home = () => {
                 <UpcomingStreamsWidget />
               </div>
             </aside>
+          </div>
+          
+          {/* Mobile Widgets Section */}
+          <div className="lg:hidden py-6 border-t border-border/10 space-y-4">
+            <UpcomingStreamsWidget />
+            <TrendingGamesWidget />
+            {authenticated && <RecentlyPlayedGames />}
           </div>
         </div>
 
