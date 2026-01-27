@@ -114,6 +114,7 @@ export type Database = {
           rules: string | null
           short_description: string | null
           slug: string
+          status: string
           updated_at: string | null
         }
         Insert: {
@@ -133,6 +134,7 @@ export type Database = {
           rules?: string | null
           short_description?: string | null
           slug: string
+          status?: string
           updated_at?: string | null
         }
         Update: {
@@ -152,6 +154,7 @@ export type Database = {
           rules?: string | null
           short_description?: string | null
           slug?: string
+          status?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -352,6 +355,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "community_memberships_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "public_communities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "community_memberships_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -508,6 +518,73 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_posts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "public_communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reports: {
+        Row: {
+          admin_notes: string | null
+          community_id: string
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          community_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          admin_notes?: string | null
+          community_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reports_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "public_communities"
             referencedColumns: ["id"]
           },
         ]
@@ -1418,6 +1495,47 @@ export type Database = {
       }
     }
     Views: {
+      public_communities: {
+        Row: {
+          avatar_url: string | null
+          banner_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          is_ens_gated: boolean | null
+          is_nft_gated: boolean | null
+          member_count: number | null
+          name: string | null
+          nft_contract_address: string | null
+          owner_avatar_url: string | null
+          owner_id: string | null
+          owner_username: string | null
+          owner_verified: boolean | null
+          required_ens_suffix: string | null
+          rules: string | null
+          short_description: string | null
+          slug: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communities_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communities_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_profiles: {
         Row: {
           avatar_url: string | null
@@ -1450,6 +1568,18 @@ export type Database = {
       }
     }
     Functions: {
+      admin_approve_community: {
+        Args: { p_community_id: string; p_notes?: string }
+        Returns: undefined
+      }
+      admin_delete_community: {
+        Args: { p_community_id: string; p_reason?: string }
+        Returns: undefined
+      }
+      admin_delete_community_post: {
+        Args: { p_post_id: string; p_reason?: string }
+        Returns: undefined
+      }
       admin_delete_message: {
         Args: { p_message_id: string }
         Returns: undefined
@@ -1468,6 +1598,10 @@ export type Database = {
         Returns: undefined
       }
       admin_global_unmute: { Args: { p_user_id: string }; Returns: undefined }
+      admin_kick_community_member: {
+        Args: { p_membership_id: string; p_reason?: string }
+        Returns: undefined
+      }
       admin_list_users_paged: {
         Args: { p_limit?: number; p_offset?: number }
         Returns: {
@@ -1481,6 +1615,14 @@ export type Database = {
           verified_creator: boolean
           wallet_address: string
         }[]
+      }
+      admin_pin_community_post: {
+        Args: { p_pinned: boolean; p_post_id: string }
+        Returns: undefined
+      }
+      admin_review_community_report: {
+        Args: { p_notes?: string; p_report_id: string; p_status: string }
+        Returns: undefined
       }
       admin_review_verification: {
         Args: {
@@ -1516,6 +1658,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_suspend_community: {
+        Args: { p_community_id: string; p_reason?: string }
+        Returns: undefined
+      }
+      admin_unsuspend_community: {
+        Args: { p_community_id: string }
+        Returns: undefined
+      }
       approve_streamer_application: {
         Args: { p_application_id: string; p_notes?: string }
         Returns: undefined
@@ -1533,6 +1683,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_admin_community_stats: { Args: never; Returns: Json }
       get_admin_stats: { Args: never; Returns: Json }
       get_follower_count: { Args: { p_profile_id: string }; Returns: number }
       get_following_count: { Args: { p_profile_id: string }; Returns: number }

@@ -40,6 +40,7 @@ import {
   BadgeCheck,
   LayoutDashboard,
   ShieldCheck,
+  UsersRound,
 } from 'lucide-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useUserRole } from '@/hooks/useProfile';
@@ -63,6 +64,7 @@ import {
   useRejectApplication 
 } from '@/hooks/useStreamerApplication';
 import { usePendingVerifications, useReviewVerification } from '@/hooks/useVerification';
+import AdminCommunities from '@/components/admin/AdminCommunities';
 
 export default function Admin() {
   const { user, isAuthenticated, isInitialized } = useWalletAuth();
@@ -232,7 +234,7 @@ export default function Admin() {
 
         {/* Tabs */}
         <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="w-full max-w-lg bg-muted/50 p-1 rounded-xl">
+          <TabsList className="w-full max-w-2xl bg-muted/50 p-1 rounded-xl overflow-x-auto">
             <TabsTrigger value="applications" className="flex-1 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Applications</span>
@@ -240,6 +242,10 @@ export default function Admin() {
             <TabsTrigger value="verifications" className="flex-1 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg">
               <ShieldCheck className="h-4 w-4" />
               <span className="hidden sm:inline">Verify</span>
+            </TabsTrigger>
+            <TabsTrigger value="communities" className="flex-1 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg">
+              <UsersRound className="h-4 w-4" />
+              <span className="hidden sm:inline">Communities</span>
             </TabsTrigger>
             <TabsTrigger value="users" className="flex-1 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg">
               <Users className="h-4 w-4" />
@@ -389,6 +395,11 @@ export default function Admin() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Communities Tab */}
+          <TabsContent value="communities">
+            <AdminCommunities />
           </TabsContent>
 
           {/* Users Tab */}
