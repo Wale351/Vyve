@@ -22,6 +22,7 @@ export interface PublicProfile {
   bio: string | null;
   avatar_url: string | null;
   verified_creator: boolean;
+  has_base_name: boolean;
   role: UserRole;
   created_at: string;
 }

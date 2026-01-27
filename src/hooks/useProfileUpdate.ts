@@ -98,13 +98,17 @@ export const useCreateProfile = () => {
       walletAddress, 
       username, 
       bio,
-      avatarUrl 
+      avatarUrl,
+      hasBaseName,
+      baseName,
     }: { 
       userId: string; 
       walletAddress: string;
       username: string;
       bio?: string;
       avatarUrl: string;
+      hasBaseName?: boolean;
+      baseName?: string;
     }) => {
       // First, check if profile already exists (skeleton from wallet-auth)
       const { data: existing } = await supabase
@@ -118,16 +122,20 @@ export const useCreateProfile = () => {
         throw new Error('Profile already exists with a username.');
       }
 
+      const profileData = {
+        username,
+        bio: bio || null,
+        avatar_url: avatarUrl,
+        avatar_last_updated_at: new Date().toISOString(),
+        has_base_name: hasBaseName || false,
+        base_name: baseName || null,
+      };
+
       if (existing) {
         // Profile exists but incomplete - update it
         const { error } = await supabase
           .from('profiles')
-          .update({
-            username,
-            bio: bio || null,
-            avatar_url: avatarUrl,
-            avatar_last_updated_at: new Date().toISOString(),
-          })
+          .update(profileData)
           .eq('id', userId);
 
         if (error) {
@@ -143,10 +151,7 @@ export const useCreateProfile = () => {
           .insert({
             id: userId,
             wallet_address: walletAddress,
-            username,
-            bio: bio || null,
-            avatar_url: avatarUrl,
-            avatar_last_updated_at: new Date().toISOString(),
+            ...profileData,
           });
 
         if (error) {

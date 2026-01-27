@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { BadgeCheck, Star, Coins, Radio, Users, Eye, Flame, Crown, Zap, Trophy, Heart } from 'lucide-react';
+import { BadgeCheck, Star, Coins, Radio, Users, Eye, Flame, Crown, Zap, Trophy, Heart, Hexagon } from 'lucide-react';
 import { PublicProfile } from '@/hooks/useProfile';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -34,6 +34,18 @@ const ProfileBadges = ({
   totalViews = 0,
 }: ProfileBadgesProps) => {
   const badges = [];
+
+  // Base/ENS Name badge (shows identity is decentralized)
+  if (profile.has_base_name) {
+    badges.push(
+      <BadgeWithTooltip key="base-name" label="Identity resolved directly from Base/ENS on-chain">
+        <Badge variant="outline" className="gap-1 border-blue-500/30 bg-blue-500/10 text-blue-400">
+          <Hexagon className="h-3 w-3" />
+          Base
+        </Badge>
+      </BadgeWithTooltip>
+    );
+  }
 
   // Verified badge (highest priority)
   if (profile.verified_creator) {

@@ -255,8 +255,10 @@ export type Database = {
         Row: {
           avatar_last_updated_at: string | null
           avatar_url: string | null
+          base_name: string | null
           bio: string | null
           created_at: string
+          has_base_name: boolean | null
           id: string
           suspended: boolean | null
           suspended_at: string | null
@@ -269,8 +271,10 @@ export type Database = {
         Insert: {
           avatar_last_updated_at?: string | null
           avatar_url?: string | null
+          base_name?: string | null
           bio?: string | null
           created_at?: string
+          has_base_name?: boolean | null
           id: string
           suspended?: boolean | null
           suspended_at?: string | null
@@ -283,8 +287,10 @@ export type Database = {
         Update: {
           avatar_last_updated_at?: string | null
           avatar_url?: string | null
+          base_name?: string | null
           bio?: string | null
           created_at?: string
+          has_base_name?: boolean | null
           id?: string
           suspended?: boolean | null
           suspended_at?: string | null
@@ -1001,6 +1007,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string | null
+          has_base_name: boolean | null
           id: string | null
           username: string | null
           verified_creator: boolean | null
@@ -1009,6 +1016,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          has_base_name?: boolean | null
           id?: string | null
           username?: string | null
           verified_creator?: boolean | null
@@ -1017,6 +1025,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          has_base_name?: boolean | null
           id?: string | null
           username?: string | null
           verified_creator?: boolean | null

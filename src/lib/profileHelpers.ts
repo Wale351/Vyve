@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 // Safe public profile fields - NEVER include wallet_address
-export const PUBLIC_PROFILE_FIELDS = 'id, username, avatar_url, bio, verified_creator, created_at';
+export const PUBLIC_PROFILE_FIELDS = 'id, username, avatar_url, bio, verified_creator, created_at, has_base_name';
 
 // Fetch role for a user (separate query since it's in user_roles table)
 export async function fetchUserRole(userId: string): Promise<'viewer' | 'streamer' | 'admin'> {
@@ -20,7 +20,7 @@ export async function fetchUserRole(userId: string): Promise<'viewer' | 'streame
 export async function fetchPublicProfile(profileId: string) {
   const { data, error } = await supabase
     .from('public_profiles')
-    .select('id, username, avatar_url, bio, verified_creator, created_at')
+    .select('id, username, avatar_url, bio, verified_creator, created_at, has_base_name')
     .eq('id', profileId)
     .maybeSingle();
   
@@ -35,6 +35,7 @@ export async function fetchPublicProfile(profileId: string) {
     bio: data.bio,
     verified_creator: data.verified_creator || false,
     created_at: data.created_at || new Date().toISOString(),
+    has_base_name: data.has_base_name || false,
     role 
   };
 }
@@ -43,7 +44,7 @@ export async function fetchPublicProfile(profileId: string) {
 export async function fetchPublicProfileByUsername(username: string) {
   const { data, error } = await supabase
     .from('public_profiles')
-    .select('id, username, avatar_url, bio, verified_creator, created_at')
+    .select('id, username, avatar_url, bio, verified_creator, created_at, has_base_name')
     .ilike('username', username)
     .limit(1)
     .maybeSingle();
@@ -59,6 +60,7 @@ export async function fetchPublicProfileByUsername(username: string) {
     bio: data.bio,
     verified_creator: data.verified_creator || false,
     created_at: data.created_at || new Date().toISOString(),
+    has_base_name: data.has_base_name || false,
     role 
   };
 }
