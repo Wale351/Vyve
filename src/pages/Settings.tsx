@@ -21,8 +21,11 @@ import {
   BellRing,
   Radio,
   ChevronRight,
+  Wallet,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAccount, useBalance } from 'wagmi';
+import { formatEther } from 'viem';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 16 },
@@ -38,7 +41,9 @@ const staggerContainer = {
 };
 
 const Settings = () => {
-  const { user, isAuthenticated, isInitialized } = useWalletAuth();
+  const { user, isAuthenticated, isInitialized, walletAddress } = useWalletAuth();
+  const { address } = useAccount();
+  const { data: ethBalance } = useBalance({ address });
   const { data: profile, isLoading: profileLoading } = useOwnProfile(user?.id);
   const { data: role } = useUserRole(user?.id);
   const { data: imageUpdateInfo } = useCanUpdateProfileImage(user?.id);
@@ -149,6 +154,68 @@ const Settings = () => {
           animate="visible"
           className="space-y-6"
         >
+          {/* Wallet Section */}
+          <motion.div variants={fadeInUp} className="bg-card rounded-2xl border border-border/40 overflow-hidden">
+            <div className="p-5 border-b border-border/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-display font-semibold text-lg">Wallet</h2>
+                  <p className="text-sm text-muted-foreground">Your crypto balances</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* ETH Balance */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">Ξ</span>
+                  </div>
+                  <div>
+                    <p className="font-medium">Ethereum</p>
+                    <p className="text-xs text-muted-foreground">ETH</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-mono font-semibold">
+                    {ethBalance ? parseFloat(formatEther(ethBalance.value)).toFixed(4) : '0.0000'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">ETH</p>
+                </div>
+              </div>
+
+              {/* Other Popular Currencies - Coming Soon */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/20 opacity-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">₿</span>
+                  </div>
+                  <div>
+                    <p className="font-medium">Bitcoin</p>
+                    <p className="text-xs text-muted-foreground">BTC</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">Coming soon</p>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/20 opacity-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">$</span>
+                  </div>
+                  <div>
+                    <p className="font-medium">USDC</p>
+                    <p className="text-xs text-muted-foreground">USD Coin</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">Coming soon</p>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Profile Section */}
           <motion.div variants={fadeInUp} className="bg-card rounded-2xl border border-border/40 overflow-hidden">
             <div className="p-5 border-b border-border/30">

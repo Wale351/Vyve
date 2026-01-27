@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, Gamepad2, Home } from 'lucide-react';
+import { Search, Gamepad2, Home, ArrowLeft } from 'lucide-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile } from '@/hooks/useProfile';
 import GlobalSearch from '@/components/GlobalSearch';
@@ -13,32 +13,48 @@ import { ChevronDown } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useWalletAuth();
   const { data: profile } = useOwnProfile(user?.id);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
+  const isHomePage = location.pathname === '/';
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
       <div className="w-full flex h-14 md:h-16 items-center justify-between px-4">
-        {/* Left Section - Profile */}
+        {/* Left Section - Profile on Home, Back Button elsewhere */}
         <div className="flex items-center gap-2">
-          {isAuthenticated && profile ? (
-            <ProfileAccountMenu>
-              <Button variant="ghost" className="flex items-center gap-2 px-2">
-                <Avatar className="h-8 w-8 border border-border">
-                  {profile.avatar_url ? (
-                    <AvatarImage src={profile.avatar_url} alt={profile?.username || 'Profile'} />
-                  ) : (
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-xs">
-                      {profile?.username?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
-              </Button>
-            </ProfileAccountMenu>
+          {isHomePage ? (
+            // Show profile menu on homepage
+            isAuthenticated && profile ? (
+              <ProfileAccountMenu>
+                <Button variant="ghost" className="flex items-center gap-2 px-2">
+                  <Avatar className="h-8 w-8 border border-border">
+                    {profile.avatar_url ? (
+                      <AvatarImage src={profile.avatar_url} alt={profile?.username || 'Profile'} />
+                    ) : (
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-xs">
+                        {profile?.username?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                </Button>
+              </ProfileAccountMenu>
+            ) : (
+              <WalletConnectButton>Connect</WalletConnectButton>
+            )
           ) : (
-            <WalletConnectButton>Connect</WalletConnectButton>
+            // Show back button on all other pages
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
           )}
         </div>
 

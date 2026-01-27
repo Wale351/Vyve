@@ -124,25 +124,11 @@ const ProfileAccountMenu = ({ children }: ProfileAccountMenuProps) => {
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-lg truncate">{profile?.username || 'User'}</p>
-              <p className="text-sm text-muted-foreground capitalize">{role || 'Viewer'}</p>
+              <p className="text-sm font-mono text-muted-foreground">
+                {balance ? `${parseFloat(formatEther(balance.value)).toFixed(4)} ${balance.symbol}` : '0 ETH'}
+              </p>
             </div>
           </div>
-          
-          {/* Wallet Balance */}
-          {balance && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="mt-4 p-3 rounded-lg bg-muted/50 border border-border/50"
-            >
-              <div className="flex items-center gap-2 text-sm">
-                <Wallet className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Balance</span>
-              </div>
-              <p className="mt-1 font-mono font-medium">{formatBalance()}</p>
-            </motion.div>
-          )}
         </div>
         
         <Separator />
