@@ -20,22 +20,26 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
       <div className="w-full flex h-14 md:h-16 items-center justify-between px-4">
-        {/* Left Section - Search */}
-        <div className="flex items-center gap-3">
-          {/* Mobile Search Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 lg:hidden"
-            onClick={() => setMobileSearchOpen(true)}
-          >
-            <Search className="h-5 w-5" />
-          </Button>
-          
-          {/* Desktop Search */}
-          <div className="hidden lg:block">
-            <GlobalSearch />
-          </div>
+        {/* Left Section - Profile */}
+        <div className="flex items-center gap-2">
+          {isAuthenticated && profile ? (
+            <ProfileAccountMenu>
+              <Button variant="ghost" className="flex items-center gap-2 px-2">
+                <Avatar className="h-8 w-8 border border-border">
+                  {profile.avatar_url ? (
+                    <AvatarImage src={profile.avatar_url} alt={profile?.username || 'Profile'} />
+                  ) : (
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-xs">
+                      {profile?.username?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
+              </Button>
+            </ProfileAccountMenu>
+          ) : (
+            <WalletConnectButton>Connect</WalletConnectButton>
+          )}
         </div>
 
         {/* Center Section - Navigation (Desktop) */}
@@ -62,26 +66,22 @@ const Header = () => {
           </Link>
         </nav>
 
-        {/* Right Section - Profile */}
-        <div className="flex items-center gap-2">
-          {isAuthenticated && profile ? (
-            <ProfileAccountMenu>
-              <Button variant="ghost" className="flex items-center gap-2 px-2">
-                <Avatar className="h-8 w-8 border border-border">
-                  {profile.avatar_url ? (
-                    <AvatarImage src={profile.avatar_url} alt={profile?.username || 'Profile'} />
-                  ) : (
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-xs">
-                      {profile?.username?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
-              </Button>
-            </ProfileAccountMenu>
-          ) : (
-            <WalletConnectButton>Connect</WalletConnectButton>
-          )}
+        {/* Right Section - Search */}
+        <div className="flex items-center gap-3">
+          {/* Mobile Search Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 lg:hidden"
+            onClick={() => setMobileSearchOpen(true)}
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+          
+          {/* Desktop Search */}
+          <div className="hidden lg:block">
+            <GlobalSearch />
+          </div>
         </div>
       </div>
       
