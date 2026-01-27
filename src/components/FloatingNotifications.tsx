@@ -67,19 +67,23 @@ const FloatingNotifications = () => {
           className="fixed bottom-6 right-6 z-50"
         >
           <Button
-            size="lg"
-            className="h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 relative"
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 rounded-full bg-muted/60 backdrop-blur-sm border border-border/50 hover:bg-muted hover:border-border shadow-sm relative"
           >
-            <Bell className="h-6 w-6" />
-            {unreadCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold flex items-center justify-center"
-              >
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </motion.span>
-            )}
+            <Bell className="h-5 w-5 text-muted-foreground" />
+            <AnimatePresence>
+              {unreadCount > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center"
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </Button>
         </motion.div>
       </SheetTrigger>
