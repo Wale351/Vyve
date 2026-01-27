@@ -33,9 +33,10 @@ import UserHoverCard from '@/components/UserHoverCard';
 
 interface LiveChatProps {
   streamId: string;
+  streamerId?: string;
 }
 
-const LiveChat = ({ streamId }: LiveChatProps) => {
+const LiveChat = ({ streamId, streamerId: propStreamerId }: LiveChatProps) => {
   const { address, isConnected } = useAccount();
   const { user, isAuthenticated } = useWalletAuth();
   const [newMessage, setNewMessage] = useState('');
@@ -52,7 +53,8 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
   const muteUserMutation = useMuteUser();
   const blockUserMutation = useBlockUser();
 
-  const streamerId = stream?.streamer_id;
+  // Use passed streamerId or get from stream data
+  const streamerId = propStreamerId || stream?.streamer_id;
   
   // Fetch tips only for streamer (visible only to them)
   const { data: tips = [] } = useStreamTips(streamId, streamerId, user?.id);

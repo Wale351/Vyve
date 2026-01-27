@@ -339,11 +339,14 @@ const Watch = () => {
 
                   {/* Desktop Actions */}
                   <div className="hidden lg:flex items-center gap-2 ml-auto">
-                    <TipButton 
-                      streamerId={streamerId}
-                      streamerName={streamerName}
-                      streamId={stream.id}
-                    />
+                    {/* Only show tip button for viewers, not the streamer */}
+                    {!isStreamOwner && (
+                      <TipButton 
+                        streamerId={streamerId}
+                        streamerName={streamerName}
+                        streamId={stream.id}
+                      />
+                    )}
                     
                     <ClipButton
                       streamId={stream.id}
@@ -394,12 +397,22 @@ const Watch = () => {
               </div>
             </motion.div>
             
-            {/* Mobile Tip Button - Fixed at bottom with chat toggle */}
+            {/* Mobile Bottom Bar - Fixed at bottom with chat toggle */}
             <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-lg border-t border-border/30 flex items-center gap-2 lg:hidden z-40">
-              <TipButton 
-                streamerId={streamerId}
-                streamerName={streamerName}
+              {/* Only show tip button for viewers, not the streamer */}
+              {!isStreamOwner && (
+                <TipButton 
+                  streamerId={streamerId}
+                  streamerName={streamerName}
+                  streamId={stream.id}
+                />
+              )}
+              
+              <ClipButton
                 streamId={stream.id}
+                playbackId={stream.playback_id || undefined}
+                currentTime={currentPlaybackTime}
+                isLive={streamPhase === 'live'}
               />
               
               <Sheet open={chatOpen} onOpenChange={setChatOpen}>
@@ -411,7 +424,7 @@ const Watch = () => {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="h-[70vh] p-0 rounded-t-2xl">
-                  <LiveChat streamId={stream.id} />
+                  <LiveChat streamId={stream.id} streamerId={streamerId} />
                 </SheetContent>
               </Sheet>
             </div>
@@ -427,7 +440,7 @@ const Watch = () => {
             transition={{ delay: 0.2 }}
             className="hidden lg:block h-[calc(100vh-120px)] min-h-[500px]"
           >
-            <LiveChat streamId={stream.id} />
+            <LiveChat streamId={stream.id} streamerId={streamerId} />
           </motion.div>
         </div>
       </div>

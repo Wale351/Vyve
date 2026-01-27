@@ -58,19 +58,30 @@ export default function ClipButton({ streamId, playbackId, currentTime = 0, isLi
     setDuration(30);
   };
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  // Show button for all users but disabled if not authenticated
+  const isDisabled = !isAuthenticated || !isLive;
+
+  const getTitle = () => {
+    if (!isAuthenticated) return 'Connect wallet to create clips';
+    if (!isLive) return 'Clips available when stream is live';
+    return 'Create clip';
+  };
 
   return (
     <>
       <Button
         variant="subtle"
         size="sm"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          if (!isAuthenticated) {
+            toast.error('Please connect your wallet to create clips');
+            return;
+          }
+          setOpen(true);
+        }}
         className="gap-1.5"
-        disabled={!isLive}
-        title={isLive ? 'Create clip' : 'Clips available when stream is live'}
+        disabled={isDisabled}
+        title={getTitle()}
       >
         <Scissors className="h-4 w-4" />
         <span className="hidden sm:inline">Clip</span>
