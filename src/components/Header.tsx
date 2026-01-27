@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, Gamepad2, Home, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile } from '@/hooks/useProfile';
 import GlobalSearch from '@/components/GlobalSearch';
@@ -58,29 +58,8 @@ const Header = () => {
           )}
         </div>
 
-        {/* Center Section - Navigation (Desktop) */}
-        <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-          <Link to="/">
-            <Button
-              variant={location.pathname === '/' ? 'soft' : 'ghost'}
-              size="sm"
-              className="gap-2"
-            >
-              <Home className="h-4 w-4" />
-              Home
-            </Button>
-          </Link>
-          <Link to="/games">
-            <Button
-              variant={location.pathname.startsWith('/games') ? 'soft' : 'ghost'}
-              size="sm"
-              className="gap-2"
-            >
-              <Gamepad2 className="h-4 w-4" />
-              Activities
-            </Button>
-          </Link>
-        </nav>
+        {/* Center Section - Empty on homepage, could add branding later */}
+        <div className="hidden md:block" />
 
         {/* Right Section - Search */}
         <div className="flex items-center gap-3">

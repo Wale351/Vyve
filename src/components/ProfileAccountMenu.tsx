@@ -18,7 +18,8 @@ import {
   Settings,
   LogOut,
   ChevronDown,
-  Wallet,
+  Gamepad2,
+  Shield,
 } from 'lucide-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
@@ -40,6 +41,7 @@ const ProfileAccountMenu = ({ children }: ProfileAccountMenuProps) => {
   });
 
   const isStreamer = role === 'streamer' || role === 'admin';
+  const isAdmin = role === 'admin';
   const profileHref = profile?.username ? `/profile/${profile.username}` : '/';
 
   const handleSignOut = async () => {
@@ -52,6 +54,12 @@ const ProfileAccountMenu = ({ children }: ProfileAccountMenuProps) => {
       label: 'Profile',
       icon: User,
       href: profileHref,
+      show: true,
+    },
+    {
+      label: 'Activities',
+      icon: Gamepad2,
+      href: '/games',
       show: true,
     },
     {
@@ -71,6 +79,12 @@ const ProfileAccountMenu = ({ children }: ProfileAccountMenuProps) => {
       icon: Users,
       href: '/communities',
       show: true,
+    },
+    {
+      label: 'Admin',
+      icon: Shield,
+      href: '/admin',
+      show: isAdmin,
     },
     {
       label: 'Settings',
