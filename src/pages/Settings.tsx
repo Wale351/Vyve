@@ -28,6 +28,7 @@ import {
 import { toast } from 'sonner';
 import { useAccount, useBalance } from 'wagmi';
 import { formatEther } from 'viem';
+import { useEthPrice, formatFiatValue } from '@/hooks/useEthPrice';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 16 },
@@ -55,6 +56,7 @@ const Settings = () => {
   const { user, isAuthenticated, isInitialized, walletAddress } = useWalletAuth();
   const { address } = useAccount();
   const { data: ethBalance } = useBalance({ address });
+  const { data: ethPrices } = useEthPrice();
   const { data: profile, isLoading: profileLoading } = useOwnProfile(user?.id);
   const { data: role } = useUserRole(user?.id);
   const { data: imageUpdateInfo } = useCanUpdateProfileImage(user?.id);
@@ -142,6 +144,13 @@ const Settings = () => {
   };
 
   const displayAvatar = avatarPreview || profile?.avatar_url;
+  
+  // Calculate fiat value
+  const ethAmount = ethBalance ? parseFloat(formatEther(ethBalance.value)) : 0;
+  const currencyKey = displayCurrency.toLowerCase() as keyof typeof ethPrices;
+  const fiatValue = ethPrices && ethPrices[currencyKey] 
+    ? formatFiatValue(ethAmount, ethPrices[currencyKey], displayCurrency)
+    : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -191,9 +200,16 @@ const Settings = () => {
                     <p className="text-xs text-muted-foreground">ETH</p>
                   </div>
                 </div>
-                <p className="font-mono font-semibold">
-                  {ethBalance ? parseFloat(formatEther(ethBalance.value)).toFixed(4) : '0.0000'} ETH
-                </p>
+                <div className="text-right">
+                  <p className="font-mono font-semibold">
+                    {ethBalance ? parseFloat(formatEther(ethBalance.value)).toFixed(4) : '0.0000'} ETH
+                  </p>
+                  {fiatValue && (
+                    <p className="text-sm text-muted-foreground font-mono">
+                      ≈ {fiatValue}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
