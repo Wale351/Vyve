@@ -8,6 +8,7 @@ import TrendingGamesSection from '@/components/home/TrendingGamesSection';
 import LiveStreamsGrid from '@/components/home/LiveStreamsGrid';
 import MobileWidgetsSection from '@/components/home/MobileWidgetsSection';
 import HomeFooter from '@/components/home/HomeFooter';
+import FloatingNotifications from '@/components/FloatingNotifications';
 import { useLiveStreams } from '@/hooks/useStreams';
 import { useGames, useLiveStreamCountByGame } from '@/hooks/useGames';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
@@ -70,6 +71,9 @@ const Home = () => {
       </div>
 
       <HomeFooter />
+      
+      {/* Floating Notifications - Only show when authenticated */}
+      {authenticated && <FloatingNotifications />}
     </div>
   );
 };
