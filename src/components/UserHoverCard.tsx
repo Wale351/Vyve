@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import FollowButton from '@/components/FollowButton';
-import { User, BadgeCheck, Calendar } from 'lucide-react';
+import BaseNameBadge from '@/components/BaseNameBadge';
+import { User, BadgeCheck, Calendar, Hexagon } from 'lucide-react';
 import { useProfile, useFollowerCount } from '@/hooks/useProfile';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -48,7 +49,10 @@ const UserHoverCard = ({ userId, children }: UserHoverCardProps) => {
                     <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />
                   )}
                 </Link>
-                <p className="text-xs text-muted-foreground capitalize">{profile.role}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <p className="text-xs text-muted-foreground capitalize">{profile.role}</p>
+                  {profile.has_base_name && <BaseNameBadge size="sm" />}
+                </div>
               </div>
             </div>
             
