@@ -39,7 +39,7 @@ import { useLivepeerStatus, StreamPhase } from '@/hooks/useLivepeerStatus';
 import { useSetStreamTipGoal, useStreamTipTotal } from '@/hooks/useTipGoal';
 import { useRecordView } from '@/hooks/useViewingHistory';
 import { formatViewerCount, formatDuration } from '@/lib/formatters';
-import { Users, Clock, Share2, Loader2, Play, StopCircle, MessageCircle, ChevronUp, Radio, CheckCircle } from 'lucide-react';
+import { Users, Clock, Share2, Loader2, Play, StopCircle, MessageCircle, ChevronUp, ChevronRight, ChevronLeft, Radio, CheckCircle, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Watch = () => {
@@ -49,6 +49,7 @@ const Watch = () => {
   const { user } = useWalletAuth();
   const endStreamMutation = useEndStream();
   const [chatOpen, setChatOpen] = useState(false);
+  const [desktopChatOpen, setDesktopChatOpen] = useState(true);
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
   const [tipGoalOpen, setTipGoalOpen] = useState(false);
   const [tipGoalTitle, setTipGoalTitle] = useState('');
@@ -190,7 +191,7 @@ const Watch = () => {
       <div className="h-14 md:h-16" />
       
       <div className="md:container md:py-6">
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_380px] lg:gap-6">
+        <div className={`flex flex-col lg:grid lg:gap-6 transition-all duration-300 ${desktopChatOpen ? 'lg:grid-cols-[1fr_380px]' : 'lg:grid-cols-1'}`}>
           {/* Main content */}
           <div className="flex flex-col">
             {/* Video Player */}
@@ -436,12 +437,29 @@ const Watch = () => {
           {/* Desktop Chat Sidebar */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="hidden lg:block h-[calc(100vh-120px)] min-h-[500px]"
+            animate={{ 
+              opacity: desktopChatOpen ? 1 : 0,
+              x: desktopChatOpen ? 0 : 20,
+              width: desktopChatOpen ? 'auto' : 0
+            }}
+            transition={{ duration: 0.3 }}
+            className={`hidden lg:block h-[calc(100vh-120px)] min-h-[500px] ${!desktopChatOpen ? 'overflow-hidden pointer-events-none' : ''}`}
           >
             <LiveChat streamId={stream.id} streamerId={streamerId} />
           </motion.div>
+
+          {/* Desktop Chat Toggle Button */}
+          <button
+            onClick={() => setDesktopChatOpen(!desktopChatOpen)}
+            className="hidden lg:flex fixed right-4 top-1/2 -translate-y-1/2 z-50 items-center justify-center w-8 h-16 bg-card/90 backdrop-blur-sm border border-border/50 rounded-l-lg hover:bg-muted transition-colors shadow-lg"
+            title={desktopChatOpen ? 'Hide chat' : 'Show chat'}
+          >
+            {desktopChatOpen ? (
+              <PanelRightClose className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <PanelRightOpen className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
         </div>
       </div>
 
