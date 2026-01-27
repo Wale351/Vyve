@@ -217,22 +217,22 @@ const Profile = () => {
       {/* Spacer for fixed header */}
       <div className="h-14 md:h-16" />
       
-      <div className="container px-4 py-4 md:py-8">
-        {/* Profile Header */}
-        <div className="glass-card p-4 md:p-8 mb-6 md:mb-8">
-          <div className="flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-4 md:gap-8">
-            {/* Avatar */}
-            <div className="flex-shrink-0 relative">
+      <div className="container px-4 py-4 md:py-8 max-w-3xl mx-auto">
+        {/* Profile Header Card */}
+        <div className="glass-card p-6 md:p-8 mb-6 md:mb-8">
+          {/* Avatar - Centered */}
+          <div className="flex flex-col items-center text-center">
+            <div className="relative mb-5">
               {isEditing && imageUpdateInfo?.canUpdate ? (
                 <div 
                   onClick={() => fileInputRef.current?.click()}
                   className="relative cursor-pointer group"
                 >
-                  <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-border">
+                  <Avatar className="w-28 h-28 md:w-32 md:h-32 border-4 border-border/50 shadow-2xl">
                     {displayAvatar ? (
-                      <AvatarImage src={displayAvatar} alt="Avatar" />
+                      <AvatarImage src={displayAvatar} alt="Avatar" className="object-cover" />
                     ) : (
-                      <AvatarFallback className="bg-gradient-to-br from-primary via-primary/80 to-secondary text-primary-foreground font-bold text-2xl md:text-4xl">
+                      <AvatarFallback className="bg-gradient-to-br from-primary via-primary/80 to-secondary text-primary-foreground font-bold text-3xl md:text-4xl">
                         {displayName.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     )}
@@ -249,11 +249,11 @@ const Profile = () => {
                   />
                 </div>
               ) : (
-                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-border shadow-xl">
+                <Avatar className="w-28 h-28 md:w-32 md:h-32 border-4 border-border/50 shadow-2xl">
                   {profile.avatar_url ? (
-                    <AvatarImage src={profile.avatar_url} alt={displayName} />
+                    <AvatarImage src={profile.avatar_url} alt={displayName} className="object-cover" />
                   ) : (
-                    <AvatarFallback className="bg-gradient-to-br from-primary via-primary/80 to-secondary text-primary-foreground font-bold text-2xl md:text-4xl">
+                    <AvatarFallback className="bg-gradient-to-br from-primary via-primary/80 to-secondary text-primary-foreground font-bold text-3xl md:text-4xl">
                       {displayName.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   )}
@@ -268,199 +268,183 @@ const Profile = () => {
               )}
             </div>
 
-            {/* Info */}
-            <div className="flex-1 w-full">
-              {isEditing ? (
-                <div className="space-y-3 md:space-y-4 max-w-md mx-auto md:mx-0">
-                  {/* Username (read-only) */}
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Username (cannot change)</Label>
-                    <p className="text-lg font-semibold">@{profile.username}</p>
-                  </div>
-                  
-                  
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="bio" className="text-sm">Bio</Label>
-                    <Textarea
-                      id="bio"
-                      value={editBio}
-                      onChange={(e) => setEditBio(e.target.value.slice(0, 500))}
-                      placeholder="Tell others about yourself..."
-                      className="bg-muted/30 resize-none"
-                      rows={3}
-                      maxLength={500}
-                    />
-                    {editBio.length > 400 && (
-                      <p className="text-xs text-muted-foreground text-right">{editBio.length}/500</p>
-                    )}
-                  </div>
-                  
-                  {/* Image update notice */}
-                  {!imageUpdateInfo?.canUpdate && imageUpdateInfo?.nextUpdateDate && (
-                    <p className="text-xs text-muted-foreground">
-                      Profile image can be changed on {imageUpdateInfo.nextUpdateDate.toLocaleDateString()}
-                    </p>
-                  )}
-                  
-                  {/* Edit actions */}
-                  <div className="flex gap-2 justify-center md:justify-start pt-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={cancelEditing}
-                      disabled={isUpdating}
-                    >
-                      <X className="h-4 w-4 mr-1" />
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="premium"
-                      size="sm"
-                      onClick={handleSave}
-                      disabled={isUpdating}
-                      className="gap-2"
-                    >
-                      {isUpdating ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Save className="h-4 w-4" />
-                      )}
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {/* Name and badges */}
-                  <div className="flex items-center gap-2 justify-center md:justify-start flex-wrap mb-1">
-                    <h1 className="text-2xl md:text-3xl font-display font-bold">{displayName}</h1>
-                    <ProfileBadges profile={profile} tipsReceived={totalTips} />
-                  </div>
-                  
-                  <p className="text-muted-foreground text-sm mb-2">@{profile.username}</p>
-                  
-                  {/* Wallet address - only visible to owner */}
-                  {isOwnProfile && ownProfile?.wallet_address && (
-                    <button
-                      onClick={copyAddress}
-                      className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-mono text-xs md:text-sm mb-2 md:mb-4 mx-auto md:mx-0"
-                    >
-                      <span>{ownProfile.wallet_address.slice(0, 6)}...{ownProfile.wallet_address.slice(-4)}</span>
-                      {copied ? (
-                        <Check className="h-3.5 w-3.5 text-success" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  )}
-
-                  <div className="flex items-center justify-center md:justify-start gap-2 text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
-                    <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                    <span>Joined {joinDate}</span>
-                  </div>
-
-                  {profile.bio && (
-                    <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl mb-4 md:mb-0">
-                      {profile.bio}
-                    </p>
-                  )}
-
-                  {/* Stats */}
-                  <div className="flex gap-4 md:gap-6 mt-4 md:mt-6 justify-center md:justify-start flex-wrap">
-                    <button 
-                      onClick={() => { setFollowersModalTab('followers'); setFollowersModalOpen(true); }}
-                      className="flex items-center gap-2 hover:bg-muted/50 p-1 -m-1 rounded-lg transition-colors"
-                    >
-                      <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
-                        <Users className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-semibold text-sm md:text-base">{followerCount}</p>
-                        <p className="text-[10px] md:text-xs text-muted-foreground">Followers</p>
-                      </div>
-                    </button>
-                    
-                    <button 
-                      onClick={() => { setFollowersModalTab('following'); setFollowersModalOpen(true); }}
-                      className="flex items-center gap-2 hover:bg-muted/50 p-1 -m-1 rounded-lg transition-colors"
-                    >
-                      <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
-                        <UserPlus className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-semibold text-sm md:text-base">{followingCount}</p>
-                        <p className="text-[10px] md:text-xs text-muted-foreground">Following</p>
-                      </div>
-                    </button>
-                    
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
-                        <Radio className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm md:text-base">{streams.length}</p>
-                        <p className="text-[10px] md:text-xs text-muted-foreground">Streams</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
-                        <Coins className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm md:text-base">{totalTips.toFixed(3)} ETH</p>
-                        <p className="text-[10px] md:text-xs text-muted-foreground">Tips</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 mt-4 md:mt-6 justify-center md:justify-start flex-wrap">
-                    {isOwnProfile ? (
-                      <>
-                        <Button
-                          variant="subtle"
-                          size="sm"
-                          onClick={startEditing}
-                          className="gap-2"
-                        >
-                          <Pencil className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                          Edit
-                        </Button>
-                        
-                        {profile.role === 'viewer' && (
-                          <Link to="/apply/streamer">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
-                            >
-                              <Shield className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                              Become Streamer
-                            </Button>
-                          </Link>
-                        )}
-                        
-                        {(profile.role === 'streamer' || profile.role === 'admin') && (
-                          <Link to="/go-live">
-                            <Button variant="premium" size="sm" className="gap-2">
-                              <Radio className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                              Go Live
-                            </Button>
-                          </Link>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <FollowButton profileId={profileId!} />
-                        <NotificationToggle streamerId={profileId!} />
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
+            {/* Name and badges */}
+            <div className="flex items-center gap-2 justify-center flex-wrap mb-1">
+              <h1 className="text-2xl md:text-3xl font-display font-bold">{displayName}</h1>
+              <ProfileBadges profile={profile} tipsReceived={totalTips} />
             </div>
+            
+            <p className="text-muted-foreground text-sm mb-2">@{profile.username}</p>
+            
+            {/* Wallet address - only visible to owner */}
+            {isOwnProfile && ownProfile?.wallet_address && (
+              <button
+                onClick={copyAddress}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-mono text-xs md:text-sm mb-3"
+              >
+                <span>{ownProfile.wallet_address.slice(0, 6)}...{ownProfile.wallet_address.slice(-4)}</span>
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-success" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+              </button>
+            )}
+
+            <div className="flex items-center justify-center gap-2 text-xs md:text-sm text-muted-foreground mb-4">
+              <Calendar className="h-3.5 w-3.5" />
+              <span>Joined {joinDate}</span>
+            </div>
+
+            {profile.bio && (
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-lg mx-auto mb-5">
+                {profile.bio}
+              </p>
+            )}
+
+            {/* Stats Row */}
+            <div className="flex items-center justify-center gap-6 md:gap-8 mb-5">
+              <button 
+                onClick={() => { setFollowersModalTab('followers'); setFollowersModalOpen(true); }}
+                className="flex items-center gap-2 hover:bg-muted/50 px-2 py-1 -mx-2 -my-1 rounded-lg transition-colors"
+              >
+                <div className="p-1.5 rounded-lg bg-primary/10">
+                  <Users className="h-4 w-4 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-sm">{followerCount}</p>
+                  <p className="text-[10px] text-muted-foreground">Followers</p>
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => { setFollowersModalTab('following'); setFollowersModalOpen(true); }}
+                className="flex items-center gap-2 hover:bg-muted/50 px-2 py-1 -mx-2 -my-1 rounded-lg transition-colors"
+              >
+                <div className="p-1.5 rounded-lg bg-primary/10">
+                  <UserPlus className="h-4 w-4 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-sm">{followingCount}</p>
+                  <p className="text-[10px] text-muted-foreground">Following</p>
+                </div>
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-primary/10">
+                  <Radio className="h-4 w-4 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-sm">{streams.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Streams</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tips Row */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <Coins className="h-4 w-4 text-primary" />
+              </div>
+              <p className="font-semibold text-sm">{totalTips.toFixed(3)} ETH</p>
+              <p className="text-xs text-muted-foreground">Tips</p>
+            </div>
+
+            {/* Actions */}
+            {isEditing ? (
+              <div className="space-y-4 max-w-md mx-auto w-full">
+                <div className="space-y-2">
+                  <Label htmlFor="bio" className="text-sm">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    value={editBio}
+                    onChange={(e) => setEditBio(e.target.value.slice(0, 500))}
+                    placeholder="Tell others about yourself..."
+                    className="bg-muted/30 resize-none"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  {editBio.length > 400 && (
+                    <p className="text-xs text-muted-foreground text-right">{editBio.length}/500</p>
+                  )}
+                </div>
+                
+                {!imageUpdateInfo?.canUpdate && imageUpdateInfo?.nextUpdateDate && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Profile image can be changed on {imageUpdateInfo.nextUpdateDate.toLocaleDateString()}
+                  </p>
+                )}
+                
+                <div className="flex gap-2 justify-center pt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={cancelEditing}
+                    disabled={isUpdating}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="premium"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={isUpdating}
+                    className="gap-2"
+                  >
+                    {isUpdating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    Save
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-3 justify-center">
+                {isOwnProfile ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="default"
+                      onClick={startEditing}
+                      className="gap-2 rounded-full px-6"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                    
+                    {profile.role === 'viewer' && (
+                      <Link to="/apply/streamer">
+                        <Button
+                          variant="outline"
+                          size="default"
+                          className="gap-2 rounded-full px-6"
+                        >
+                          <Shield className="h-4 w-4" />
+                          Become Streamer
+                        </Button>
+                      </Link>
+                    )}
+                    
+                    {(profile.role === 'streamer' || profile.role === 'admin') && (
+                      <Link to="/go-live">
+                        <Button variant="premium" size="default" className="gap-2 rounded-full px-6">
+                          <Radio className="h-4 w-4" />
+                          Go Live
+                        </Button>
+                      </Link>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <FollowButton profileId={profileId!} />
+                    <NotificationToggle streamerId={profileId!} />
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
