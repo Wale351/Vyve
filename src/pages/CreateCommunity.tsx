@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { 
-  Users, Image as ImageIcon, Shield, Hexagon, 
-  ArrowLeft, Loader2, Info
+  Users, Shield, Hexagon, 
+  Loader2, Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import Header from '@/components/Header';
+import CommunityImageUpload from '@/components/communities/CommunityImageUpload';
 import { useCreateCommunity } from '@/hooks/useCommunities';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { toast } from 'sonner';
@@ -49,8 +50,8 @@ const CreateCommunity = () => {
   const navigate = useNavigate();
   const { user } = useWalletAuth();
   const createCommunity = useCreateCommunity();
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -85,6 +86,8 @@ const CreateCommunity = () => {
         nft_contract_address: data.nft_contract_address,
         is_ens_gated: data.is_ens_gated,
         required_ens_suffix: data.required_ens_suffix,
+        banner_url: bannerUrl || undefined,
+        avatar_url: avatarUrl || undefined,
         owner_id: user.id,
       });
 
@@ -124,6 +127,45 @@ const CreateCommunity = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
+            >
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                <CardHeader>
+                  <CardTitle className="text-lg">Community Images</CardTitle>
+                  <CardDescription>
+                    Add a banner and avatar to make your community stand out
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <FormLabel>Banner Image</FormLabel>
+                    <CommunityImageUpload
+                      userId={user?.id || ''}
+                      value={bannerUrl}
+                      onChange={setBannerUrl}
+                      type="banner"
+                      disabled={!user?.id}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <FormLabel>Avatar Image</FormLabel>
+                    <CommunityImageUpload
+                      userId={user?.id || ''}
+                      value={avatarUrl}
+                      onChange={setAvatarUrl}
+                      type="avatar"
+                      disabled={!user?.id}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Basic Info */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
             >
               <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                 <CardHeader>
@@ -215,7 +257,7 @@ const CreateCommunity = () => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.25 }}
             >
               <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                 <CardHeader>
@@ -343,7 +385,7 @@ const CreateCommunity = () => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.35 }}
               className="flex flex-col sm:flex-row gap-3"
             >
               <Button
