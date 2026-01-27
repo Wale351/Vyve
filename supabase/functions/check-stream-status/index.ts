@@ -88,24 +88,37 @@ serve(async (req) => {
       : null;
 
     // If stream_id provided and status changed, update database
+    // IMPORTANT: Do NOT update streams that have been manually ended (ended_at is set)
     if (stream_id && isActive) {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
-      const { error: updateError } = await serviceSupabase
+      // First check if the stream has been manually ended
+      const { data: existingStream } = await serviceSupabase
         .from("streams")
-        .update({ 
-          is_live: true, 
-          started_at: new Date().toISOString() 
-        })
+        .select("ended_at, is_live")
         .eq("id", stream_id)
-        .eq("is_live", false); // Only update if not already live
+        .single();
 
-      if (updateError) {
-        console.error("[check-stream-status] Failed to update stream status:", updateError);
-      } else {
-        console.log(`[check-stream-status] Updated stream ${stream_id} to live`);
+      // Only update to live if stream hasn't been ended
+      if (existingStream && !existingStream.ended_at && !existingStream.is_live) {
+        const { error: updateError } = await serviceSupabase
+          .from("streams")
+          .update({ 
+            is_live: true, 
+            started_at: new Date().toISOString() 
+          })
+          .eq("id", stream_id)
+          .is("ended_at", null); // Extra safety: only update if ended_at is null
+
+        if (updateError) {
+          console.error("[check-stream-status] Failed to update stream status:", updateError);
+        } else {
+          console.log(`[check-stream-status] Updated stream ${stream_id} to live`);
+        }
+      } else if (existingStream?.ended_at) {
+        console.log(`[check-stream-status] Stream ${stream_id} was manually ended, not updating to live`);
       }
     }
 
