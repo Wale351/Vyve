@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useCanUpdateProfileImage, useUserRole } from '@/hooks/useProfile';
 import { useProfileUpdate, useProfileImageUpload } from '@/hooks/useProfileUpdate';
@@ -22,6 +23,7 @@ import {
   Radio,
   ChevronRight,
   Wallet,
+  Globe,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAccount, useBalance } from 'wagmi';
@@ -40,6 +42,15 @@ const staggerContainer = {
   }
 };
 
+const FIAT_CURRENCIES = [
+  { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
+  { code: 'KRW', name: 'Korean Won', symbol: '₩' },
+];
+
 const Settings = () => {
   const { user, isAuthenticated, isInitialized, walletAddress } = useWalletAuth();
   const { address } = useAccount();
@@ -52,6 +63,7 @@ const Settings = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [displayCurrency, setDisplayCurrency] = useState('USD');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const profileUpdate = useProfileUpdate();
@@ -163,11 +175,11 @@ const Settings = () => {
                 </div>
                 <div>
                   <h2 className="font-display font-semibold text-lg">Wallet</h2>
-                  <p className="text-sm text-muted-foreground">Your crypto balances</p>
+                  <p className="text-sm text-muted-foreground">Your crypto balance</p>
                 </div>
               </div>
             </div>
-            <div className="p-5 space-y-4">
+            <div className="p-5">
               {/* ETH Balance */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/30">
                 <div className="flex items-center gap-3">
@@ -179,39 +191,9 @@ const Settings = () => {
                     <p className="text-xs text-muted-foreground">ETH</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-mono font-semibold">
-                    {ethBalance ? parseFloat(formatEther(ethBalance.value)).toFixed(4) : '0.0000'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">ETH</p>
-                </div>
-              </div>
-
-              {/* Other Popular Currencies - Coming Soon */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/20 opacity-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">₿</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Bitcoin</p>
-                    <p className="text-xs text-muted-foreground">BTC</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">Coming soon</p>
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/20 opacity-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">$</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">USDC</p>
-                    <p className="text-xs text-muted-foreground">USD Coin</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">Coming soon</p>
+                <p className="font-mono font-semibold">
+                  {ethBalance ? parseFloat(formatEther(ethBalance.value)).toFixed(4) : '0.0000'} ETH
+                </p>
               </div>
             </div>
           </motion.div>
@@ -350,6 +332,38 @@ const Settings = () => {
           {/* Notifications Section */}
           <motion.div variants={fadeInUp}>
             <NotificationsCard />
+          </motion.div>
+
+          {/* Display Currency Section */}
+          <motion.div variants={fadeInUp} className="bg-card rounded-2xl border border-border/40 overflow-hidden">
+            <div className="p-5 border-b border-border/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10">
+                  <Globe className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-display font-semibold text-lg">Display Currency</h2>
+                  <p className="text-sm text-muted-foreground">Choose your preferred fiat currency</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-5">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Show values in</p>
+                <Select value={displayCurrency} onValueChange={setDisplayCurrency}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FIAT_CURRENCIES.map((currency) => (
+                      <SelectItem key={currency.code} value={currency.code}>
+                        {currency.symbol} {currency.code}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </motion.div>
 
           {/* Save Button */}
