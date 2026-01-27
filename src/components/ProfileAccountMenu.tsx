@@ -105,7 +105,7 @@ const ProfileAccountMenu = ({ children }: ProfileAccountMenuProps) => {
         )}
       </SheetTrigger>
       
-      <SheetContent side="right" className="w-[300px] sm:w-[340px] p-0">
+      <SheetContent side="left" className="w-[300px] sm:w-[340px] p-0 flex flex-col">
         <SheetHeader className="sr-only">
           <SheetTitle>Account Menu</SheetTitle>
         </SheetHeader>
@@ -148,7 +148,7 @@ const ProfileAccountMenu = ({ children }: ProfileAccountMenuProps) => {
         <Separator />
         
         {/* Menu Items */}
-        <nav className="p-2">
+        <nav className="p-2 flex-1">
           <AnimatePresence>
             {menuItems.filter(item => item.show).map((item, index) => (
               <motion.div
@@ -169,23 +169,24 @@ const ProfileAccountMenu = ({ children }: ProfileAccountMenuProps) => {
           </AnimatePresence>
         </nav>
         
-        <Separator />
-        
-        {/* Disconnect Button */}
-        <div className="p-2">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+        {/* Disconnect Button - Fixed at bottom */}
+        <div className="mt-auto">
+          <Separator />
+          <div className="p-2">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
             >
-              <LogOut className="h-5 w-5" />
-              Disconnect
-            </button>
-          </motion.div>
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <LogOut className="h-5 w-5" />
+                Disconnect
+              </button>
+            </motion.div>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
