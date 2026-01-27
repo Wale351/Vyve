@@ -103,8 +103,16 @@ export const useLivepeerStatus = ({
     const initialPhase = getInitialPhase();
     setStatus(prev => ({ ...prev, phase: initialPhase }));
 
-    // If ended or no playback ID, don't poll
+    // If ended or no playback ID, don't poll - stream is definitively over
     if (endedAt || !playbackId) {
+      // Ensure we show ended state correctly
+      if (endedAt) {
+        setStatus({
+          isActive: false,
+          phase: 'ended',
+          playbackUrl: null,
+        });
+      }
       return;
     }
 
