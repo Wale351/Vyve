@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { 
   Pin, Heart, MessageCircle, MoreHorizontal, 
-  Send, Radio, Megaphone, ChevronDown, ChevronUp
+  Send, Radio, Megaphone, ChevronDown, ChevronUp, Trash2, Loader2
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,25 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useCommunityPosts, useCreatePost, CommunityPost } from '@/hooks/useCommunities';
+import { usePostLikes, useToggleLike } from '@/hooks/usePostLikes';
+import { useDeletePost } from '@/hooks/useCommunityPosts';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -35,9 +53,33 @@ const PostTypeIcon = ({ type }: { type: string }) => {
   }
 };
 
-const PostCard = ({ post }: { post: CommunityPost }) => {
-  const [liked, setLiked] = useState(false);
+interface PostCardProps {
+  post: CommunityPost;
+  communityId: string;
+  isOwner: boolean;
+}
+
+const PostCard = ({ post, communityId, isOwner }: PostCardProps) => {
+  const { user } = useWalletAuth();
   const [showComments, setShowComments] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  const { data: likes = [] } = usePostLikes(post.id);
+  const toggleLike = useToggleLike();
+  const deletePost = useDeletePost();
+
+  const isLiked = likes.some(like => like.user_id === user?.id);
+  const canDelete = user?.id === post.author_id || isOwner;
+
+  const handleLike = () => {
+    if (!user?.id) return;
+    toggleLike.mutate({ postId: post.id, isLiked });
+  };
+
+  const handleDelete = () => {
+    deletePost.mutate({ postId: post.id, communityId });
+    setShowDeleteDialog(false);
+  };
 
   return (
     <motion.div
@@ -84,9 +126,25 @@ const PostCard = ({ post }: { post: CommunityPost }) => {
                 </p>
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            
+            {canDelete && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Post
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           {/* Content */}
@@ -108,13 +166,12 @@ const PostCard = ({ post }: { post: CommunityPost }) => {
             <Button
               variant="ghost"
               size="sm"
-              className={cn("gap-2 h-8", liked && "text-red-500")}
-              onClick={() => setLiked(!liked)}
+              className={cn("gap-2 h-8", isLiked && "text-red-500")}
+              onClick={handleLike}
+              disabled={!user || toggleLike.isPending}
             >
-              <Heart className={cn("h-4 w-4", liked && "fill-current")} />
-              <span className="text-xs">
-                {Object.values(post.reactions || {}).flat().length + (liked ? 1 : 0)}
-              </span>
+              <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
+              <span className="text-xs">{likes.length}</span>
             </Button>
             <Button 
               variant="ghost" 
@@ -136,6 +193,31 @@ const PostCard = ({ post }: { post: CommunityPost }) => {
           <PostComments postId={post.id} isExpanded={showComments} />
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this post? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletePost.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 };
@@ -189,7 +271,7 @@ const CommunityFeed = ({ communityId, isOwner, isMember }: CommunityFeedProps) =
 
   return (
     <div className="space-y-4">
-      {/* Post composer for owners/moderators */}
+      {/* Post composer for owners only */}
       {isOwner && (
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-4 space-y-3">
@@ -243,7 +325,12 @@ const CommunityFeed = ({ communityId, isOwner, isMember }: CommunityFeedProps) =
       {posts && posts.length > 0 ? (
         <div className="space-y-4">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard 
+              key={post.id} 
+              post={post} 
+              communityId={communityId}
+              isOwner={isOwner}
+            />
           ))}
         </div>
       ) : (

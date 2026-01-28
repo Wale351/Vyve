@@ -165,7 +165,7 @@ const CommunitySettings = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-20 pb-24 px-4 max-w-2xl mx-auto">
+      <main className="pt-20 pb-24 px-4 max-w-4xl mx-auto lg:px-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -197,240 +197,264 @@ const CommunitySettings = () => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Images */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-lg">Community Images</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <FormLabel>Banner Image</FormLabel>
-                    <CommunityImageUpload
-                      userId={user?.id || ''}
-                      value={bannerUrl}
-                      onChange={setBannerUrl}
-                      type="banner"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <FormLabel>Avatar Image</FormLabel>
-                    <CommunityImageUpload
-                      userId={user?.id || ''}
-                      value={avatarUrl}
-                      onChange={setAvatarUrl}
-                      type="avatar"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+            {/* Two column layout for desktop */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-6">
+                {/* Images */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Community Images</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-2">
+                        <FormLabel>Banner Image</FormLabel>
+                        <CommunityImageUpload
+                          userId={user?.id || ''}
+                          value={bannerUrl}
+                          onChange={setBannerUrl}
+                          type="banner"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Avatar Image</FormLabel>
+                        <CommunityImageUpload
+                          userId={user?.id || ''}
+                          value={avatarUrl}
+                          onChange={setAvatarUrl}
+                          type="avatar"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
 
-            {/* Basic Info */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-            >
-              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-lg">Basic Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Community Name</FormLabel>
-                        <FormControl>
-                          <Input className="bg-muted/50" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Basic Info */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Basic Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Community Name</FormLabel>
+                            <FormControl>
+                              <Input className="bg-muted/50" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="short_description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Short Description</FormLabel>
-                        <FormControl>
-                          <Input className="bg-muted/50" {...field} />
-                        </FormControl>
-                        <FormDescription>Shown on community cards</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="short_description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Short Description</FormLabel>
+                            <FormControl>
+                              <Input className="bg-muted/50" {...field} />
+                            </FormControl>
+                            <FormDescription>Shown on community cards</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Description</FormLabel>
-                        <FormControl>
-                          <Textarea className="bg-muted/50 min-h-[100px]" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Description</FormLabel>
+                            <FormControl>
+                              <Textarea className="bg-muted/50 min-h-[100px]" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="rules"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Community Rules</FormLabel>
-                        <FormControl>
-                          <Textarea className="bg-muted/50 min-h-[80px]" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-            </motion.div>
+                      <FormField
+                        control={form.control}
+                        name="rules"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Community Rules</FormLabel>
+                            <FormControl>
+                              <Textarea className="bg-muted/50 min-h-[80px]" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </div>
 
-            {/* Access Control */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-lg">Access Control</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="is_nft_gated"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border border-border/50 p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <Shield className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <FormLabel>NFT Gated</FormLabel>
-                            <FormDescription>Require NFT ownership</FormDescription>
-                          </div>
-                        </div>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Access Control */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Access Control</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="is_nft_gated"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center justify-between rounded-lg border border-border/50 p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-primary/10">
+                                <Shield className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <FormLabel>NFT Gated</FormLabel>
+                                <FormDescription>Require NFT ownership</FormDescription>
+                              </div>
+                            </div>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
 
-                  {watchNftGated && (
-                    <FormField
-                      control={form.control}
-                      name="nft_contract_address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>NFT Contract Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="0x..." className="bg-muted/50 font-mono text-sm" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      {watchNftGated && (
+                        <FormField
+                          control={form.control}
+                          name="nft_contract_address"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>NFT Contract Address</FormLabel>
+                              <FormControl>
+                                <Input placeholder="0x..." className="bg-muted/50 font-mono text-sm" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       )}
-                    />
-                  )}
 
-                  <FormField
-                    control={form.control}
-                    name="is_ens_gated"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border border-border/50 p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-blue-500/10">
-                            <Hexagon className="h-5 w-5 text-blue-500" />
-                          </div>
-                          <div>
-                            <FormLabel>ENS/Base Name Gated</FormLabel>
-                            <FormDescription>Require ENS or Base name</FormDescription>
-                          </div>
-                        </div>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="is_ens_gated"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center justify-between rounded-lg border border-border/50 p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-secondary/20">
+                                <Hexagon className="h-5 w-5 text-secondary-foreground" />
+                              </div>
+                              <div>
+                                <FormLabel>ENS/Base Name Gated</FormLabel>
+                                <FormDescription>Require ENS or Base name</FormDescription>
+                              </div>
+                            </div>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
 
-                  {watchEnsGated && (
-                    <FormField
-                      control={form.control}
-                      name="required_ens_suffix"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Required ENS Suffix</FormLabel>
-                          <FormControl>
-                            <Input placeholder=".eth" className="bg-muted/50" {...field} />
-                          </FormControl>
-                          <FormDescription>Leave empty for any ENS/Base name</FormDescription>
-                          <FormMessage />
-                        </FormItem>
+                      {watchEnsGated && (
+                        <FormField
+                          control={form.control}
+                          name="required_ens_suffix"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Required ENS Suffix</FormLabel>
+                              <FormControl>
+                                <Input placeholder=".eth" className="bg-muted/50" {...field} />
+                              </FormControl>
+                              <FormDescription>Leave empty for any ENS/Base name</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       )}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
 
-            {/* Actions */}
+                {/* Danger Zone */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                >
+                  <Card className="bg-card/50 backdrop-blur-sm border-destructive/30">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-destructive">Danger Zone</CardTitle>
+                      <CardDescription>Irreversible and destructive actions</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button type="button" variant="destructive" className="w-full gap-2">
+                            <Trash2 className="h-4 w-4" />
+                            Delete Community
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <AlertTriangle className="h-5 w-5 text-destructive" />
+                              Delete Community
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete your
+                              community and all associated posts, polls, and member data.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleDelete}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete Forever
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Save Button - Full Width */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="flex flex-col-reverse sm:flex-row gap-3"
+              transition={{ delay: 0.3 }}
+              className="flex justify-end pt-4 border-t border-border/50"
             >
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button type="button" variant="destructive" className="gap-2">
-                    <Trash2 className="h-4 w-4" />
-                    Delete Community
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
-                      Delete Community
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your
-                      community and all associated posts, polls, and member data.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Delete Forever
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-
               <Button
                 type="submit"
                 disabled={updateCommunity.isPending}
-                className="sm:ml-auto gap-2"
+                className="gap-2 min-w-32"
               >
                 {updateCommunity.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
