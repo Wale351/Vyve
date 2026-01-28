@@ -61,7 +61,7 @@ const CreateCommunity = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Check if user is verified (fetch from profile)
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['user-profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -75,7 +75,54 @@ const CreateCommunity = () => {
     enabled: !!user?.id,
   });
 
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      short_description: '',
+      rules: '',
+      is_nft_gated: false,
+      nft_contract_address: '',
+      is_ens_gated: false,
+      required_ens_suffix: '',
+    },
+  });
+
+  const watchName = form.watch('name');
+  const watchDescription = form.watch('description');
+  const watchNftGated = form.watch('is_nft_gated');
+  const watchEnsGated = form.watch('is_ens_gated');
+
   const isVerified = profile?.verified_creator === true;
+  const progress = ((currentStep + 1) / steps.length) * 100;
+
+  const canProceed = () => {
+    switch (currentStep) {
+      case 0:
+        return watchName.length >= 3 && watchDescription.length >= 10;
+      case 1:
+        return true; // Images are optional
+      case 2:
+        return true; // Access control is optional
+      case 3:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  // Show loading state
+  if (isLoadingProfile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-20 px-4 max-w-lg mx-auto flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
 
   // Show verification required message
   if (user && !isVerified) {
@@ -97,42 +144,6 @@ const CreateCommunity = () => {
       </div>
     );
   }
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      short_description: '',
-      rules: '',
-      is_nft_gated: false,
-      nft_contract_address: '',
-      is_ens_gated: false,
-      required_ens_suffix: '',
-    },
-  });
-
-  const watchName = form.watch('name');
-  const watchDescription = form.watch('description');
-  const watchNftGated = form.watch('is_nft_gated');
-  const watchEnsGated = form.watch('is_ens_gated');
-
-  const progress = ((currentStep + 1) / steps.length) * 100;
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 0:
-        return watchName.length >= 3 && watchDescription.length >= 10;
-      case 1:
-        return true; // Images are optional
-      case 2:
-        return true; // Access control is optional
-      case 3:
-        return true;
-      default:
-        return false;
-    }
-  };
 
   const handleNext = async () => {
     if (currentStep === 0) {
