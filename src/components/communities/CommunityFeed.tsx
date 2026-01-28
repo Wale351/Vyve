@@ -60,7 +60,7 @@ interface PostCardProps {
 }
 
 const PostCard = ({ post, communityId, isOwner }: PostCardProps) => {
-  const { user } = useWalletAuth();
+  const { user, isAuthenticated } = useWalletAuth();
   const [showComments, setShowComments] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
@@ -69,8 +69,8 @@ const PostCard = ({ post, communityId, isOwner }: PostCardProps) => {
   const deletePost = useDeletePost();
 
   const isLiked = likes.some(like => like.user_id === user?.id);
-  const canDelete = user?.id === post.author_id || isOwner;
-
+  const isPostAuthor = user?.id === post.author_id;
+  const canDelete = isAuthenticated && (isPostAuthor || isOwner);
   const handleLike = () => {
     if (!user?.id) return;
     toggleLike.mutate({ postId: post.id, isLiked });
