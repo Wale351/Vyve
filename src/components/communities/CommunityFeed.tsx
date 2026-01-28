@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { 
   Pin, Heart, MessageCircle, MoreHorizontal, 
-  Image as ImageIcon, Send, Radio, Megaphone
+  Send, Radio, Megaphone, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,8 @@ import { useCommunityPosts, useCreatePost, CommunityPost } from '@/hooks/useComm
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import PostComments from './PostComments';
+import PostImageUpload from './PostImageUpload';
 
 interface CommunityFeedProps {
   communityId: string;
@@ -35,6 +37,7 @@ const PostTypeIcon = ({ type }: { type: string }) => {
 
 const PostCard = ({ post }: { post: CommunityPost }) => {
   const [liked, setLiked] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   return (
     <motion.div
@@ -113,11 +116,24 @@ const PostCard = ({ post }: { post: CommunityPost }) => {
                 {Object.values(post.reactions || {}).flat().length + (liked ? 1 : 0)}
               </span>
             </Button>
-            <Button variant="ghost" size="sm" className="gap-2 h-8">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2 h-8"
+              onClick={() => setShowComments(!showComments)}
+            >
               <MessageCircle className="h-4 w-4" />
               <span className="text-xs">Reply</span>
+              {showComments ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
             </Button>
           </div>
+
+          {/* Comments Section */}
+          <PostComments postId={post.id} isExpanded={showComments} />
         </CardContent>
       </Card>
     </motion.div>
@@ -129,6 +145,7 @@ const CommunityFeed = ({ communityId, isOwner, isMember }: CommunityFeedProps) =
   const { data: posts, isLoading } = useCommunityPosts(communityId);
   const createPost = useCreatePost();
   const [newPost, setNewPost] = useState('');
+  const [postImage, setPostImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -140,8 +157,10 @@ const CommunityFeed = ({ communityId, isOwner, isMember }: CommunityFeedProps) =
         community_id: communityId,
         author_id: user.id,
         content: newPost.trim(),
+        image_url: postImage || undefined,
       });
       setNewPost('');
+      setPostImage(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -180,11 +199,33 @@ const CommunityFeed = ({ communityId, isOwner, isMember }: CommunityFeedProps) =
               onChange={(e) => setNewPost(e.target.value)}
               className="min-h-[80px] bg-muted/50 border-border/50 resize-none"
             />
+            
+            {/* Image preview */}
+            {postImage && (
+              <div className="relative rounded-lg overflow-hidden border border-border/50">
+                <img 
+                  src={postImage} 
+                  alt="Post preview" 
+                  className="w-full max-h-48 object-cover"
+                />
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={() => setPostImage(null)}
+                >
+                  Remove
+                </Button>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <ImageIcon className="h-4 w-4" />
-                Add Image
-              </Button>
+              <PostImageUpload
+                userId={user?.id || ''}
+                value={postImage}
+                onChange={setPostImage}
+                disabled={!user?.id}
+              />
               <Button 
                 onClick={handleSubmit}
                 disabled={!newPost.trim() || isSubmitting}

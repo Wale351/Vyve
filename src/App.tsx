@@ -20,6 +20,7 @@ import VerifyAccount from "./pages/VerifyAccount";
 import Communities from "./pages/Communities";
 import CommunityDetail from "./pages/CommunityDetail";
 import CreateCommunity from "./pages/CreateCommunity";
+import CommunitySettings from "./pages/CommunitySettings";
 
 import NotFound from "./pages/NotFound";
 import OnboardingModal from "./components/OnboardingModal";
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="/communities" element={<Communities />} />
               <Route path="/communities/create" element={<CreateCommunity />} />
               <Route path="/communities/:slug" element={<CommunityDetail />} />
+              <Route path="/communities/:slug/settings" element={<CommunitySettings />} />
               
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
