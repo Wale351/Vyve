@@ -5,11 +5,11 @@ import { Send, Trash2, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePostComments, useCreateComment, useDeleteComment, PostComment } from '@/hooks/useCommunityPosts';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
-import { cn } from '@/lib/utils';
+import MentionInput from './MentionInput';
+import MentionText from './MentionText';
 
 interface PostCommentsProps {
   postId: string;
@@ -57,7 +57,9 @@ const CommentItem = ({
             {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
           </span>
         </div>
-        <p className="text-sm text-foreground/90 break-words">{comment.content}</p>
+        <p className="text-sm text-foreground/90 break-words">
+          <MentionText content={comment.content} />
+        </p>
       </div>
       {isOwn && (
         <Button
@@ -135,14 +137,14 @@ const PostComments = ({ postId, isExpanded }: PostCommentsProps) => {
         </p>
       )}
 
-      {/* Comment input */}
+      {/* Comment input with mention support */}
       {isAuthenticated && (
         <form onSubmit={handleSubmit} className="flex gap-2 pt-2">
-          <Input
+          <MentionInput
             value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Write a reply..."
-            className="h-9 text-sm bg-muted/50"
+            onChange={setNewComment}
+            placeholder="Write a reply... (use @username to mention)"
+            className="h-9 text-sm bg-muted/50 flex-1"
             maxLength={500}
           />
           <Button 

@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { Calendar, Clock, Bell, Radio } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Calendar, Clock, Bell, Radio, Plus, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useStreamerSchedule } from '@/hooks/useScheduledStreams';
+import { useStreamerSchedule, useCancelScheduledStream } from '@/hooks/useScheduledStreams';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
+import ScheduleStreamModal from '@/components/ScheduleStreamModal';
 
 interface CommunityScheduleProps {
   communityId: string;
@@ -14,7 +16,12 @@ interface CommunityScheduleProps {
 }
 
 const CommunitySchedule = ({ communityId, ownerId }: CommunityScheduleProps) => {
+  const { user } = useWalletAuth();
   const { data: scheduledStreams, isLoading } = useStreamerSchedule(ownerId);
+  const cancelStream = useCancelScheduledStream();
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+
+  const isOwner = user?.id === ownerId;
 
   if (isLoading) {
     return (
@@ -43,6 +50,16 @@ const CommunitySchedule = ({ communityId, ownerId }: CommunityScheduleProps) => 
 
   return (
     <div className="space-y-4">
+      {/* Owner Controls */}
+      {isOwner && (
+        <div className="flex justify-end">
+          <Button onClick={() => setScheduleModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Schedule Stream
+          </Button>
+        </div>
+      )}
+
       {upcomingStreams.length > 0 ? (
         upcomingStreams.map((stream, index) => (
           <motion.div
@@ -59,6 +76,12 @@ const CommunitySchedule = ({ communityId, ownerId }: CommunityScheduleProps) => 
                     {stream.thumbnail_url ? (
                       <img 
                         src={stream.thumbnail_url} 
+                        alt="" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : stream.games?.thumbnail_url ? (
+                      <img 
+                        src={stream.games.thumbnail_url} 
                         alt="" 
                         className="w-full h-full object-cover"
                       />
@@ -85,6 +108,11 @@ const CommunitySchedule = ({ communityId, ownerId }: CommunityScheduleProps) => 
                         <Clock className="h-3.5 w-3.5" />
                         <span>{format(new Date(stream.scheduled_for), 'h:mm a')}</span>
                       </div>
+                      {stream.games?.name && (
+                        <Badge variant="secondary" className="text-xs">
+                          {stream.games.name}
+                        </Badge>
+                      )}
                     </div>
 
                     {stream.description && (
@@ -95,11 +123,23 @@ const CommunitySchedule = ({ communityId, ownerId }: CommunityScheduleProps) => 
                   </div>
 
                   {/* Actions */}
-                  <div className="hidden sm:flex items-center">
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Bell className="h-4 w-4" />
-                      Remind Me
-                    </Button>
+                  <div className="hidden sm:flex items-center gap-2">
+                    {isOwner ? (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => cancelStream.mutate(stream.id)}
+                        disabled={cancelStream.isPending}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Bell className="h-4 w-4" />
+                        Remind Me
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -111,10 +151,27 @@ const CommunitySchedule = ({ communityId, ownerId }: CommunityScheduleProps) => 
           <Calendar className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
           <h3 className="font-medium mb-2">No upcoming streams</h3>
           <p className="text-sm text-muted-foreground">
-            The streamer hasn't scheduled any upcoming streams yet.
+            {isOwner 
+              ? 'Schedule your next stream to let your community know!' 
+              : 'The streamer hasn\'t scheduled any upcoming streams yet.'}
           </p>
+          {isOwner && (
+            <Button 
+              variant="link" 
+              className="mt-2"
+              onClick={() => setScheduleModalOpen(true)}
+            >
+              Schedule a stream
+            </Button>
+          )}
         </div>
       )}
+
+      {/* Schedule Stream Modal */}
+      <ScheduleStreamModal
+        open={scheduleModalOpen}
+        onOpenChange={setScheduleModalOpen}
+      />
     </div>
   );
 };

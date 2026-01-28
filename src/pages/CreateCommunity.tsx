@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Users, Shield, Hexagon, Loader2, ArrowRight, ArrowLeft,
   Check, Sparkles, ImagePlus, FileText, Lock
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -57,6 +59,44 @@ const CreateCommunity = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // Check if user is verified (fetch from profile)
+  const { data: profile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('public_profiles')
+        .select('verified_creator')
+        .eq('id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const isVerified = profile?.verified_creator === true;
+
+  // Show verification required message
+  if (user && !isVerified) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-20 px-4 max-w-lg mx-auto text-center">
+          <div className="p-6 rounded-xl bg-card border border-border">
+            <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h1 className="text-xl font-bold mb-2">Verification Required</h1>
+            <p className="text-muted-foreground mb-4">
+              Only verified creators can create communities. Get verified to unlock this feature.
+            </p>
+            <Button asChild>
+              <Link to="/verify">Get Verified</Link>
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
