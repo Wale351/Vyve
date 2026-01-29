@@ -29,6 +29,9 @@ import { toast } from 'sonner';
 import { useAccount, useBalance } from 'wagmi';
 import { formatEther } from 'viem';
 import { useEthPrice, formatFiatValue } from '@/hooks/useEthPrice';
+import { useTheme, accentColorOptions } from '@/contexts/ThemeContext';
+import { Palette } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 16 },
@@ -350,6 +353,11 @@ const Settings = () => {
             <NotificationsCard />
           </motion.div>
 
+          {/* Appearance Section */}
+          <motion.div variants={fadeInUp}>
+            <AppearanceCard />
+          </motion.div>
+
           {/* Display Currency Section */}
           <motion.div variants={fadeInUp} className="bg-card rounded-2xl border border-border/40 overflow-hidden">
             <div className="p-5 border-b border-border/30">
@@ -463,6 +471,50 @@ const NotificationsCard = () => {
             Notifications are blocked. Please enable them in your browser settings.
           </p>
         )}
+      </div>
+    </div>
+  );
+};
+
+// Appearance settings component
+const AppearanceCard = () => {
+  const { accentColor, setAccentColor } = useTheme();
+
+  return (
+    <div className="bg-card rounded-2xl border border-border/40 overflow-hidden">
+      <div className="p-5 border-b border-border/30">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-primary/10">
+            <Palette className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="font-display font-semibold text-lg">Appearance</h2>
+            <p className="text-sm text-muted-foreground">Customize your app experience</p>
+          </div>
+        </div>
+      </div>
+      <div className="p-5">
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm text-muted-foreground mb-3 block">Accent Color</Label>
+            <div className="flex gap-3">
+              {accentColorOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setAccentColor(option.value)}
+                  className={cn(
+                    'w-10 h-10 rounded-xl transition-all duration-200',
+                    option.class,
+                    accentColor === option.value 
+                      ? 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110' 
+                      : 'opacity-60 hover:opacity-100 hover:scale-105'
+                  )}
+                  title={option.label}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

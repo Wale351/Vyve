@@ -9,7 +9,6 @@ import GlobalSearch from '@/components/GlobalSearch';
 import MobileSearch from '@/components/MobileSearch';
 import ProfileAccountMenu from '@/components/ProfileAccountMenu';
 import WalletConnectButton from '@/components/WalletConnectButton';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ChevronDown } from 'lucide-react';
 
@@ -68,11 +67,8 @@ const Header = () => {
         {/* Center Section - Empty on homepage, could add branding later */}
         <div className="hidden md:block" />
 
-        {/* Right Section - Search + Theme Toggle */}
+        {/* Right Section - Search */}
         <div className="flex items-center gap-2">
-          {/* Theme Toggle */}
-          <ThemeToggle />
-          
           {/* Mobile Search Button */}
           <Button
             variant="ghost"
