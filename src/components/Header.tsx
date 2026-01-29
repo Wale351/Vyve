@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Search, ArrowLeft } from 'lucide-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
@@ -8,6 +9,7 @@ import GlobalSearch from '@/components/GlobalSearch';
 import MobileSearch from '@/components/MobileSearch';
 import ProfileAccountMenu from '@/components/ProfileAccountMenu';
 import WalletConnectButton from '@/components/WalletConnectButton';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ChevronDown } from 'lucide-react';
 
@@ -21,7 +23,12 @@ const Header = () => {
   const isHomePage = location.pathname === '/';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border/30 bg-background/90 backdrop-blur-xl">
+    <motion.header 
+      className="fixed top-0 left-0 right-0 z-50 w-full glass-subtle"
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="w-full flex h-14 md:h-16 items-center justify-between px-4">
         {/* Left Section - Profile on Home, Back Button elsewhere */}
         <div className="flex items-center gap-2">
@@ -30,7 +37,7 @@ const Header = () => {
             isAuthenticated && profile ? (
               <ProfileAccountMenu>
                 <Button variant="ghost" className="flex items-center gap-2 px-2">
-                  <Avatar className="h-8 w-8 border border-border">
+                  <Avatar className="h-8 w-8 border border-primary/20">
                     {profile.avatar_url ? (
                       <AvatarImage src={profile.avatar_url} alt={profile?.username || 'Profile'} />
                     ) : (
@@ -50,7 +57,7 @@ const Header = () => {
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-9 w-9"
+              className="h-9 w-9 rounded-xl"
               onClick={() => navigate('/')}
             >
               <ArrowLeft className="h-5 w-5" />
@@ -61,13 +68,16 @@ const Header = () => {
         {/* Center Section - Empty on homepage, could add branding later */}
         <div className="hidden md:block" />
 
-        {/* Right Section - Search */}
-        <div className="flex items-center gap-3">
+        {/* Right Section - Search + Theme Toggle */}
+        <div className="flex items-center gap-2">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+          
           {/* Mobile Search Button */}
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 lg:hidden"
+            className="h-9 w-9 rounded-xl lg:hidden"
             onClick={() => setMobileSearchOpen(true)}
           >
             <Search className="h-5 w-5" />
@@ -82,7 +92,7 @@ const Header = () => {
       
       {/* Mobile Search Modal */}
       <MobileSearch open={mobileSearchOpen} onOpenChange={setMobileSearchOpen} />
-    </header>
+    </motion.header>
   );
 };
 

@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import TrendingGamesWidget from '@/components/TrendingGamesWidget';
 import RecentlyPlayedGames from '@/components/RecentlyPlayedGames';
@@ -12,6 +13,14 @@ import FloatingNotifications from '@/components/FloatingNotifications';
 import { useLiveStreams } from '@/hooks/useStreams';
 import { useGames, useLiveStreamCountByGame } from '@/hooks/useGames';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
+
+const pageVariants = {
+  initial: { opacity: 0 },
+  animate: { 
+    opacity: 1,
+    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }
+  },
+};
 
 const Home = () => {
   const { data: liveStreams = [], isLoading } = useLiveStreams();
@@ -33,7 +42,12 @@ const Home = () => {
     .slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div 
+      className="min-h-screen bg-background"
+      initial="initial"
+      animate="animate"
+      variants={pageVariants}
+    >
       <Header />
       <div className="h-14 md:h-16" />
       
@@ -50,11 +64,16 @@ const Home = () => {
 
             {/* Sidebar - Desktop Only */}
             <aside className="hidden lg:block w-72 flex-shrink-0">
-              <div className="sticky top-20 space-y-4">
+              <motion.div 
+                className="sticky top-20 space-y-4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              >
                 <TrendingGamesWidget />
                 {authenticated && <RecentlyPlayedGames />}
                 <UpcomingStreamsWidget />
-              </div>
+              </motion.div>
             </aside>
           </div>
           
@@ -72,9 +91,9 @@ const Home = () => {
 
       <HomeFooter />
       
-      {/* Floating Notifications - Only show when authenticated */}
+      {/* Floating Notifications */}
       {authenticated && <FloatingNotifications />}
-    </div>
+    </motion.div>
   );
 };
 

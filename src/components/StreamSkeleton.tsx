@@ -1,7 +1,13 @@
+import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const StreamSkeleton = () => (
-  <div className="stream-card">
+  <motion.div 
+    className="stream-card"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ duration: 0.3 }}
+  >
     <div className="relative aspect-video overflow-hidden rounded-t-xl md:rounded-t-2xl">
       <Skeleton className="w-full h-full" />
     </div>
@@ -14,13 +20,20 @@ const StreamSkeleton = () => (
         </div>
       </div>
     </div>
-  </div>
+  </motion.div>
 );
 
 export const StreamSkeletonGrid = ({ count = 4 }: { count?: number }) => (
   <div className="flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6">
     {Array.from({ length: count }).map((_, i) => (
-      <StreamSkeleton key={i} />
+      <motion.div
+        key={i}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: i * 0.05, duration: 0.3 }}
+      >
+        <StreamSkeleton />
+      </motion.div>
     ))}
   </div>
 );
