@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import StreamCard from '@/components/StreamCard';
 import ProfileBadges from '@/components/ProfileBadges';
@@ -211,7 +212,12 @@ const Profile = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background page-enter">
+    <motion.div 
+      className="min-h-screen bg-background"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+    >
       <Header />
       
       {/* Spacer for fixed header */}
@@ -219,8 +225,13 @@ const Profile = () => {
       
       <div className="container px-4 py-6 md:py-10 max-w-2xl mx-auto">
         {/* Compact Profile Header */}
-        <div className="flex flex-col items-center mb-8">
-          {/* Avatar */}
+        <motion.div 
+          className="flex flex-col items-center mb-8"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {/* Avatar with subtle glow */}
           <div className="relative mb-4">
             {isEditing && imageUpdateInfo?.canUpdate ? (
               <div 
@@ -388,7 +399,7 @@ const Profile = () => {
               )}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Content Tabs */}
         <div className="space-y-6 md:space-y-8">
@@ -452,7 +463,7 @@ const Profile = () => {
           initialTab={followersModalTab}
         />
       )}
-    </div>
+    </motion.div>
   );
 };
 

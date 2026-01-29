@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { motion } from 'framer-motion';
 import LandingHeader from '@/components/landing/LandingHeader';
 import HeroSection from '@/components/landing/HeroSection';
 import FeaturesSection from '@/components/landing/FeaturesSection';
@@ -8,14 +9,20 @@ import LandingFooter from '@/components/landing/LandingFooter';
 
 const Landing = forwardRef<HTMLDivElement>(function Landing(_props, ref) {
   return (
-    <div ref={ref} className="min-h-screen bg-background overflow-x-hidden">
+    <motion.div 
+      ref={ref} 
+      className="min-h-screen bg-background overflow-x-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <LandingHeader />
       <HeroSection />
       <FeaturesSection />
       <HowItWorksSection />
       <FeaturedGamesSection />
       <LandingFooter />
-    </div>
+    </motion.div>
   );
 });
 

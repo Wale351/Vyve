@@ -146,12 +146,12 @@ const LiveChat = ({ streamId, streamerId: propStreamerId }: LiveChatProps) => {
   return (
     <div className="flex flex-col h-full bg-card lg:glass-card overflow-hidden lg:rounded-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 md:px-5 md:py-4 border-b border-border/30">
+      <div className="flex items-center justify-between px-4 py-3 md:px-5 md:py-4 border-b border-border/20">
         <div className="flex items-center gap-2">
           <MessageCircle className="h-4 w-4 md:h-5 md:w-5 text-primary" />
           <h3 className="font-display font-semibold text-sm md:text-base">Live Chat</h3>
         </div>
-        <span className="text-[10px] md:text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg">
+        <span className="text-[10px] md:text-xs text-muted-foreground glass-subtle px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg">
           {messages.length}
         </span>
       </div>
