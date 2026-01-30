@@ -3,6 +3,10 @@ import { Play, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import WalletConnectButton from '@/components/WalletConnectButton';
 
+// Fixed brand colors for landing page
+const BRAND_PRIMARY = 'hsl(175, 85%, 45%)';
+const BRAND_SECONDARY = 'hsl(15, 75%, 55%)';
+
 export default function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -20,16 +24,20 @@ export default function LandingHeader() {
             <motion.div 
               className="flex items-center gap-3"
               whileHover={{ scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 400 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
               <div className="relative">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                  <Play className="h-5 w-5 text-primary-foreground" fill="currentColor" />
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: `linear-gradient(to bottom right, ${BRAND_PRIMARY}, ${BRAND_SECONDARY})` }}
+                >
+                  <Play className="h-5 w-5 text-white" fill="currentColor" />
                 </div>
                 <motion.div 
-                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-secondary"
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute inset-0 rounded-xl"
+                  style={{ background: `linear-gradient(to bottom right, ${BRAND_PRIMARY}, ${BRAND_SECONDARY})` }}
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0, 0.4] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
                 />
               </div>
               <span className="font-varsity text-3xl tracking-wider text-foreground">VYVE</span>
@@ -57,6 +65,7 @@ export default function LandingHeader() {
       <motion.div
         initial={false}
         animate={{ height: mobileMenuOpen ? 'auto' : 0, opacity: mobileMenuOpen ? 1 : 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className="md:hidden overflow-hidden mx-4 mt-2"
       >
         <div className="bg-card/95 backdrop-blur-xl rounded-xl border border-border/50 p-4">

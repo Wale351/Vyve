@@ -22,14 +22,12 @@ import {
   Shield,
   Moon,
   Sun,
-  Palette,
 } from 'lucide-react';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useOwnProfile, useUserRole } from '@/hooks/useProfile';
 import { useBalance } from 'wagmi';
 import { formatEther } from 'viem';
-import { useTheme, accentColorOptions } from '@/contexts/ThemeContext';
-import { cn } from '@/lib/utils';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ProfileAccountMenuProps {
   children?: React.ReactNode;
@@ -40,7 +38,7 @@ const ProfileAccountMenu = ({ children }: ProfileAccountMenuProps) => {
   const { user, walletAddress, signOut } = useWalletAuth();
   const { data: profile } = useOwnProfile(user?.id);
   const { data: role } = useUserRole(user?.id);
-  const { theme, accentColor, toggleTheme, setAccentColor } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   
   const { data: balance } = useBalance({
     address: walletAddress as `0x${string}` | undefined,
@@ -203,29 +201,6 @@ const ProfileAccountMenu = ({ children }: ProfileAccountMenuProps) => {
             </motion.div>
           </button>
           
-          {/* Accent Color Picker */}
-          <div className="px-4 py-3">
-            <div className="flex items-center gap-3 mb-2">
-              <Palette className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm font-medium">Accent</span>
-            </div>
-            <div className="flex gap-2 mt-2">
-              {accentColorOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setAccentColor(option.value)}
-                  className={cn(
-                    'w-7 h-7 rounded-full transition-all duration-200',
-                    option.class,
-                    accentColor === option.value 
-                      ? 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110' 
-                      : 'opacity-60 hover:opacity-100 hover:scale-105'
-                  )}
-                  title={option.label}
-                />
-              ))}
-            </div>
-          </div>
         </div>
         
         {/* Disconnect Button */}

@@ -2,6 +2,10 @@ import { motion } from 'framer-motion';
 import { Play, Github, Twitter, ExternalLink } from 'lucide-react';
 import { SiDiscord } from 'react-icons/si';
 
+// Fixed brand colors for landing page
+const BRAND_PRIMARY = 'hsl(175, 85%, 45%)';
+const BRAND_SECONDARY = 'hsl(15, 75%, 55%)';
+
 const links = {
   product: [
     { label: 'Features', href: '#features' },
@@ -30,7 +34,10 @@ export default function LandingFooter() {
   return (
     <footer className="relative border-t border-border/30">
       {/* Gradient top border */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+      <div 
+        className="absolute top-0 left-0 right-0 h-px"
+        style={{ background: `linear-gradient(to right, transparent, ${BRAND_PRIMARY.replace(')', ' / 0.5)')}, transparent)` }}
+      />
 
       <div className="container mx-auto px-4 py-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
@@ -39,9 +46,13 @@ export default function LandingFooter() {
             <motion.div 
               className="flex items-center gap-3 mb-6"
               whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Play className="h-5 w-5 text-primary-foreground" fill="currentColor" />
+              <div 
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: `linear-gradient(to bottom right, ${BRAND_PRIMARY}, ${BRAND_SECONDARY})` }}
+              >
+                <Play className="h-5 w-5 text-white" fill="currentColor" />
               </div>
               <span className="font-varsity text-3xl tracking-wider">VYVE</span>
             </motion.div>
@@ -58,12 +69,14 @@ export default function LandingFooter() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  whileHover={{ scale: 1.1, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-10 h-10 rounded-xl bg-muted hover:bg-primary/20 flex items-center justify-center transition-colors"
+                  whileHover={{ scale: 1.08, y: -2 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center transition-colors duration-300"
+                  style={{ '--hover-bg': `${BRAND_PRIMARY.replace(')', ' / 0.2)')}` } as React.CSSProperties}
                   aria-label={social.label}
                 >
-                  <social.icon className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+                  <social.icon className="w-5 h-5 text-muted-foreground" />
                 </motion.a>
               ))}
             </div>
@@ -82,11 +95,12 @@ export default function LandingFooter() {
                       href={item.href}
                       target={item.external ? '_blank' : undefined}
                       rel={item.external ? 'noopener noreferrer' : undefined}
-                      className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 group"
+                      className="text-muted-foreground transition-colors duration-200 inline-flex items-center gap-1 group"
+                      style={{ '--link-hover': BRAND_PRIMARY } as React.CSSProperties}
                     >
-                      {item.label}
+                      <span className="hover:text-[var(--link-hover)]">{item.label}</span>
                       {item.external && (
-                        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                       )}
                     </a>
                   </li>
@@ -107,9 +121,9 @@ export default function LandingFooter() {
               </span>
             </div>
             <div className="flex items-center gap-6">
-              <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-              <a href="#" className="hover:text-primary transition-colors">Terms</a>
-              <a href="#" className="hover:text-primary transition-colors">Cookies</a>
+              <a href="#" className="transition-colors duration-200" style={{ '--hover': BRAND_PRIMARY } as React.CSSProperties}>Privacy</a>
+              <a href="#" className="transition-colors duration-200" style={{ '--hover': BRAND_PRIMARY } as React.CSSProperties}>Terms</a>
+              <a href="#" className="transition-colors duration-200" style={{ '--hover': BRAND_PRIMARY } as React.CSSProperties}>Cookies</a>
             </div>
           </div>
         </div>
