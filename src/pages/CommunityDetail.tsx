@@ -32,12 +32,12 @@ const CommunityDetail = () => {
   const isPending = joinMutation.isPending || leaveMutation.isPending;
 
   const handleJoinLeave = () => {
-    if (!community) return;
+    if (!community || !slug) return;
     
     if (community.is_member) {
-      leaveMutation.mutate(community.id);
+      leaveMutation.mutate({ communityId: community.id, slug });
     } else {
-      joinMutation.mutate(community.id);
+      joinMutation.mutate({ communityId: community.id, slug });
     }
   };
 

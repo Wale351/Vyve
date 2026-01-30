@@ -27,9 +27,9 @@ const CommunityCard = ({ community, index = 0 }: CommunityCardProps) => {
     e.stopPropagation();
     
     if (community.is_member) {
-      leaveMutation.mutate(community.id);
+      leaveMutation.mutate({ communityId: community.id, slug: community.slug });
     } else {
-      joinMutation.mutate(community.id);
+      joinMutation.mutate({ communityId: community.id, slug: community.slug });
     }
   };
 

@@ -151,6 +151,7 @@ export const useCreateGiveaway = () => {
       prizeAmount,
       prizeType,
       endsAt,
+      giveawayType,
     }: {
       communityId: string;
       title: string;
@@ -158,8 +159,12 @@ export const useCreateGiveaway = () => {
       prizeAmount?: number;
       prizeType?: string;
       endsAt?: Date;
+      giveawayType?: 'raffle' | 'action';
     }) => {
       if (!user?.id) throw new Error('Must be logged in');
+
+      // Ensure prize_type is lowercase to match DB constraint
+      const normalizedPrizeType = prizeType?.toLowerCase() as 'eth' | 'nft' | 'other' | undefined;
 
       // Create a post for the giveaway
       const { data: post, error: postError } = await supabase
@@ -183,7 +188,7 @@ export const useCreateGiveaway = () => {
           title,
           description: description || null,
           prize_amount: prizeAmount || null,
-          prize_type: prizeType || null,
+          prize_type: normalizedPrizeType || null,
           ends_at: endsAt?.toISOString() || null,
           is_active: true,
         })
