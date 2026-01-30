@@ -169,18 +169,33 @@ export function useJoinCommunity() {
   const { user } = useWalletAuth();
 
   return useMutation({
-    mutationFn: async (communityId: string) => {
+    mutationFn: async ({ communityId, slug }: { communityId: string; slug: string }) => {
       if (!user?.id) throw new Error('Not authenticated');
+
+      // Check if already a member
+      const { data: existing } = await supabase
+        .from('community_memberships')
+        .select('id')
+        .eq('community_id', communityId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        return { alreadyMember: true };
+      }
 
       const { error } = await supabase
         .from('community_memberships')
         .insert({ community_id: communityId, user_id: user.id });
 
       if (error) throw error;
+      return { alreadyMember: false };
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Invalidate with exact query keys for immediate UI update
       queryClient.invalidateQueries({ queryKey: ['communities'] });
-      queryClient.invalidateQueries({ queryKey: ['community'] });
+      queryClient.invalidateQueries({ queryKey: ['community', variables.slug] });
+      queryClient.invalidateQueries({ queryKey: ['community-members', variables.communityId] });
     },
   });
 }
@@ -190,7 +205,7 @@ export function useLeaveCommunity() {
   const { user } = useWalletAuth();
 
   return useMutation({
-    mutationFn: async (communityId: string) => {
+    mutationFn: async ({ communityId, slug }: { communityId: string; slug: string }) => {
       if (!user?.id) throw new Error('Not authenticated');
 
       const { error } = await supabase
@@ -201,9 +216,10 @@ export function useLeaveCommunity() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['communities'] });
-      queryClient.invalidateQueries({ queryKey: ['community'] });
+      queryClient.invalidateQueries({ queryKey: ['community', variables.slug] });
+      queryClient.invalidateQueries({ queryKey: ['community-members', variables.communityId] });
     },
   });
 }
