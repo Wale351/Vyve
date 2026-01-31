@@ -57,7 +57,13 @@ const Header = () => {
               variant="ghost" 
               size="icon"
               className="h-9 w-9 rounded-xl"
-              onClick={() => navigate('/')}
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate('/');
+                }
+              }}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
