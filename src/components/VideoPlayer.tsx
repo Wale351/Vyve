@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Loader2, RefreshCw, Radio, Clock } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Loader2, RefreshCw, Radio, Clock, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,9 @@ interface VideoPlayerProps {
   onRetry?: () => void;
 }
 
+const MAX_AUTO_RETRIES = 15;
+const STALL_DETECTION_THRESHOLD = 20000; // 20 seconds without progress
+
 const VideoPlayer = ({ 
   playbackUrl, 
   playbackId, 
@@ -32,12 +35,15 @@ const VideoPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const stallCheckRef = useRef<NodeJS.Timeout | null>(null);
+  const lastProgressTimeRef = useRef<number>(Date.now());
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [volume, setVolume] = useState([75]);
   const [showControls, setShowControls] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [isStalled, setIsStalled] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [retryCount, setRetryCount] = useState(0);
 
@@ -53,6 +59,10 @@ const VideoPlayer = ({
       clearTimeout(retryTimeoutRef.current);
       retryTimeoutRef.current = null;
     }
+    if (stallCheckRef.current) {
+      clearInterval(stallCheckRef.current);
+      stallCheckRef.current = null;
+    }
   }, []);
 
   const initializePlayback = useCallback(() => {
@@ -65,7 +75,9 @@ const VideoPlayer = ({
     destroyHls();
     setIsLoading(true);
     setHasError(false);
+    setIsStalled(false);
     setErrorMessage('');
+    lastProgressTimeRef.current = Date.now();
 
     console.log('[VideoPlayer] Initializing playback:', effectivePlaybackUrl);
 
@@ -97,11 +109,11 @@ const VideoPlayer = ({
         liveSyncDurationCount: 3,
         liveMaxLatencyDurationCount: 10,
         manifestLoadingTimeOut: 10000,
-        manifestLoadingMaxRetry: 3,
+        manifestLoadingMaxRetry: 4,
         levelLoadingTimeOut: 10000,
-        levelLoadingMaxRetry: 3,
+        levelLoadingMaxRetry: 4,
         fragLoadingTimeOut: 20000,
-        fragLoadingMaxRetry: 3,
+        fragLoadingMaxRetry: 4,
       });
       
       hlsRef.current = hls;
@@ -115,6 +127,12 @@ const VideoPlayer = ({
         video.play().then(() => setIsPlaying(true)).catch((e) => {
           console.log('[VideoPlayer] Autoplay prevented:', e.message);
         });
+      });
+
+      // Track fragment loads for stall detection
+      hls.on(Hls.Events.FRAG_LOADED, () => {
+        lastProgressTimeRef.current = Date.now();
+        setIsStalled(false);
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
@@ -144,22 +162,37 @@ const VideoPlayer = ({
           }
         }
       });
+
+      // Stall detection for live streams
+      if (isLive) {
+        stallCheckRef.current = setInterval(() => {
+          const timeSinceProgress = Date.now() - lastProgressTimeRef.current;
+          if (timeSinceProgress > STALL_DETECTION_THRESHOLD && !isLoading && !hasError) {
+            console.log('[VideoPlayer] Stall detected, attempting recovery');
+            setIsStalled(true);
+            // Try to recover
+            if (hls && hls.media) {
+              hls.recoverMediaError();
+            }
+          }
+        }, 5000);
+      }
     } else {
       setIsLoading(false);
       setHasError(true);
       setErrorMessage('HLS playback not supported in this browser');
     }
-  }, [effectivePlaybackUrl, destroyHls]);
+  }, [effectivePlaybackUrl, destroyHls, isLive]);
 
   const handlePlaybackError = useCallback((message: string) => {
     console.log('[VideoPlayer] Playback error:', message, 'Retry count:', retryCount);
     setIsLoading(false);
     setErrorMessage(message);
     
-    // Auto-retry for live streams
-    if (isLive && retryCount < 10) {
-      const delay = Math.min(3000 + retryCount * 1000, 8000);
-      console.log(`[VideoPlayer] Retrying in ${delay}ms...`);
+    // Auto-retry for live streams with exponential backoff
+    if (isLive && retryCount < MAX_AUTO_RETRIES) {
+      const delay = Math.min(2000 + retryCount * 1500, 10000);
+      console.log(`[VideoPlayer] Retrying in ${delay}ms... (attempt ${retryCount + 1}/${MAX_AUTO_RETRIES})`);
       
       retryTimeoutRef.current = setTimeout(() => {
         setRetryCount(prev => prev + 1);
@@ -221,10 +254,12 @@ const VideoPlayer = ({
   const handleRetry = useCallback(() => {
     console.log('[VideoPlayer] Manual retry triggered, streamPhase:', streamPhase);
     
-    // Reset all error/retry states
+    // Reset all error/retry states completely
     setRetryCount(0);
     setHasError(false);
+    setIsStalled(false);
     setErrorMessage('');
+    lastProgressTimeRef.current = Date.now();
     
     // Call onRetry first to refresh Livepeer status (which might update streamPhase)
     if (onRetry) {
@@ -232,14 +267,14 @@ const VideoPlayer = ({
       onRetry();
     }
     
-    // If we're in live phase, reinitialize playback after a brief delay
+    // Reinitialize playback after a brief delay
     // The delay allows the Livepeer status check to complete first
     if (streamPhase === 'live' || effectivePlaybackUrl) {
       setIsLoading(true);
       setTimeout(() => {
         console.log('[VideoPlayer] Reinitializing playback after retry');
         initializePlayback();
-      }, 800);
+      }, 1000);
     }
   }, [onRetry, initializePlayback, streamPhase, effectivePlaybackUrl]);
 
@@ -349,13 +384,24 @@ const VideoPlayer = ({
         </div>
       )}
 
+      {/* Stall warning */}
+      {isStalled && !hasError && (
+        <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/90 text-warning-foreground text-xs font-medium">
+          <WifiOff className="h-3 w-3" />
+          Connection unstable - recovering...
+        </div>
+      )}
+
       {/* Error state */}
       {hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-          <div className="text-center px-4">
-            <p className="text-muted-foreground mb-2">Unable to load stream</p>
-            <p className="text-sm text-muted-foreground/70 mb-4">
-              {errorMessage || 'The stream may be offline or unavailable'}
+        <div className="absolute inset-0 flex items-center justify-center bg-background/90">
+          <div className="text-center px-4 max-w-sm">
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
+              <WifiOff className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Stream Unavailable</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {errorMessage || 'The stream may be offline or experiencing issues. The streamer might have disconnected.'}
             </p>
             <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2">
               <RefreshCw className="h-4 w-4" />

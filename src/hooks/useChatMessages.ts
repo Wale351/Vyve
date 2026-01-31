@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { mapDatabaseError } from '@/lib/errorHandler';
 import { fetchChatProfiles } from '@/lib/profileHelpers';
@@ -154,6 +154,8 @@ interface SendMessageParams {
 
 export const useSendMessage = () => {
   const queryClient = useQueryClient();
+  // Track in-flight messages to prevent double-send
+  const pendingMessagesRef = useRef<Set<string>>(new Set());
 
   return useMutation({
     mutationFn: async ({
@@ -171,22 +173,45 @@ export const useSendMessage = () => {
         throw new Error(`Message cannot exceed ${MAX_MESSAGE_LENGTH} characters`);
       }
 
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .insert({
-          stream_id: streamId,
-          sender_id: senderId,
-          message: trimmedMessage,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        const appError = mapDatabaseError(error);
-        throw new Error(appError.userMessage);
+      // Create a unique key for this message attempt
+      const messageKey = `${senderId}-${trimmedMessage}-${Date.now()}`;
+      
+      // Check if this exact message is already being sent
+      const recentKey = Array.from(pendingMessagesRef.current).find(key => {
+        const [sid, msg] = key.split('-');
+        return sid === senderId && msg === trimmedMessage;
+      });
+      
+      if (recentKey) {
+        console.log('[useSendMessage] Duplicate message detected, skipping');
+        throw new Error('Message already being sent');
       }
+      
+      pendingMessagesRef.current.add(messageKey);
 
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .insert({
+            stream_id: streamId,
+            sender_id: senderId,
+            message: trimmedMessage,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          const appError = mapDatabaseError(error);
+          throw new Error(appError.userMessage);
+        }
+
+        return data;
+      } finally {
+        // Clean up after a short delay to prevent rapid re-sends
+        setTimeout(() => {
+          pendingMessagesRef.current.delete(messageKey);
+        }, 2000);
+      }
     },
     // Optimistic update for instant UI feedback
     onMutate: async ({ streamId, senderId, message, senderProfile }) => {
@@ -196,9 +221,21 @@ export const useSendMessage = () => {
       // Snapshot previous value
       const previousMessages = queryClient.getQueryData<ChatMessageWithSender[]>(['chat', streamId]);
 
-      // Create optimistic message
+      // Check for duplicate optimistic message
+      const existingOptimistic = previousMessages?.find(m => 
+        m.id.startsWith('optimistic-') && 
+        m.sender_id === senderId && 
+        m.message === message.trim()
+      );
+      
+      if (existingOptimistic) {
+        console.log('[useSendMessage] Optimistic message already exists, skipping');
+        return { previousMessages, optimisticId: existingOptimistic.id };
+      }
+
+      // Create optimistic message with unique ID
       const optimisticMessage: ChatMessageWithSender = {
-        id: `optimistic-${Date.now()}`,
+        id: `optimistic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         stream_id: streamId,
         sender_id: senderId,
         message: message.trim(),
@@ -231,8 +268,8 @@ export const useSendMessage = () => {
       }
     },
     onError: (err, variables, context) => {
-      // Rollback on error
-      if (context?.previousMessages) {
+      // Only rollback if it's not a duplicate error
+      if (err.message !== 'Message already being sent' && context?.previousMessages) {
         queryClient.setQueryData(['chat', variables.streamId], context.previousMessages);
       }
     },
