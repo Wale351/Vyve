@@ -418,8 +418,19 @@ const GoLive = () => {
                   </div>
                   <h2 className="font-display text-xl md:text-2xl font-bold mb-1 md:mb-2">Stream Ready!</h2>
                   <p className="text-xs md:text-sm text-muted-foreground">
-                    Use these in OBS or your streaming software
+                    Configure OBS with these credentials
                   </p>
+                </div>
+
+                {/* Stream Status Indicator */}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/30">
+                  <div className="w-3 h-3 rounded-full bg-warning animate-pulse" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Status: Not Live</p>
+                    <p className="text-xs text-muted-foreground">
+                      Your stream will go live once OBS starts sending data
+                    </p>
+                  </div>
                 </div>
 
                 {/* Credentials */}
@@ -475,29 +486,41 @@ const GoLive = () => {
                         )}
                       </Button>
                     </div>
-                    <p className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Keep this key secret!
-                    </p>
+                    {/* Security warning */}
+                    <div className="flex items-start gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
+                      <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
+                      <p className="text-[10px] md:text-xs text-destructive">
+                        <strong>Do not share your stream key!</strong> Anyone with this key can stream to your channel.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Quick guide - Collapsible on mobile */}
+                {/* OBS Setup Checklist */}
                 <div className="bg-muted/20 rounded-xl p-3 md:p-5 border border-border/30">
-                  <h3 className="font-display font-semibold text-sm md:text-base mb-3 md:mb-4">Quick Setup</h3>
+                  <h3 className="font-display font-semibold text-sm md:text-base mb-3 md:mb-4 flex items-center gap-2">
+                    <Settings className="h-4 w-4 text-primary" />
+                    OBS Setup Checklist
+                  </h3>
                   <ol className="space-y-2 md:space-y-3">
                     {[
-                      'Open OBS Studio',
-                      'Go to Settings → Stream',
-                      'Select "Custom" service',
-                      'Paste URL and Key',
-                      'Click "Start Streaming"'
-                    ].map((stepText, i) => (
-                      <li key={i} className="flex items-start gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground">
+                      { step: 'Open OBS Studio', detail: 'Download from obsproject.com if needed' },
+                      { step: 'Go to Settings → Stream', detail: null },
+                      { step: 'Set Service to "Custom"', detail: 'Do not select Twitch, YouTube, etc.' },
+                      { step: 'Paste the RTMP Server URL', detail: 'In the "Server" field' },
+                      { step: 'Paste your Stream Key', detail: 'In the "Stream Key" field' },
+                      { step: 'Click "Start Streaming" in OBS', detail: 'Your stream will go live automatically' },
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 md:gap-3 text-xs md:text-sm">
                         <span className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] md:text-xs font-medium text-primary">
                           {i + 1}
                         </span>
-                        <span className="pt-0.5">{stepText}</span>
+                        <div className="pt-0.5">
+                          <span className="text-foreground">{item.step}</span>
+                          {item.detail && (
+                            <span className="text-muted-foreground ml-1">– {item.detail}</span>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ol>
