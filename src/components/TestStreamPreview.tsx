@@ -138,9 +138,9 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
 
   const StatusBadge = () => {
     const statusConfig = {
-      connecting: { color: 'bg-muted text-muted-foreground', icon: Loader2, label: 'Connecting...', animate: true },
+      connecting: { color: 'bg-muted text-muted-foreground border-border', icon: Loader2, label: 'Connecting...', animate: true },
       waiting: { color: 'bg-warning/20 text-warning border-warning/30', icon: Wifi, label: 'Waiting for OBS', animate: false },
-      live: { color: 'bg-success/20 text-success border-success/30', icon: Radio, label: 'Preview Active', animate: true },
+      live: { color: 'bg-success/20 text-success border-success/30', icon: Radio, label: 'Preview Active', animate: false },
       reconnecting: { color: 'bg-warning/20 text-warning border-warning/30', icon: WifiOff, label: 'Reconnecting...', animate: true },
       error: { color: 'bg-destructive/20 text-destructive border-destructive/30', icon: AlertCircle, label: 'Error', animate: false },
     };
