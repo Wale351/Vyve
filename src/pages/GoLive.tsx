@@ -26,6 +26,7 @@ interface StreamData {
   stream_key: string;
   rtmp_url: string;
   playback_url: string;
+  playback_id: string;
 }
 
 const GoLive = () => {
@@ -94,6 +95,7 @@ const GoLive = () => {
         stream_key: data.stream_key,
         rtmp_url: data.rtmp_url,
         playback_url: data.playback_url,
+        playback_id: data.playback_id,
       });
       setStep('ready');
       toast.success('Stream created!');
@@ -564,6 +566,7 @@ const GoLive = () => {
               <div className="p-4 md:p-8">
                 <TestStreamPreview
                   playbackUrl={streamData.playback_url}
+                  playbackId={streamData.playback_id}
                   streamId={streamData.id}
                   onConfirmLive={handleGoLive}
                   onCancel={() => setStep('ready')}
