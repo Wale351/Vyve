@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef, forwardRef } from 'react';
+import { useState, useEffect, useRef, forwardRef, useCallback } from 'react';
 import { Monitor, Loader2, AlertCircle, RefreshCw, Check, X, Radio, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Hls from 'hls.js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TestStreamPreviewProps {
   playbackUrl: string;
+  playbackId?: string;
   streamId: string;
   onConfirmLive: () => void;
   onCancel: () => void;
@@ -16,6 +18,7 @@ type StreamStatus = 'connecting' | 'waiting' | 'live' | 'error' | 'reconnecting'
 
 const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
   playbackUrl,
+  playbackId,
   streamId,
   onConfirmLive,
   onCancel,
@@ -24,12 +27,17 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const statusPollRef = useRef<NodeJS.Timeout | null>(null);
   const [status, setStatus] = useState<StreamStatus>('connecting');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [retryCount, setRetryCount] = useState(0);
   const [lastSignalTime, setLastSignalTime] = useState<number | null>(null);
+  const [isLivepeerActive, setIsLivepeerActive] = useState(false);
 
-  const destroyHls = () => {
+  // Extract playbackId from URL if not provided directly
+  const effectivePlaybackId = playbackId || playbackUrl.match(/\/hls\/([^/]+)\//)?.[1];
+
+  const destroyHls = useCallback(() => {
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -38,7 +46,40 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
       clearTimeout(retryTimeoutRef.current);
       retryTimeoutRef.current = null;
     }
-  };
+    if (statusPollRef.current) {
+      clearInterval(statusPollRef.current);
+      statusPollRef.current = null;
+    }
+  }, []);
+
+  // Poll Livepeer status via edge function
+  const checkLivepeerStatus = useCallback(async () => {
+    if (!effectivePlaybackId) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('check-stream-status', {
+        body: { playback_id: effectivePlaybackId, stream_id: streamId },
+      });
+
+      if (error) {
+        console.log('[TestStreamPreview] Status check error:', error);
+        return;
+      }
+
+      console.log('[TestStreamPreview] Livepeer status:', data);
+
+      if (data.isActive) {
+        setIsLivepeerActive(true);
+        // Stop polling once live is confirmed
+        if (statusPollRef.current) {
+          clearInterval(statusPollRef.current);
+          statusPollRef.current = null;
+        }
+      }
+    } catch (err) {
+      console.log('[TestStreamPreview] Status check failed:', err);
+    }
+  }, [effectivePlaybackId, streamId]);
 
   const initializePlayback = () => {
     const video = videoRef.current;
@@ -123,6 +164,33 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
     return () => clearInterval(checkInterval);
   }, [status, lastSignalTime]);
 
+  // Start Livepeer status polling
+  useEffect(() => {
+    if (!effectivePlaybackId) return;
+
+    // Initial check
+    checkLivepeerStatus();
+
+    // Poll every 3 seconds for faster detection
+    statusPollRef.current = setInterval(checkLivepeerStatus, 3000);
+
+    return () => {
+      if (statusPollRef.current) {
+        clearInterval(statusPollRef.current);
+        statusPollRef.current = null;
+      }
+    };
+  }, [effectivePlaybackId, checkLivepeerStatus]);
+
+  // Initialize HLS playback when Livepeer confirms stream is active
+  useEffect(() => {
+    if (isLivepeerActive) {
+      console.log('[TestStreamPreview] Livepeer confirmed active, initializing HLS');
+      initializePlayback();
+    }
+  }, [isLivepeerActive]);
+
+  // Also try HLS directly on mount (for cases where Livepeer status is delayed)
   useEffect(() => {
     initializePlayback();
 
@@ -131,10 +199,12 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
     };
   }, [playbackUrl]);
 
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     setRetryCount(0);
+    setIsLivepeerActive(false);
+    checkLivepeerStatus();
     initializePlayback();
-  };
+  }, [checkLivepeerStatus]);
 
   const StatusBadge = () => {
     const statusConfig = {
