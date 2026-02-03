@@ -31,94 +31,126 @@ serve(async (req) => {
       );
     }
 
-    // Query Livepeer for stream status using playback ID
-    console.log(`[check-stream-status] Checking status for playback_id: ${playback_id}`);
-    
-    const livepeerResponse = await fetch(
-      `https://livepeer.studio/api/playback/${playback_id}`,
-      {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${livepeerApiKey}`,
-        },
-      }
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    if (!livepeerResponse.ok) {
-      const errorText = await livepeerResponse.text();
-      console.error(`[check-stream-status] Livepeer API error: ${livepeerResponse.status}`, errorText);
-      
-      // 404 means stream doesn't exist or isn't active yet
-      if (livepeerResponse.status === 404) {
-        return new Response(
-          JSON.stringify({ 
-            isActive: false, 
-            phase: "waiting",
-            message: "Stream not active yet"
-          }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+    // We prefer Livepeer's /stream/{id} endpoint for activity checks (isActive).
+    // It's significantly more reliable than the playback meta.live flag in real-world broadcasts.
+    let livepeerStreamId: string | null = null;
+    let endedAt: string | null = null;
+    let dbIsLive: boolean | null = null;
+
+    if (stream_id) {
+      const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: s, error: streamFetchError } = await serviceSupabase
+        .from("streams")
+        .select("livepeer_stream_id, ended_at, is_live")
+        .eq("id", stream_id)
+        .maybeSingle();
+
+      if (streamFetchError) {
+        console.error("[check-stream-status] Failed to fetch stream row:", streamFetchError);
+      } else {
+        livepeerStreamId = (s?.livepeer_stream_id as string | null) ?? null;
+        endedAt = (s?.ended_at as string | null) ?? null;
+        dbIsLive = (s?.is_live as boolean | null) ?? null;
       }
-      
-      return new Response(
-        JSON.stringify({ error: "Failed to check stream status" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
     }
 
-    const playbackInfo = await livepeerResponse.json();
-    console.log(`[check-stream-status] Playback info:`, JSON.stringify(playbackInfo));
+    console.log(
+      `[check-stream-status] Checking status for playback_id=${playback_id}` +
+        (stream_id ? ` stream_id=${stream_id}` : "") +
+        (livepeerStreamId ? ` livepeer_stream_id=${livepeerStreamId}` : "")
+    );
 
-    // Determine if stream is active
-    // Livepeer playback API uses meta.live (0/1) to indicate a currently broadcasting live stream.
-    // NOTE: The "type" field can still be "live" even when the stream is NOT actively broadcasting,
-    // so we must not rely on it alone.
-    const liveFlag = playbackInfo?.meta?.live;
-    const liveNumber = typeof liveFlag === "string" ? Number(liveFlag)
-      : typeof liveFlag === "number" ? liveFlag
-      : typeof liveFlag === "boolean" ? (liveFlag ? 1 : 0)
-      : null;
+    const toBool = (v: unknown): boolean | null => {
+      if (typeof v === "boolean") return v;
+      if (typeof v === "number") return v > 0;
+      if (typeof v === "string") {
+        const s = v.trim().toLowerCase();
+        if (s === "true" || s === "1") return true;
+        if (s === "false" || s === "0") return false;
+        const n = Number(s);
+        if (!Number.isNaN(n)) return n > 0;
+      }
+      return null;
+    };
 
-    const isActive = liveNumber !== null ? liveNumber > 0 : false;
+    let isActive = false;
+    let meta: any = null;
+
+    // 1) Primary: /stream/{id} activity check
+    if (livepeerStreamId) {
+      const streamRes = await fetch(`https://livepeer.studio/api/stream/${livepeerStreamId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${livepeerApiKey}`,
+        },
+      });
+
+      if (streamRes.ok) {
+        const streamInfo = await streamRes.json();
+        meta = {
+          source: "stream",
+          isActive: streamInfo?.isActive,
+          lastSeen: streamInfo?.lastSeen ?? null,
+          isHealthy: streamInfo?.isHealthy ?? null,
+          issues: streamInfo?.issues ?? null,
+        };
+
+        const active = toBool(streamInfo?.isActive);
+        isActive = active === true;
+      } else {
+        const errTxt = await streamRes.text().catch(() => "");
+        console.error(`[check-stream-status] Livepeer /stream error: ${streamRes.status}`, errTxt);
+      }
+    }
+
+    // 2) Fallback: playback endpoint meta.live (kept for older streams missing livepeer_stream_id)
+    if (!isActive && !livepeerStreamId) {
+      const pbRes = await fetch(`https://livepeer.studio/api/playback/${playback_id}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${livepeerApiKey}`,
+        },
+      });
+
+      if (pbRes.ok) {
+        const playbackInfo = await pbRes.json();
+        const liveFlag = playbackInfo?.meta?.live;
+        const active = toBool(liveFlag);
+        isActive = active === true;
+        meta = playbackInfo?.meta ?? null;
+      } else if (pbRes.status !== 404) {
+        const errTxt = await pbRes.text().catch(() => "");
+        console.error(`[check-stream-status] Livepeer /playback error: ${pbRes.status}`, errTxt);
+      }
+    }
+
+    // Never report active if the stream was manually ended.
+    if (endedAt) {
+      isActive = false;
+    }
+
     const phase = isActive ? "live" : "waiting";
-
-    // Prefer the HLS URL provided by Livepeer (if available)
-    const hlsUrlFromMeta = Array.isArray(playbackInfo?.meta?.source)
-      ? playbackInfo.meta.source.find((s: any) => typeof s?.url === "string" && s.url.includes("/hls/"))?.url
-      : null;
 
     // If stream_id provided and status changed, update database
     // IMPORTANT: Do NOT update streams that have been manually ended (ended_at is set)
-    if (stream_id && isActive) {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    if (stream_id && isActive && !endedAt && dbIsLive !== true) {
       const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
-
-      // First check if the stream has been manually ended
-      const { data: existingStream } = await serviceSupabase
+      const { error: updateError } = await serviceSupabase
         .from("streams")
-        .select("ended_at, is_live")
+        .update({
+          is_live: true,
+          started_at: new Date().toISOString(),
+        })
         .eq("id", stream_id)
-        .single();
+        .is("ended_at", null);
 
-      // Only update to live if stream hasn't been ended
-      if (existingStream && !existingStream.ended_at && !existingStream.is_live) {
-        const { error: updateError } = await serviceSupabase
-          .from("streams")
-          .update({ 
-            is_live: true, 
-            started_at: new Date().toISOString() 
-          })
-          .eq("id", stream_id)
-          .is("ended_at", null); // Extra safety: only update if ended_at is null
-
-        if (updateError) {
-          console.error("[check-stream-status] Failed to update stream status:", updateError);
-        } else {
-          console.log(`[check-stream-status] Updated stream ${stream_id} to live`);
-        }
-      } else if (existingStream?.ended_at) {
-        console.log(`[check-stream-status] Stream ${stream_id} was manually ended, not updating to live`);
+      if (updateError) {
+        console.error("[check-stream-status] Failed to update stream status:", updateError);
+      } else {
+        console.log(`[check-stream-status] Updated stream ${stream_id} to live`);
       }
     }
 
@@ -126,10 +158,8 @@ serve(async (req) => {
       JSON.stringify({
         isActive,
         phase,
-        playbackUrl: isActive
-          ? (hlsUrlFromMeta || `https://livepeercdn.studio/hls/${playback_id}/index.m3u8`)
-          : null,
-        meta: playbackInfo?.meta || null,
+        playbackUrl: isActive ? `https://livepeercdn.studio/hls/${playback_id}/index.m3u8` : null,
+        meta,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
