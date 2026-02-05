@@ -86,6 +86,7 @@ const Watch = () => {
     if (!stream) return 'idle';
     if (stream.ended_at) return 'ended';
     if (livepeerStatus.isActive) return 'live';
+    if (livepeerStatus.phase === 'ingesting') return 'ingesting';
     if (stream.is_live && !livepeerStatus.isActive) return 'waiting';
     if (stream.playback_id) return 'waiting';
     return 'idle';
@@ -165,11 +166,18 @@ const Watch = () => {
             LIVE
           </div>
         );
+      case 'ingesting':
+        return (
+          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg bg-primary/20 text-primary border border-primary/30">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            STARTING
+          </div>
+        );
       case 'waiting':
         return (
           <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg bg-warning/20 text-warning border border-warning/30">
             <Loader2 className="w-3 h-3 animate-spin" />
-            STARTING
+            WAITING
           </div>
         );
       case 'ended':

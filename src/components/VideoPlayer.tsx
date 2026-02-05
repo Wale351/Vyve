@@ -332,6 +332,36 @@ const VideoPlayer = ({
     );
   }
 
+  // INGESTING state - signal detected but HLS not ready
+  if (streamPhase === 'ingesting') {
+    return (
+      <div className="relative aspect-video bg-background rounded-xl overflow-hidden">
+        {effectiveThumbnail ? (
+          <img src={effectiveThumbnail} alt={title} className="w-full h-full object-cover opacity-30" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
+        )}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center px-4 max-w-sm">
+            <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-5 mx-auto relative">
+              <Radio className="h-8 w-8 text-primary animate-pulse" />
+            </div>
+            <h3 className="text-lg font-display font-semibold text-foreground mb-2">
+              Stream starting...
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Signal detected! Preparing playback...
+            </p>
+            <div className="flex items-center justify-center gap-2 text-xs text-primary">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Almost ready
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ENDED state
   if (streamPhase === 'ended') {
     return (

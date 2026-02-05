@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, forwardRef, useCallback } from 'react';
-import { Monitor, Loader2, AlertCircle, RefreshCw, Check, X, Radio, Wifi, WifiOff } from 'lucide-react';
+import { Monitor, Loader2, AlertCircle, RefreshCw, Check, X, Radio, Wifi, WifiOff, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Hls from 'hls.js';
@@ -14,7 +14,13 @@ interface TestStreamPreviewProps {
   isGoingLive: boolean;
 }
 
-type StreamStatus = 'connecting' | 'waiting' | 'live' | 'error' | 'reconnecting';
+type StreamStatus = 'connecting' | 'waiting' | 'ingesting' | 'live' | 'error' | 'reconnecting';
+
+interface StreamDebugInfo {
+  lastSeenAgo: number | null;
+  hlsReady: boolean;
+  ingestActive: boolean;
+}
 
 const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
   playbackUrl,
@@ -33,6 +39,11 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
   const [retryCount, setRetryCount] = useState(0);
   const [lastSignalTime, setLastSignalTime] = useState<number | null>(null);
   const [isLivepeerActive, setIsLivepeerActive] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<StreamDebugInfo>({
+    lastSeenAgo: null,
+    hlsReady: false,
+    ingestActive: false,
+  });
 
   // Extract playbackId from URL if not provided directly
   const effectivePlaybackId = playbackId || playbackUrl.match(/\/hls\/([^/]+)\//)?.[1];
@@ -68,18 +79,36 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
 
       console.log('[TestStreamPreview] Livepeer status:', data);
 
-      if (data.isActive) {
+      // Update debug info
+      setDebugInfo({
+        lastSeenAgo: data.meta?.lastSeenAgo ?? null,
+        hlsReady: data.meta?.hlsReady ?? false,
+        ingestActive: data.meta?.ingestActive ?? false,
+      });
+
+      // Handle different phases
+      if (data.phase === 'live' && data.isActive) {
         setIsLivepeerActive(true);
-        // Stop polling once live is confirmed
+        setStatus('live');
+        // Stop polling once live
         if (statusPollRef.current) {
           clearInterval(statusPollRef.current);
           statusPollRef.current = null;
+        }
+      } else if (data.phase === 'ingesting' || data.meta?.ingestActive) {
+        // Signal detected but HLS not ready yet
+        setStatus('ingesting');
+        // Keep polling until live
+      } else {
+        // No signal yet
+        if (status !== 'live' && status !== 'ingesting') {
+          setStatus('waiting');
         }
       }
     } catch (err) {
       console.log('[TestStreamPreview] Status check failed:', err);
     }
-  }, [effectivePlaybackId, streamId]);
+  }, [effectivePlaybackId, streamId, status]);
 
   const initializePlayback = () => {
     const video = videoRef.current;
@@ -122,8 +151,12 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
         
         if (data.fatal) {
           if (retryCount < 10) {
-            // Show reconnecting state for subsequent retries
-            setStatus(retryCount > 0 ? 'reconnecting' : 'waiting');
+            // Show reconnecting state for subsequent retries, but keep ingesting if we have signal
+            if (debugInfo.ingestActive) {
+              setStatus('ingesting');
+            } else {
+              setStatus(retryCount > 0 ? 'reconnecting' : 'waiting');
+            }
             retryTimeoutRef.current = setTimeout(() => {
               setRetryCount(prev => prev + 1);
               initializePlayback();
@@ -210,6 +243,7 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
     const statusConfig = {
       connecting: { color: 'bg-muted text-muted-foreground border-border', icon: Loader2, label: 'Connecting...', animate: true },
       waiting: { color: 'bg-warning/20 text-warning border-warning/30', icon: Wifi, label: 'Waiting for OBS', animate: false },
+      ingesting: { color: 'bg-primary/20 text-primary border-primary/30', icon: Zap, label: 'Signal Detected', animate: false },
       live: { color: 'bg-success/20 text-success border-success/30', icon: Radio, label: 'Preview Active', animate: false },
       reconnecting: { color: 'bg-warning/20 text-warning border-warning/30', icon: WifiOff, label: 'Reconnecting...', animate: true },
       error: { color: 'bg-destructive/20 text-destructive border-destructive/30', icon: AlertCircle, label: 'Error', animate: false },
@@ -265,6 +299,20 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
           </div>
         )}
 
+        {status === 'ingesting' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
+            <div className="relative mb-4">
+              <Zap className="h-12 w-12 text-primary" />
+              <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-pulse" />
+            </div>
+            <p className="text-sm font-medium text-foreground mb-1">Signal detected! Starting playback...</p>
+            <p className="text-xs text-muted-foreground text-center max-w-xs">
+              OBS is connected. Waiting for video stream to be ready (~10-30 seconds).
+            </p>
+            <Loader2 className="h-4 w-4 animate-spin text-primary mt-3" />
+          </div>
+        )}
+
         {status === 'reconnecting' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
             <Loader2 className="h-10 w-10 animate-spin text-warning mb-3" />
@@ -285,6 +333,15 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
           </div>
         )}
       </div>
+
+      {/* Dev-only debug info */}
+      {import.meta.env.DEV && (
+        <div className="text-[10px] text-muted-foreground font-mono p-2 rounded bg-muted/30 border border-border/20">
+          Signal: {debugInfo.ingestActive ? '✓ detected' : '✗ none'} | 
+          Last seen: {debugInfo.lastSeenAgo !== null ? `${debugInfo.lastSeenAgo}s ago` : 'n/a'} | 
+          HLS: {debugInfo.hlsReady ? '✓ ready' : '✗ not ready'}
+        </div>
+      )}
 
       {/* Instructions */}
       <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
@@ -319,7 +376,7 @@ const TestStreamPreview = forwardRef<HTMLDivElement, TestStreamPreviewProps>(({
           variant="premium"
           className="flex-1 gap-2"
           onClick={onConfirmLive}
-          disabled={status !== 'live' || isGoingLive}
+          disabled={(status !== 'live' && status !== 'ingesting') || isGoingLive}
         >
           {isGoingLive ? (
             <Loader2 className="h-4 w-4 animate-spin" />

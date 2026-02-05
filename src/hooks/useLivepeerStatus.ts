@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type StreamPhase = 'idle' | 'waiting' | 'live' | 'ended';
+export type StreamPhase = 'idle' | 'waiting' | 'ingesting' | 'live' | 'ended';
 
 interface LivepeerStatus {
   isActive: boolean;
   phase: StreamPhase;
   playbackUrl: string | null;
+  ingestActive: boolean;
+  hlsReady: boolean;
+  lastSeenAgo: number | null;
 }
 
 interface UseLivepeerStatusOptions {
@@ -28,6 +31,9 @@ export const useLivepeerStatus = ({
     isActive: false,
     phase: 'idle',
     playbackUrl: null,
+    ingestActive: false,
+    hlsReady: false,
+    lastSeenAgo: null,
   });
   const [isChecking, setIsChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,23 +71,60 @@ export const useLivepeerStatus = ({
 
       console.log('[useLivepeerStatus] Status response:', data);
 
-      if (data.isActive) {
+      const ingestActive = data.meta?.ingestActive ?? false;
+      const hlsReady = data.meta?.hlsReady ?? false;
+      const lastSeenAgo = data.meta?.lastSeenAgo ?? null;
+      const phase = data.phase as StreamPhase;
+
+      // Update status with new phase information
+      if (phase === 'live') {
         setStatus({
           isActive: true,
           phase: 'live',
           playbackUrl: data.playbackUrl || `https://livepeercdn.studio/hls/${playbackId}/index.m3u8`,
+          ingestActive: true,
+          hlsReady: true,
+          lastSeenAgo,
         });
-        // Stop polling once live
+        // Stop polling once live and HLS is ready
+        if (pollRef.current) {
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+        }
+      } else if (phase === 'ingesting') {
+        // Signal detected but HLS not ready - keep polling
+        setStatus({
+          isActive: false,
+          phase: 'ingesting',
+          playbackUrl: null,
+          ingestActive: true,
+          hlsReady: false,
+          lastSeenAgo,
+        });
+      } else if (phase === 'ended') {
+        setStatus({
+          isActive: false,
+          phase: 'ended',
+          playbackUrl: null,
+          ingestActive: false,
+          hlsReady: false,
+          lastSeenAgo: null,
+        });
+        // Stop polling on ended
         if (pollRef.current) {
           clearInterval(pollRef.current);
           pollRef.current = null;
         }
       } else {
-        setStatus(prev => ({
-          ...prev,
+        // Waiting state
+        setStatus({
           isActive: false,
-          phase: endedAt ? 'ended' : 'waiting',
-        }));
+          phase: 'waiting',
+          playbackUrl: null,
+          ingestActive: false,
+          hlsReady: false,
+          lastSeenAgo: null,
+        });
       }
     } catch (err) {
       console.error('[useLivepeerStatus] Unexpected error:', err);
@@ -93,7 +136,7 @@ export const useLivepeerStatus = ({
         setIsChecking(false);
       }
     }
-  }, [playbackId, streamId, endedAt]);
+  }, [playbackId, streamId]);
 
   // Start polling when we have a playback ID and stream isn't ended
   useEffect(() => {
@@ -111,6 +154,9 @@ export const useLivepeerStatus = ({
           isActive: false,
           phase: 'ended',
           playbackUrl: null,
+          ingestActive: false,
+          hlsReady: false,
+          lastSeenAgo: null,
         });
       }
       return;
@@ -135,7 +181,7 @@ export const useLivepeerStatus = ({
   const retry = useCallback(() => {
     console.log('[useLivepeerStatus] Manual retry triggered');
     setError(null);
-    setStatus(prev => ({ ...prev, isActive: false })); // Reset active state
+    setStatus(prev => ({ ...prev, isActive: false, phase: 'waiting' })); // Reset to waiting
     
     // Re-check status immediately
     checkStatus();
