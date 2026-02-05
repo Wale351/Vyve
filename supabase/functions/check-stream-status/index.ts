@@ -7,6 +7,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Phase detection thresholds
+const SIGNAL_RECENCY_THRESHOLD_MS = 20000; // 20 seconds
+const HLS_PROBE_TIMEOUT_MS = 4000; // 4 seconds
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -77,6 +81,8 @@ serve(async (req) => {
     };
 
     let isActive = false;
+    let lastSeen: number | null = null;
+    let hasRecentSignal = false;
     let meta: any = null;
 
     // 1) Primary: /stream/{id} activity check
@@ -90,10 +96,19 @@ serve(async (req) => {
 
       if (streamRes.ok) {
         const streamInfo = await streamRes.json();
+        
+        // Parse lastSeen timestamp
+        if (streamInfo?.lastSeen) {
+          lastSeen = new Date(streamInfo.lastSeen).getTime();
+          hasRecentSignal = (Date.now() - lastSeen) < SIGNAL_RECENCY_THRESHOLD_MS;
+        }
+        
         meta = {
           source: "stream",
           isActive: streamInfo?.isActive,
-          lastSeen: streamInfo?.lastSeen ?? null,
+          lastSeen: lastSeen,
+          lastSeenAgo: lastSeen ? Math.floor((Date.now() - lastSeen) / 1000) : null,
+          hasRecentSignal,
           isHealthy: streamInfo?.isHealthy ?? null,
           issues: streamInfo?.issues ?? null,
         };
@@ -127,16 +142,65 @@ serve(async (req) => {
       }
     }
 
+    // 3) HLS manifest probe - check if playback is actually ready
+    const playbackUrl = `https://livepeercdn.studio/hls/${playback_id}/index.m3u8`;
+    let hlsReady = false;
+    
+    // Only probe HLS if we have some signal (isActive or hasRecentSignal)
+    if (isActive || hasRecentSignal) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), HLS_PROBE_TIMEOUT_MS);
+        
+        const hlsRes = await fetch(playbackUrl, {
+          method: "GET",
+          signal: controller.signal,
+          headers: { "Accept": "application/vnd.apple.mpegurl" },
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (hlsRes.ok) {
+          const manifestText = await hlsRes.text();
+          // Check for valid HLS manifest (contains #EXTM3U) and no error markers
+          if (manifestText.includes("#EXTM3U") && !manifestText.includes("#EXT-X-ERROR")) {
+            hlsReady = true;
+          }
+        }
+      } catch (err) {
+        // HLS probe failed (timeout, network error, etc.) - not fatal
+        console.log("[check-stream-status] HLS probe failed:", err);
+      }
+    }
+
     // Never report active if the stream was manually ended.
     if (endedAt) {
       isActive = false;
+      hasRecentSignal = false;
+      hlsReady = false;
     }
 
-    const phase = isActive ? "live" : "waiting";
+    // Determine stream phase:
+    // - "waiting": no signal at all
+    // - "ingesting": signal detected (via isActive or lastSeen) but HLS not ready
+    // - "live": HLS manifest is ready for playback
+    // - "ended": stream has been manually ended
+    let phase: "waiting" | "ingesting" | "live" | "ended";
+    if (endedAt) {
+      phase = "ended";
+    } else if (hlsReady) {
+      phase = "live";
+    } else if (isActive || hasRecentSignal) {
+      phase = "ingesting";
+    } else {
+      phase = "waiting";
+    }
+
+    console.log(`[check-stream-status] Result: phase=${phase}, isActive=${isActive}, hasRecentSignal=${hasRecentSignal}, hlsReady=${hlsReady}`);
 
     // If stream_id provided and status changed, update database
     // IMPORTANT: Do NOT update streams that have been manually ended (ended_at is set)
-    if (stream_id && isActive && !endedAt && dbIsLive !== true) {
+    if (stream_id && hlsReady && !endedAt && dbIsLive !== true) {
       const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
       const { error: updateError } = await serviceSupabase
         .from("streams")
@@ -156,10 +220,14 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        isActive,
+        isActive: hlsReady, // For backward compatibility, isActive now means "ready for playback"
         phase,
-        playbackUrl: isActive ? `https://livepeercdn.studio/hls/${playback_id}/index.m3u8` : null,
-        meta,
+        playbackUrl: hlsReady ? playbackUrl : null,
+        meta: {
+          ...meta,
+          hlsReady,
+          ingestActive: isActive || hasRecentSignal,
+        },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
