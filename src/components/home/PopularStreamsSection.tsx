@@ -7,28 +7,14 @@ interface PopularStreamsSectionProps {
   streams: StreamWithProfile[];
 }
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0 }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 }
-  }
-};
-
 export default function PopularStreamsSection({ streams }: PopularStreamsSectionProps) {
   if (streams.length === 0) return null;
 
   return (
     <section className="py-5 md:py-8">
       <motion.div 
-        initial="hidden"
-        animate="visible"
-        variants={fadeInUp}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         className="flex items-center gap-2.5 mb-4"
       >
@@ -41,32 +27,36 @@ export default function PopularStreamsSection({ streams }: PopularStreamsSection
         </div>
       </motion.div>
       
-      {/* Mobile: Horizontal scroll */}
+      {/* Mobile: Horizontal scroll — no stagger, just fade in */}
       <div className="md:hidden -mx-4 px-4">
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+        >
           {streams.map((stream) => (
-            <motion.div 
+            <div 
               key={stream.id} 
-              variants={fadeInUp}
-              className="flex-shrink-0 w-[280px]"
+              className="flex-shrink-0 w-[280px] snap-start"
             >
               <StreamCard stream={stream} />
-            </motion.div>
+            </div>
           ))}
-        </div>
+        </motion.div>
       </div>
       
-      {/* Desktop: Grid */}
+      {/* Desktop: Grid with stagger */}
       <motion.div 
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
         className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4"
       >
         {streams.map((stream) => (
-          <motion.div key={stream.id} variants={fadeInUp}>
+          <div key={stream.id}>
             <StreamCard stream={stream} />
-          </motion.div>
+          </div>
         ))}
       </motion.div>
     </section>

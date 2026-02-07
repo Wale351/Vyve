@@ -10,26 +10,13 @@ interface LiveStreamsGridProps {
   isLoading: boolean;
 }
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0 }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.04 }
-  }
-};
-
 export default function LiveStreamsGrid({ streams, isLoading }: LiveStreamsGridProps) {
   return (
     <div className="flex-1 min-w-0">
       <motion.div 
-        initial="hidden"
-        animate="visible"
-        variants={fadeInUp}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
         className="flex items-center gap-2.5 mb-4 md:mb-6"
       >
         <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-gradient-to-br from-secondary/20 to-primary/20 border border-secondary/20">
@@ -48,21 +35,21 @@ export default function LiveStreamsGrid({ streams, isLoading }: LiveStreamsGridP
         </div>
       ) : streams.length > 0 ? (
         <motion.div 
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
           className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4"
         >
           {streams.map((stream) => (
-            <motion.div key={stream.id} variants={fadeInUp}>
+            <div key={stream.id}>
               <StreamCard stream={stream} />
-            </motion.div>
+            </div>
           ))}
         </motion.div>
       ) : (
         <motion.div 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           className="text-center py-12 md:py-16 bg-gradient-to-b from-card/80 to-card/40 rounded-xl md:rounded-2xl border border-border/30 mx-auto max-w-sm md:max-w-md"
         >
           <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4 md:mb-5">

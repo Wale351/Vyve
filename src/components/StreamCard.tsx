@@ -5,12 +5,14 @@ import { formatViewerCount, formatDuration } from '@/lib/formatters';
 import { Users, Clock, Play, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useIsTouchDevice } from '@/hooks/useIsTouchDevice';
 
 interface StreamCardProps {
   stream: StreamWithProfile;
 }
 
 const StreamCard = ({ stream }: StreamCardProps) => {
+  const isTouch = useIsTouchDevice();
   const [isHovered, setIsHovered] = useState(false);
   const streamerName = stream.profiles?.username || 'Streamer';
   const streamerUsername = stream.profiles?.username;
@@ -23,12 +25,12 @@ const StreamCard = ({ stream }: StreamCardProps) => {
   
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -4 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={isTouch ? undefined : { y: -4 }}
+      onMouseEnter={isTouch ? undefined : () => setIsHovered(true)}
+      onMouseLeave={isTouch ? undefined : () => setIsHovered(false)}
     >
       <Link
         to={`/watch/${stream.id}`}
@@ -36,55 +38,61 @@ const StreamCard = ({ stream }: StreamCardProps) => {
       >
         {/* Thumbnail - 16:9 aspect ratio */}
         <div className="relative aspect-video overflow-hidden rounded-t-xl md:rounded-t-2xl">
-          <motion.img
-            src={thumbnailUrl}
-            alt={stream.title}
-            className="w-full h-full object-cover"
-            animate={{ scale: isHovered ? 1.05 : 1 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          />
+          {isTouch ? (
+            <img
+              src={thumbnailUrl}
+              alt={stream.title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <motion.img
+              src={thumbnailUrl}
+              alt={stream.title}
+              className="w-full h-full object-cover"
+              animate={{ scale: isHovered ? 1.05 : 1 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            />
+          )}
           
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-60" />
           
-          {/* Live badge with subtle glow */}
+          {/* Live badge */}
           {stream.is_live && (
-            <motion.div 
-              className="absolute top-2 left-2 md:top-3 md:left-3"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1 }}
-            >
+            <div className="absolute top-2 left-2 md:top-3 md:left-3">
               <div className="live-badge flex items-center gap-1 text-[10px] md:text-xs px-2 py-0.5 md:px-2.5 md:py-1">
                 <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-destructive-foreground animate-pulse-subtle" />
                 LIVE
               </div>
-            </motion.div>
+            </div>
           )}
           
-          {/* Viewer count with glass effect */}
+          {/* Viewer count */}
           <div className="absolute top-2 right-2 md:top-3 md:right-3 flex items-center gap-1 px-2 py-1 md:px-2.5 md:py-1.5 glass-subtle rounded-md md:rounded-lg text-[10px] md:text-xs font-medium">
             <Users className="h-3 w-3 md:h-3.5 md:w-3.5 text-muted-foreground" />
             <span>{formatViewerCount(stream.viewer_count || 0)}</span>
           </div>
           
-          {/* Play button on hover */}
-          <motion.div 
-            className="absolute inset-0 hidden md:flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            transition={{ duration: 0.2 }}
-          >
+          {/* Play button on hover - desktop only */}
+          {!isTouch && (
             <motion.div 
-              className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: isHovered ? 1 : 0.8 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              style={{ boxShadow: 'var(--glow-primary)' }}
+              className="absolute inset-0 hidden md:flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isHovered ? 1 : 0 }}
+              transition={{ duration: 0.2 }}
             >
-              <Play className="h-5 w-5 lg:h-6 lg:w-6 text-primary-foreground ml-0.5" fill="currentColor" />
+              <motion.div 
+                className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center"
+                initial={{ scale: 0.8 }}
+                animate={{ scale: isHovered ? 1 : 0.8 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                style={{ boxShadow: 'var(--glow-primary)' }}
+              >
+                <Play className="h-5 w-5 lg:h-6 lg:w-6 text-primary-foreground ml-0.5" fill="currentColor" />
+              </motion.div>
             </motion.div>
-          </motion.div>
+          )}
           
           {/* Bottom info */}
           <div className="absolute bottom-2 left-2 right-2 md:bottom-3 md:left-3 md:right-3 flex items-center justify-between gap-2">
@@ -106,13 +114,12 @@ const StreamCard = ({ stream }: StreamCardProps) => {
         {/* Info section */}
         <div className="p-3 md:p-4">
           <div className="flex items-start gap-2.5 md:gap-3">
-            {/* Streamer avatar */}
             <Link 
               to={streamerUsername ? `/profile/${streamerUsername}` : '#'} 
               className="flex-shrink-0"
               onClick={(e) => e.stopPropagation()}
             >
-              <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-primary/20 hover:ring-2 hover:ring-primary/50 transition-all">
+              <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-primary/20">
                 {streamerAvatar ? (
                   <AvatarImage src={streamerAvatar} alt={streamerName} />
                 ) : (

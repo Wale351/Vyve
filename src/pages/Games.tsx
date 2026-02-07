@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Loader2, Gamepad2 } from 'lucide-react';
 
 const fadeInUp = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0 }
 };
 
@@ -18,7 +18,7 @@ const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.04, delayChildren: 0.05 }
+    transition: { staggerChildren: 0.02, delayChildren: 0.02 }
   }
 };
 

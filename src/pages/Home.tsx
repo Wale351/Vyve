@@ -18,7 +18,7 @@ const pageVariants = {
   initial: { opacity: 0 },
   animate: { 
     opacity: 1,
-    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }
+    transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }
   },
 };
 
