@@ -148,6 +148,37 @@
   }
 }
 
+/* Mobile performance optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Faster taps - remove 300ms delay */
+  * {
+    touch-action: manipulation;
+  }
+
+  /* Disable hover-only transforms on touch devices */
+  .stream-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-md);
+    border-color: hsl(var(--border) / 0.3);
+  }
+
+  .game-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-md);
+  }
+
+  .card-premium:hover {
+    box-shadow: var(--shadow-md);
+    border-color: hsl(var(--border) / 0.5);
+  }
+
+  /* GPU-accelerate scrollable containers */
+  .scrollbar-hide {
+    -webkit-overflow-scrolling: touch;
+    will-change: scroll-position;
+  }
+}
+
 @layer components {
   /* Premium glassmorphism card */
   .glass-card {

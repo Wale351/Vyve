@@ -16,8 +16,9 @@ export default function TrendingGamesSection({ games, liveCountByGame }: Trendin
   return (
     <section className="py-4 md:py-6 border-t border-border/10">
       <motion.div 
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
         className="flex items-center justify-between mb-3 md:mb-4"
       >
         <div className="flex items-center gap-2 md:gap-3">
@@ -36,19 +37,21 @@ export default function TrendingGamesSection({ games, liveCountByGame }: Trendin
         </Link>
       </motion.div>
       
-      <div className="flex gap-2.5 md:gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-        {games.map((game, index) => (
-          <motion.div 
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="flex gap-2.5 md:gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 snap-x snap-mandatory"
+      >
+        {games.map((game) => (
+          <div 
             key={game.id} 
-            initial={{ opacity: 0, x: 15 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.03 }}
-            className="flex-shrink-0 w-[120px] md:w-[150px]"
+            className="flex-shrink-0 w-[120px] md:w-[150px] snap-start"
           >
             <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
-          </motion.div>
+          </div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }
