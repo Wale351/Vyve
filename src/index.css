@@ -472,3 +472,47 @@
   background-image: radial-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+
+/* Landing page lightweight CSS animations (replaces framer-motion infinite loops) */
+@keyframes landing-blob-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, -15px) scale(1.08); }
+}
+@keyframes landing-blob-2 {
+  0%, 100% { transform: translate(0, 0) scale(1.08); }
+  50% { transform: translate(-18px, 18px) scale(1); }
+}
+@keyframes landing-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes landing-scroll-dot {
+  0%, 100% { height: 20%; }
+  50% { height: 50%; }
+}
+
+.animate-landing-blob-1 {
+  animation: landing-blob-1 20s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-landing-blob-2 {
+  animation: landing-blob-2 25s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-landing-float {
+  animation: landing-float 5s ease-in-out infinite;
+}
+.animate-landing-scroll-dot {
+  animation: landing-scroll-dot 2s ease-in-out infinite;
+}
+
+/* Disable landing blob animations on mobile for performance */
+@media (hover: none) and (pointer: coarse) {
+  .animate-landing-blob-1,
+  .animate-landing-blob-2 {
+    animation: none;
+  }
+  .animate-landing-float {
+    animation: none;
+  }
+}

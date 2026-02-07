@@ -1,61 +1,37 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
-import { ArrowRight, Sparkles, Play, Users, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowRight, Play, Users, Zap, Sparkles } from 'lucide-react';
 import WalletConnectButton from '@/components/WalletConnectButton';
 
 const floatingElements = [
-  { icon: Play, delay: 0, x: '10%', y: '20%', size: 48 },
-  { icon: Users, delay: 0.3, x: '85%', y: '30%', size: 40 },
-  { icon: Zap, delay: 0.6, x: '15%', y: '70%', size: 36 },
-  { icon: Sparkles, delay: 0.9, x: '80%', y: '75%', size: 44 },
+  { icon: Play, x: '10%', y: '20%' },
+  { icon: Users, x: '85%', y: '30%' },
+  { icon: Zap, x: '15%', y: '70%' },
+  { icon: Sparkles, x: '80%', y: '75%' },
 ];
 
-// Fixed brand colors for landing page (not affected by theme accent)
-const BRAND_PRIMARY = 'hsl(175, 85%, 45%)'; // Cyan
-const BRAND_SECONDARY = 'hsl(15, 75%, 55%)'; // Coral/Orange
+const BRAND_PRIMARY = 'hsl(175, 85%, 45%)';
+const BRAND_SECONDARY = 'hsl(15, 75%, 55%)';
 
 export default function HeroSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"]
-  });
-
-  const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-
   return (
-    <section ref={containerRef} className="relative min-h-[100vh] flex items-center overflow-hidden pt-24">
-      {/* Animated Background - Fixed brand colors */}
+    <section className="relative min-h-[100vh] flex items-center overflow-hidden pt-24">
+      {/* Background — pure CSS animations instead of framer-motion infinite loops */}
       <div className="absolute inset-0">
-        {/* Soft gradient orbs */}
-        <motion.div 
-          className="absolute top-1/4 left-1/4 w-[700px] h-[700px] rounded-full blur-3xl"
+        <div
+          className="absolute top-1/4 left-1/4 w-[700px] h-[700px] rounded-full blur-3xl animate-landing-blob-1"
           style={{
             background: `radial-gradient(circle, ${BRAND_PRIMARY.replace(')', ' / 0.12)')} 0%, transparent 60%)`,
           }}
-          animate={{
-            scale: [1, 1.08, 1],
-            x: [0, 20, 0],
-            y: [0, -15, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
         />
-        <motion.div 
-          className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] rounded-full blur-3xl"
+        <div
+          className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] rounded-full blur-3xl animate-landing-blob-2"
           style={{
             background: `radial-gradient(circle, ${BRAND_SECONDARY.replace(')', ' / 0.1)')} 0%, transparent 60%)`,
           }}
-          animate={{
-            scale: [1.08, 1, 1.08],
-            x: [0, -18, 0],
-            y: [0, 18, 0],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
         />
 
-        {/* Subtle grid pattern */}
-        <div 
+        {/* Grid pattern */}
+        <div
           className="absolute inset-0 opacity-[0.02]"
           style={{
             backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), 
@@ -64,55 +40,35 @@ export default function HeroSection() {
           }}
         />
 
-        {/* Floating icons - smoother animations */}
+        {/* Floating icons — CSS float only, hidden on mobile */}
         {floatingElements.map((el, i) => (
-          <motion.div
+          <div
             key={i}
-            className="absolute hidden lg:flex items-center justify-center w-16 h-16 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50"
-            style={{ left: el.x, top: el.y }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ 
-              opacity: 0.8, 
-              scale: 1,
-              y: [0, -12, 0],
-            }}
-            transition={{ 
-              opacity: { delay: el.delay + 0.3, duration: 0.6, ease: "easeOut" },
-              scale: { delay: el.delay + 0.3, duration: 0.6, ease: "easeOut" },
-              y: { delay: el.delay + 0.8, duration: 5, repeat: Infinity, ease: "easeInOut" }
+            className="absolute hidden lg:flex items-center justify-center w-16 h-16 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50 opacity-80 animate-landing-float"
+            style={{
+              left: el.x,
+              top: el.y,
+              animationDelay: `${i * 0.8}s`,
             }}
           >
             <el.icon className="w-6 h-6" style={{ color: BRAND_PRIMARY }} />
-          </motion.div>
+          </div>
         ))}
       </div>
 
-      {/* Content */}
-      <motion.div 
-        style={{ y, opacity }}
-        className="relative z-10 container mx-auto px-4"
-      >
+      {/* Content — simple fade-in, no scroll-linked transforms */}
+      <div className="relative z-10 container mx-auto px-4">
         <div className="max-w-5xl mx-auto text-center">
-          {/* Main Headline - Smoother stagger */}
-          <motion.div className="overflow-hidden mb-6">
-            <motion.h1
-              initial={{ y: 80, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-              className="font-varsity text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-wider leading-[0.9]"
-            >
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h1 className="font-varsity text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-wider leading-[0.9] mb-6">
               <span className="block text-foreground">STREAM.</span>
-            </motion.h1>
-          </motion.div>
-          
-          <motion.div className="overflow-hidden mb-6">
-            <motion.h1
-              initial={{ y: 80, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.35 }}
-              className="font-varsity text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-wider leading-[0.9]"
-            >
-              <span 
+            </h1>
+            <h1 className="font-varsity text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-wider leading-[0.9] mb-6">
+              <span
                 className="block bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient"
                 style={{
                   backgroundImage: `linear-gradient(to right, ${BRAND_PRIMARY}, ${BRAND_SECONDARY}, ${BRAND_PRIMARY})`,
@@ -120,105 +76,71 @@ export default function HeroSection() {
               >
                 EARN.
               </span>
-            </motion.h1>
-          </motion.div>
-
-          <motion.div className="overflow-hidden mb-10">
-            <motion.h1
-              initial={{ y: 80, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
-              className="font-varsity text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-wider leading-[0.9]"
-            >
+            </h1>
+            <h1 className="font-varsity text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-wider leading-[0.9] mb-10">
               <span className="block text-foreground">OWN.</span>
-            </motion.h1>
+            </h1>
           </motion.div>
 
-          {/* Subheadline */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }}
+            transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            The decentralized streaming platform where creators truly own their audience. 
-            Receive tips directly to your wallet. <span className="text-foreground font-medium">No middlemen. No cuts.</span>
+            The decentralized streaming platform where creators truly own their audience.
+            Receive tips directly to your wallet.{' '}
+            <span className="text-foreground font-medium">No middlemen. No cuts.</span>
           </motion.p>
 
-          {/* CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.85, ease: "easeOut" }}
+            transition={{ duration: 0.5, delay: 0.45, ease: 'easeOut' }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <WalletConnectButton variant="premium" size="lg" className="text-lg px-8 py-6 group">
               Start Streaming
-              <motion.span
-                className="inline-block ml-2"
-                animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <ArrowRight className="w-5 h-5" />
-              </motion.span>
+              <ArrowRight className="w-5 h-5 ml-2" />
             </WalletConnectButton>
-            
-            <motion.a
+
+            <a
               href="#features"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
               className="px-8 py-4 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-medium transition-colors"
             >
               Explore Features
-            </motion.a>
+            </a>
           </motion.div>
 
           {/* Stats */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 1, ease: "easeOut" }}
+            transition={{ duration: 0.5, delay: 0.6, ease: 'easeOut' }}
             className="mt-20 grid grid-cols-3 gap-8 max-w-2xl mx-auto"
           >
             {[
               { value: '0%', label: 'Platform Fees' },
               { value: '100%', label: 'Ownership' },
               { value: 'Instant', label: 'Payments' },
-            ].map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1 + i * 0.1, duration: 0.5, ease: "easeOut" }}
-                className="text-center"
-              >
-                <div className="font-varsity text-3xl md:text-4xl mb-1" style={{ color: BRAND_PRIMARY }}>{stat.value}</div>
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="font-varsity text-3xl md:text-4xl mb-1" style={{ color: BRAND_PRIMARY }}>
+                  {stat.value}
+                </div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
+              </div>
             ))}
           </motion.div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.4, duration: 0.5 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-      >
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-1"
-        >
-          <motion.div
-            animate={{ height: ['20%', '50%', '20%'] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="w-1.5 bg-muted-foreground/50 rounded-full"
-          />
-        </motion.div>
-      </motion.div>
+      {/* Scroll indicator — CSS only */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-landing-float">
+        <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-1">
+          <div className="w-1.5 h-3 bg-muted-foreground/50 rounded-full animate-landing-scroll-dot" />
+        </div>
+      </div>
     </section>
   );
 }
