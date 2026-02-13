@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,44 +13,26 @@ export default function TrendingGamesSection({ games, liveCountByGame }: Trendin
   if (games.length === 0) return null;
 
   return (
-    <section className="py-4 md:py-6 border-t border-border/10">
-      <motion.div 
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex items-center justify-between mb-3 md:mb-4"
-      >
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/20">
-            <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="font-display text-lg md:text-xl font-semibold">Trending</h2>
-            <p className="text-[11px] md:text-xs text-muted-foreground">Popular games right now</p>
-          </div>
+    <section className="py-4 md:py-6 border-t border-border/50">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-medium">Trending</h2>
         </div>
         <Link to="/games">
-          <Button variant="ghost" size="sm" className="text-xs md:text-sm text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
             View All
           </Button>
         </Link>
-      </motion.div>
+      </div>
       
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="flex gap-2.5 md:gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 snap-x snap-mandatory"
-      >
+      <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 snap-x snap-mandatory">
         {games.map((game) => (
-          <div 
-            key={game.id} 
-            className="flex-shrink-0 w-[120px] md:w-[150px] snap-start"
-          >
+          <div key={game.id} className="flex-shrink-0 w-[120px] md:w-[140px] snap-start">
             <GameCard game={game} liveCount={liveCountByGame[game.id] || 0} />
           </div>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }

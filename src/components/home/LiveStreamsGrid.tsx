@@ -1,5 +1,4 @@
-import { motion } from 'framer-motion';
-import { Play, Radio, Zap, Loader2 } from 'lucide-react';
+import { Play, Radio, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import StreamCard from '@/components/StreamCard';
@@ -13,59 +12,38 @@ interface LiveStreamsGridProps {
 export default function LiveStreamsGrid({ streams, isLoading }: LiveStreamsGridProps) {
   return (
     <div className="flex-1 min-w-0">
-      <motion.div 
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex items-center gap-2.5 mb-4 md:mb-6"
-      >
-        <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-gradient-to-br from-secondary/20 to-primary/20 border border-secondary/20">
-          <Zap className="h-4 w-4 md:h-5 md:w-5 text-secondary" />
-        </div>
-        <div>
-          <h2 className="font-display text-xl md:text-2xl font-bold">Live Streams</h2>
-          <p className="text-[11px] md:text-sm text-muted-foreground">Discover content from creators</p>
-        </div>
-      </motion.div>
+      <div className="flex items-center gap-2 mb-4">
+        <Play className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-medium">Live Streams</h2>
+      </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-16 md:py-20">
-          <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-primary" />
-          <p className="mt-2 text-xs md:text-sm text-muted-foreground">Loading streams...</p>
+        <div className="flex flex-col items-center justify-center py-16">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <p className="mt-2 text-xs text-muted-foreground">Loading...</p>
         </div>
       ) : streams.length > 0 ? (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4"
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
           {streams.map((stream) => (
             <div key={stream.id}>
               <StreamCard stream={stream} />
             </div>
           ))}
-        </motion.div>
+        </div>
       ) : (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-12 md:py-16 bg-gradient-to-b from-card/80 to-card/40 rounded-xl md:rounded-2xl border border-border/30 mx-auto max-w-sm md:max-w-md"
-        >
-          <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4 md:mb-5">
-            <Play className="h-5 w-5 md:h-7 md:w-7 text-muted-foreground" />
-          </div>
-          <h3 className="font-display text-lg md:text-xl font-bold mb-1.5 md:mb-2">No Live Streams</h3>
-          <p className="text-xs md:text-sm text-muted-foreground mb-5 md:mb-6 px-4">
-            Be the first to go live and start streaming!
+        <div className="text-center py-16 rounded-lg border border-border/30 bg-card">
+          <Play className="h-6 w-6 text-muted-foreground mx-auto mb-3" />
+          <h3 className="font-medium mb-1">No Live Streams</h3>
+          <p className="text-xs text-muted-foreground mb-4">
+            Be the first to go live.
           </p>
           <Link to="/go-live">
-            <Button variant="premium" size="default" className="gap-2">
-              <Radio className="h-4 w-4" />
+            <Button variant="default" size="sm" className="gap-2">
+              <Radio className="h-3.5 w-3.5" />
               Start Streaming
             </Button>
           </Link>
-        </motion.div>
+        </div>
       )}
     </div>
   );
