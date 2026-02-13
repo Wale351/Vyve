@@ -15,8 +15,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Plus Jakarta Sans', 'sans-serif'],
-        varsity: ['Teko', 'sans-serif'],
+        display: ['Inter', 'sans-serif'],
+        varsity: ['Inter', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -93,37 +93,30 @@ export default {
           to: { height: '0' }
         },
         'fade-in': {
-          from: { opacity: '0', transform: 'translateY(8px)' },
+          from: { opacity: '0', transform: 'translateY(4px)' },
           to: { opacity: '1', transform: 'translateY(0)' }
         },
         'slide-up': {
-          from: { opacity: '0', transform: 'translateY(16px)' },
+          from: { opacity: '0', transform: 'translateY(8px)' },
           to: { opacity: '1', transform: 'translateY(0)' }
         },
         'scale-in': {
-          from: { opacity: '0', transform: 'scale(0.96)' },
+          from: { opacity: '0', transform: 'scale(0.98)' },
           to: { opacity: '1', transform: 'scale(1)' }
         },
         'pulse-subtle': {
           '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.7' }
+          '50%': { opacity: '0.5' }
         }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'fade-in': 'fade-in 0.4s ease-out forwards',
-        'slide-up': 'slide-up 0.4s ease-out forwards',
-        'scale-in': 'scale-in 0.3s ease-out',
+        'fade-in': 'fade-in 0.3s ease forwards',
+        'slide-up': 'slide-up 0.3s ease forwards',
+        'scale-in': 'scale-in 0.2s ease',
         'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite'
       },
-      boxShadow: {
-        'sm': '0 1px 2px hsl(220 14% 4% / 0.3)',
-        'md': '0 4px 12px hsl(220 14% 4% / 0.25)',
-        'lg': '0 8px 24px hsl(220 14% 4% / 0.3)',
-        'xl': '0 16px 48px hsl(220 14% 4% / 0.35)',
-        'inner-subtle': 'inset 0 1px 2px hsl(220 14% 4% / 0.2)'
-      }
     }
   },
   plugins: [require("tailwindcss-animate")],

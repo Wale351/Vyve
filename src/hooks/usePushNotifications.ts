@@ -3,6 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useWalletAuth } from './useWalletAuth';
 import { toast } from 'sonner';
 
+// Extend ServiceWorkerRegistration to include pushManager
+declare global {
+  interface ServiceWorkerRegistration {
+    readonly pushManager: PushManager;
+  }
+}
+
 const VAPID_PUBLIC_KEY = 'BFBHn7q0a-eXxrIKKVQUGmWnPIb62U-wZJ0zac-ZGOkMdg2dGp71bRUJS4Ip6iLvIw8WPMjFq_9U0yqpEj_jB7k';
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {

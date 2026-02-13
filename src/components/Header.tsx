@@ -23,40 +23,37 @@ const Header = () => {
 
   return (
     <motion.header 
-      className="fixed top-0 left-0 right-0 z-50 w-full glass-subtle"
-      initial={{ y: -20, opacity: 0 }}
+      className="fixed top-0 left-0 right-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border/50"
+      initial={{ y: -10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
     >
-      <div className="w-full flex h-14 md:h-16 items-center justify-between px-4">
-        {/* Left Section - Profile on Home, Back Button elsewhere */}
+      <div className="w-full flex h-12 md:h-14 items-center justify-between px-4">
         <div className="flex items-center gap-2">
           {isHomePage ? (
-            // Show profile menu on homepage
             isAuthenticated && profile ? (
               <ProfileAccountMenu>
                 <Button variant="ghost" className="flex items-center gap-2 px-2">
-                  <Avatar className="h-8 w-8 border border-primary/20">
+                  <Avatar className="h-7 w-7 border border-border">
                     {profile.avatar_url ? (
                       <AvatarImage src={profile.avatar_url} alt={profile?.username || 'Profile'} />
                     ) : (
-                      <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-xs">
+                      <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                         {profile?.username?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     )}
                   </Avatar>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
                 </Button>
               </ProfileAccountMenu>
             ) : (
               <WalletConnectButton>Connect</WalletConnectButton>
             )
           ) : (
-            // Show back button on all other pages
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-9 w-9 rounded-xl"
+              className="h-8 w-8"
               onClick={() => {
                 if (window.history.length > 1) {
                   navigate(-1);
@@ -65,34 +62,27 @@ const Header = () => {
                 }
               }}
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
         </div>
 
-        {/* Center Section - Empty on homepage, could add branding later */}
-        <div className="hidden md:block" />
-
-        {/* Right Section - Search */}
         <div className="flex items-center gap-2">
-          {/* Mobile Search Button */}
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 rounded-xl lg:hidden"
+            className="h-8 w-8 lg:hidden"
             onClick={() => setMobileSearchOpen(true)}
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-4 w-4" />
           </Button>
           
-          {/* Desktop Search */}
           <div className="hidden lg:block">
             <GlobalSearch />
           </div>
         </div>
       </div>
       
-      {/* Mobile Search Modal */}
       <MobileSearch open={mobileSearchOpen} onOpenChange={setMobileSearchOpen} />
     </motion.header>
   );

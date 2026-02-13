@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Game } from '@/hooks/useGames';
 import { Gamepad2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useIsTouchDevice } from '@/hooks/useIsTouchDevice';
 
 interface GameCardProps {
   game: Game;
@@ -11,70 +10,53 @@ interface GameCardProps {
 }
 
 const GameCard = ({ game, liveCount = 0 }: GameCardProps) => {
-  const isTouch = useIsTouchDevice();
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={isTouch ? undefined : { y: -6, scale: 1.02 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
     >
       <Link 
         to={`/games/${game.slug}`}
         className="group block"
       >
-        <div className="card-premium overflow-hidden">
-          {/* Thumbnail */}
-          <div className="aspect-[3/4] bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 relative overflow-hidden">
+        <div className="rounded-lg overflow-hidden border border-border/30 bg-card hover:border-border transition-colors">
+          <div className="aspect-[3/4] bg-muted relative overflow-hidden">
             {game.thumbnail_url ? (
-              isTouch ? (
-                <img 
-                  src={game.thumbnail_url} 
-                  alt={game.name}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <motion.img 
-                  src={game.thumbnail_url} 
-                  alt={game.name}
-                  className="w-full h-full object-cover"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                />
-              )
+              <img 
+                src={game.thumbnail_url} 
+                alt={game.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <Gamepad2 className="h-16 w-16 text-muted-foreground/50" />
+                <Gamepad2 className="h-12 w-12 text-muted-foreground/30" />
               </div>
             )}
             
-            {/* Live count overlay */}
             {liveCount > 0 && (
-              <div className="absolute top-3 left-3">
-                <div className="live-badge flex items-center gap-1.5 text-xs font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse-subtle" />
+              <div className="absolute top-2 left-2">
+                <div className="live-badge flex items-center gap-1 text-[10px]">
+                  <span className="w-1 h-1 rounded-full bg-current animate-pulse-subtle" />
                   {liveCount} Live
                 </div>
               </div>
             )}
             
-            {/* Category badge */}
-            <div className="absolute bottom-3 left-3">
-              <Badge variant="secondary" className="glass-subtle">
+            <div className="absolute bottom-2 left-2">
+              <Badge variant="secondary" className="text-[10px] bg-card/80 backdrop-blur-sm border border-border/30">
                 {game.category}
               </Badge>
             </div>
           </div>
           
-          {/* Info */}
-          <div className="p-3 md:p-4">
-            <h3 className="font-display font-semibold text-sm md:text-lg group-hover:text-primary transition-colors line-clamp-1">
+          <div className="p-3">
+            <h3 className="font-medium text-sm group-hover:text-foreground/80 transition-colors line-clamp-1">
               {game.name}
             </h3>
             {game.description && (
-              <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                 {game.description}
               </p>
             )}

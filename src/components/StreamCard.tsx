@@ -2,18 +2,14 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { StreamWithProfile } from '@/hooks/useStreams';
 import { formatViewerCount, formatDuration } from '@/lib/formatters';
-import { Users, Clock, Play, CheckCircle } from 'lucide-react';
-import { useState } from 'react';
+import { Users, Clock, CheckCircle } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { useIsTouchDevice } from '@/hooks/useIsTouchDevice';
 
 interface StreamCardProps {
   stream: StreamWithProfile;
 }
 
 const StreamCard = ({ stream }: StreamCardProps) => {
-  const isTouch = useIsTouchDevice();
-  const [isHovered, setIsHovered] = useState(false);
   const streamerName = stream.profiles?.username || 'Streamer';
   const streamerUsername = stream.profiles?.username;
   const streamerAvatar = stream.profiles?.avatar_url;
@@ -25,105 +21,64 @@ const StreamCard = ({ stream }: StreamCardProps) => {
   
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={isTouch ? undefined : { y: -4 }}
-      onMouseEnter={isTouch ? undefined : () => setIsHovered(true)}
-      onMouseLeave={isTouch ? undefined : () => setIsHovered(false)}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
     >
       <Link
         to={`/watch/${stream.id}`}
-        className="group block stream-card"
+        className="group block rounded-lg overflow-hidden border border-border/30 bg-card hover:border-border transition-colors"
       >
-        {/* Thumbnail - 16:9 aspect ratio */}
-        <div className="relative aspect-video overflow-hidden rounded-t-xl md:rounded-t-2xl">
-          {isTouch ? (
-            <img
-              src={thumbnailUrl}
-              alt={stream.title}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <motion.img
-              src={thumbnailUrl}
-              alt={stream.title}
-              className="w-full h-full object-cover"
-              animate={{ scale: isHovered ? 1.05 : 1 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            />
-          )}
+        <div className="relative aspect-video overflow-hidden">
+          <img
+            src={thumbnailUrl}
+            alt={stream.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
           
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-60" />
-          
-          {/* Live badge */}
           {stream.is_live && (
-            <div className="absolute top-2 left-2 md:top-3 md:left-3">
-              <div className="live-badge flex items-center gap-1 text-[10px] md:text-xs px-2 py-0.5 md:px-2.5 md:py-1">
-                <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-destructive-foreground animate-pulse-subtle" />
+            <div className="absolute top-2 left-2">
+              <div className="live-badge flex items-center gap-1 text-[10px]">
+                <span className="w-1 h-1 rounded-full bg-destructive-foreground animate-pulse-subtle" />
                 LIVE
               </div>
             </div>
           )}
           
-          {/* Viewer count */}
-          <div className="absolute top-2 right-2 md:top-3 md:right-3 flex items-center gap-1 px-2 py-1 md:px-2.5 md:py-1.5 glass-subtle rounded-md md:rounded-lg text-[10px] md:text-xs font-medium">
-            <Users className="h-3 w-3 md:h-3.5 md:w-3.5 text-muted-foreground" />
+          <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 bg-card/80 backdrop-blur-sm rounded text-[10px] font-medium border border-border/30">
+            <Users className="h-3 w-3 text-muted-foreground" />
             <span>{formatViewerCount(stream.viewer_count || 0)}</span>
           </div>
           
-          {/* Play button on hover - desktop only */}
-          {!isTouch && (
-            <motion.div 
-              className="absolute inset-0 hidden md:flex items-center justify-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isHovered ? 1 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <motion.div 
-                className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center"
-                initial={{ scale: 0.8 }}
-                animate={{ scale: isHovered ? 1 : 0.8 }}
-                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                style={{ boxShadow: 'var(--glow-primary)' }}
-              >
-                <Play className="h-5 w-5 lg:h-6 lg:w-6 text-primary-foreground ml-0.5" fill="currentColor" />
-              </motion.div>
-            </motion.div>
-          )}
-          
-          {/* Bottom info */}
-          <div className="absolute bottom-2 left-2 right-2 md:bottom-3 md:left-3 md:right-3 flex items-center justify-between gap-2">
+          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2">
             {stream.game_category && (
-              <div className="px-2 py-0.5 md:px-2.5 md:py-1 glass-subtle rounded-md md:rounded-lg text-[10px] md:text-xs text-primary font-medium truncate max-w-[50%]">
+              <div className="px-2 py-0.5 bg-card/80 backdrop-blur-sm rounded text-[10px] text-foreground truncate max-w-[50%] border border-border/30">
                 {stream.game_category}
               </div>
             )}
             
             {stream.started_at && (
-              <div className="flex items-center gap-1 px-2 py-0.5 md:px-2.5 md:py-1 glass-subtle rounded-md md:rounded-lg text-[10px] md:text-xs ml-auto">
-                <Clock className="h-3 w-3 md:h-3.5 md:w-3.5 text-muted-foreground" />
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-card/80 backdrop-blur-sm rounded text-[10px] ml-auto border border-border/30">
+                <Clock className="h-3 w-3 text-muted-foreground" />
                 <span>{formatDuration(new Date(stream.started_at))}</span>
               </div>
             )}
           </div>
         </div>
         
-        {/* Info section */}
-        <div className="p-3 md:p-4">
-          <div className="flex items-start gap-2.5 md:gap-3">
+        <div className="p-3">
+          <div className="flex items-start gap-2.5">
             <Link 
               to={streamerUsername ? `/profile/${streamerUsername}` : '#'} 
               className="flex-shrink-0"
               onClick={(e) => e.stopPropagation()}
             >
-              <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-primary/20">
+              <Avatar className="w-8 h-8 border border-border">
                 {streamerAvatar ? (
                   <AvatarImage src={streamerAvatar} alt={streamerName} />
                 ) : (
-                  <AvatarFallback className="bg-gradient-to-br from-primary/80 to-secondary/80 text-primary-foreground font-semibold text-xs md:text-sm">
+                  <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                     {streamerName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 )}
@@ -131,15 +86,15 @@ const StreamCard = ({ stream }: StreamCardProps) => {
             </Link>
             
             <div className="flex-1 min-w-0">
-              <h3 className="font-display font-semibold text-sm md:text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-200">
+              <h3 className="font-medium text-sm text-foreground line-clamp-1 group-hover:text-foreground/80 transition-colors">
                 {stream.title}
               </h3>
               <div className="mt-0.5 flex items-center gap-1">
-                <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
+                <p className="text-xs text-muted-foreground line-clamp-1">
                   {streamerName}
                 </p>
                 {isVerified && (
-                  <CheckCircle className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary flex-shrink-0" />
+                  <CheckCircle className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 )}
               </div>
             </div>
